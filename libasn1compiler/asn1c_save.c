@@ -266,23 +266,21 @@ asn1c__save_example_mk_makefile(arg_t *arg, const asn1c_dep_chainset *deps,
         }
     }
 
-    safe_fprintf(
-        mkf,
-        "\n\nall: $(ASN_PROGRAM)\n"
-        "\n$(ASN_PROGRAM): $(ASN_LIBRARY) $(ASN_PROGRAM_SRCS:.c=.o)"
-        "\n\t$(CC) $(CFLAGS) $(CPPFLAGS) -o $(ASN_PROGRAM) "
-        "$(ASN_PROGRAM_SRCS:.c=.o) $(LDFLAGS) $(ASN_LIBRARY) $(LIBS)\n"
-        "\n$(ASN_LIBRARY): $(ASN_MODULE_SRCS:.c=.o)"
-        "\n\t$(AR) rcs $@ $(ASN_MODULE_SRCS:.c=.o)\n"
-        "\n.SUFFIXES:"
-        "\n.SUFFIXES: .c .o\n"
-        "\n.c.o:"
-        "\n\t$(CC) $(CFLAGS) -o $@ -c $<\n"
-        "\nclean:"
-        "\n\trm -f $(ASN_PROGRAM) $(ASN_LIBRARY)"
-        "\n\trm -f $(ASN_MODULE_SRCS:.c=.o) $(ASN_PROGRAM_SRCS:.c=.o)\n"
-        "\nregen: regenerate-from-asn1-source\n"
-        "\nregenerate-from-asn1-source:\n\t");
+	safe_fprintf(
+		mkf,
+		"\n\nall: $(ASN_PROGRAM)\n"
+		"\n$(ASN_PROGRAM): $(ASN_LIBRARY) $(ASN_PROGRAM_SRCS:.c=.o)"
+		"\n\t$(CC) $(CFLAGS) $(CPPFLAGS) -o $(ASN_PROGRAM) "
+		"$(ASN_PROGRAM_SRCS:.c=.o) $(LDFLAGS) $(ASN_LIBRARY) $(LIBS)\n"
+		"\n$(ASN_LIBRARY): $(ASN_MODULE_SRCS:.c=.o)"
+		"\n\t$(AR) rcs $@ $(ASN_MODULE_SRCS:.c=.o)\n"
+		"\n%%.o: %%.c"
+		"\n\t$(CC) $(CFLAGS) -o $@ -c $<\n"
+		"\nclean:"
+		"\n\trm -f $(ASN_PROGRAM) $(ASN_LIBRARY)"
+		"\n\trm -f $(ASN_MODULE_SRCS:.c=.o) $(ASN_PROGRAM_SRCS:.c=.o)\n"
+		"\nregen: regenerate-from-asn1-source\n"
+		"\nregenerate-from-asn1-source:\n\t");
 
     for(int i = 0; i < argc; i++) {
         safe_fprintf(mkf, "%s%s", i ? " " : "", argv[i]);

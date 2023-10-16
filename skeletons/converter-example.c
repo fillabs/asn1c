@@ -70,6 +70,11 @@ static void   junk_bytes_with_probability(uint8_t *, size_t, double prob);
 #define RANDOPT "R:"
 static ssize_t random_max_size = 0; /* Size of the random data */
 
+#if defined(__WIN32__) && defined(JUNKTEST)
+#define random rand
+#define srandom srand
+#endif
+
 #if !defined(__FreeBSD__) && !(defined(__APPLE__) && defined(__MACH__))
 static void
 srandomdev(void) {
