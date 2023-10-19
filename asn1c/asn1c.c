@@ -119,6 +119,8 @@ main(int ac, char **av) {
             } else if(strcmp(optarg, "compound-names") == 0) {
                 asn1_compiler_flags |= A1C_COMPOUND_NAMES;
                 asn1_fixer_flags |= A1F_COMPOUND_NAMES;
+            } else if(strcmp(optarg, "strict-import-oid") == 0) {
+                asn1_fixer_flags |= A1F_STRICT_MODULE_OID;
             } else if(strcmp(optarg, "indirect-choice") == 0) {
                 asn1_compiler_flags |= A1C_INDIRECT_CHOICE;
             } else if(strncmp(optarg, "known-extern-type=", 18) == 0) {
@@ -581,6 +583,7 @@ usage(const char *av0) {
 
 "  -fbless-SIZE          Allow SIZE() constraint for INTEGER etc (non-std.)\n"
 "  -fcompound-names      Disambiguate C's struct NAME's inside top-level types\n"
+"  -fstrict-import-oid   Strict OID matching in import. Deactivate WITH SUCCESSORS/DESCENDANTS.\n"
 "  -findirect-choice     Compile members of CHOICE as indirect pointers\n"
 "  -fincludes-quoted     Generate #includes in \"double\" instead of <angle> quotes\n"
 "  -fknown-extern-type=<name>    Pretend the specified type is known\n"

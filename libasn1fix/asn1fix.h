@@ -14,7 +14,9 @@ enum asn1f_flags {
 	A1F_NOFLAGS,
 	A1F_DEBUG			= 0x01,	/* Print debugging output */
 	A1F_EXTENDED_SizeConstraint	= 0x02,	/* Enable constraint gen code */
-	A1F_COMPOUND_NAMES		= 0x04  /* A1C_COMPOUND_NAMES  */
+	A1F_COMPOUND_NAMES		= 0x04,  /* A1C_COMPOUND_NAMES  */
+	A1F_STRICT_MODULE_OID	= 0x08   /* skip WITH SUCCESSORS and  WITH DESCENDANTS */
+
 };
 
 /*

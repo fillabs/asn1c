@@ -74,6 +74,16 @@ asn1f_process(asn1p_t *asn, enum asn1f_flags flags,
 		}
 	}
 
+	if(flags & A1F_STRICT_MODULE_OID) {
+		arg.flags |= A1F_STRICT_MODULE_OID;
+		flags &= ~A1F_STRICT_MODULE_OID;
+		if(arg.debug) {
+			arg.debug(-1,
+				"Use strict module OID in import");
+		}
+	}
+
+
 	a1f_replace_me_with_proper_interface_arg = arg;
 
 	/*
