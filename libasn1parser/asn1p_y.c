@@ -1201,19 +1201,19 @@ static const yytype_int16 yyrline[] =
     1736,  1737,  1738,  1745,  1746,  1747,  1751,  1757,  1762,  1767,
     1772,  1777,  1786,  1787,  1791,  1795,  1796,  1797,  1798,  1799,
     1803,  1804,  1805,  1806,  1810,  1811,  1818,  1818,  1819,  1819,
-    1823,  1824,  1828,  1829,  1833,  1834,  1835,  1839,  1845,  1846,
-    1855,  1855,  1857,  1860,  1864,  1865,  1871,  1882,  1883,  1889,
-    1890,  1896,  1897,  1904,  1905,  1911,  1912,  1923,  1929,  1935,
-    1936,  1938,  1939,  1940,  1945,  1950,  1955,  1960,  1972,  1981,
-    1982,  1988,  1989,  1994,  1997,  2002,  2010,  2016,  2028,  2031,
-    2037,  2038,  2038,  2039,  2041,  2054,  2059,  2065,  2079,  2080,
-    2084,  2087,  2090,  2098,  2099,  2100,  2105,  2104,  2116,  2125,
-    2126,  2127,  2128,  2131,  2134,  2143,  2159,  2165,  2171,  2185,
-    2196,  2212,  2215,  2235,  2239,  2243,  2247,  2254,  2259,  2265,
-    2274,  2279,  2286,  2294,  2304,  2309,  2316,  2324,  2334,  2349,
-    2354,  2361,  2368,  2376,  2384,  2391,  2402,  2406,  2413,  2444,
-    2445,  2449,  2456,  2462,  2463,  2464,  2465,  2469,  2470,  2471,
-    2475,  2479,  2487,  2488,  2494,  2501,  2508
+    1823,  1824,  1828,  1829,  1833,  1834,  1835,  1841,  1847,  1848,
+    1857,  1857,  1859,  1862,  1866,  1867,  1873,  1884,  1885,  1891,
+    1892,  1898,  1899,  1906,  1907,  1913,  1914,  1925,  1931,  1937,
+    1938,  1940,  1941,  1942,  1947,  1952,  1957,  1962,  1974,  1983,
+    1984,  1990,  1991,  1996,  1999,  2004,  2012,  2018,  2030,  2033,
+    2039,  2040,  2040,  2041,  2043,  2056,  2061,  2067,  2081,  2082,
+    2086,  2089,  2092,  2100,  2101,  2102,  2107,  2106,  2118,  2127,
+    2128,  2129,  2130,  2133,  2136,  2145,  2161,  2167,  2173,  2187,
+    2198,  2214,  2217,  2237,  2241,  2245,  2249,  2256,  2261,  2267,
+    2276,  2281,  2288,  2296,  2306,  2311,  2318,  2326,  2336,  2351,
+    2356,  2363,  2370,  2378,  2386,  2393,  2404,  2408,  2415,  2446,
+    2447,  2451,  2458,  2464,  2465,  2466,  2467,  2471,  2472,  2473,
+    2477,  2481,  2489,  2490,  2496,  2503,  2510
 };
 #endif
 
@@ -4289,16 +4289,24 @@ yyreduce:
 #line 4290 "asn1p_y.c"
     break;
 
-  case 227: /* Constraint: '(' ConstraintSpec ')'  */
-#line 1839 "asn1p_y.y"
-                           {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_SET, (yyvsp[-1].a_constr), 0);
+  case 226: /* optSizeOrConstraint: SizeConstraint  */
+#line 1835 "asn1p_y.y"
+                         {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_SET, (yyvsp[0].a_constr), 0);
     }
 #line 4298 "asn1p_y.c"
     break;
 
+  case 227: /* Constraint: '(' ConstraintSpec ')'  */
+#line 1841 "asn1p_y.y"
+                           {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_SET, (yyvsp[-1].a_constr), 0);
+    }
+#line 4306 "asn1p_y.c"
+    break;
+
   case 229: /* ManyConstraints: ManyConstraints Constraint  */
-#line 1846 "asn1p_y.y"
+#line 1848 "asn1p_y.y"
                                      {
         if((yyvsp[0].a_constr)->type == ACT_CA_SET && (yyvsp[0].a_constr)->el_count == 1) {
             CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_SET, (yyvsp[-1].a_constr), (yyvsp[0].a_constr)->elements[0]);
@@ -4306,31 +4314,31 @@ yyreduce:
             CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_SET, (yyvsp[-1].a_constr), (yyvsp[0].a_constr));
         }
 	}
-#line 4310 "asn1p_y.c"
+#line 4318 "asn1p_y.c"
     break;
 
   case 233: /* ElementSetSpecs: "..."  */
-#line 1860 "asn1p_y.y"
+#line 1862 "asn1p_y.y"
                        {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		(yyval.a_constr)->type = ACT_EL_EXT;
 	}
-#line 4319 "asn1p_y.c"
+#line 4327 "asn1p_y.c"
     break;
 
   case 235: /* ElementSetSpecs: ElementSetSpec ',' "..."  */
-#line 1865 "asn1p_y.y"
+#line 1867 "asn1p_y.y"
                                       {
        asn1p_constraint_t *ct;
        ct = asn1p_constraint_new(yylineno, currentModule);
        ct->type = ACT_EL_EXT;
        CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_CSV, (yyvsp[-2].a_constr), ct);
    }
-#line 4330 "asn1p_y.c"
+#line 4338 "asn1p_y.c"
     break;
 
   case 236: /* ElementSetSpecs: ElementSetSpec ',' "..." ',' ElementSetSpec  */
-#line 1871 "asn1p_y.y"
+#line 1873 "asn1p_y.y"
                                                          {
        asn1p_constraint_t *ct;
        ct = asn1p_constraint_new(yylineno, currentModule);
@@ -4339,43 +4347,43 @@ yyreduce:
        ct = (yyval.a_constr);
        CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_CSV, ct, (yyvsp[0].a_constr));
    }
-#line 4343 "asn1p_y.c"
-    break;
-
-  case 238: /* ElementSetSpec: TOK_ALL TOK_EXCEPT Elements  */
-#line 1883 "asn1p_y.y"
-                                      {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_AEX, (yyvsp[0].a_constr), 0);
-	}
 #line 4351 "asn1p_y.c"
     break;
 
-  case 240: /* Unions: Unions UnionMark Intersections  */
-#line 1890 "asn1p_y.y"
-                                         {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_UNI, (yyvsp[-2].a_constr), (yyvsp[0].a_constr));
+  case 238: /* ElementSetSpec: TOK_ALL TOK_EXCEPT Elements  */
+#line 1885 "asn1p_y.y"
+                                      {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_AEX, (yyvsp[0].a_constr), 0);
 	}
 #line 4359 "asn1p_y.c"
     break;
 
-  case 242: /* Intersections: Intersections IntersectionMark IntersectionElements  */
-#line 1897 "asn1p_y.y"
-                                                               {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_INT, (yyvsp[-2].a_constr), (yyvsp[0].a_constr));
+  case 240: /* Unions: Unions UnionMark Intersections  */
+#line 1892 "asn1p_y.y"
+                                         {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_UNI, (yyvsp[-2].a_constr), (yyvsp[0].a_constr));
 	}
 #line 4367 "asn1p_y.c"
     break;
 
-  case 244: /* IntersectionElements: Elements TOK_EXCEPT Elements  */
-#line 1905 "asn1p_y.y"
-                                       {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_EXC, (yyvsp[-2].a_constr), (yyvsp[0].a_constr));
+  case 242: /* Intersections: Intersections IntersectionMark IntersectionElements  */
+#line 1899 "asn1p_y.y"
+                                                               {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_INT, (yyvsp[-2].a_constr), (yyvsp[0].a_constr));
 	}
 #line 4375 "asn1p_y.c"
     break;
 
+  case 244: /* IntersectionElements: Elements TOK_EXCEPT Elements  */
+#line 1907 "asn1p_y.y"
+                                       {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_EXC, (yyvsp[-2].a_constr), (yyvsp[0].a_constr));
+	}
+#line 4383 "asn1p_y.c"
+    break;
+
   case 246: /* Elements: '(' ElementSetSpec ')'  */
-#line 1912 "asn1p_y.y"
+#line 1914 "asn1p_y.y"
                              {
         int ret;
         (yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
@@ -4384,59 +4392,59 @@ yyreduce:
         ret = asn1p_constraint_insert((yyval.a_constr), (yyvsp[-1].a_constr));
         checkmem(ret == 0);
     }
-#line 4388 "asn1p_y.c"
+#line 4396 "asn1p_y.c"
     break;
 
   case 247: /* SubtypeElements: SingleValue  */
-#line 1923 "asn1p_y.y"
+#line 1925 "asn1p_y.y"
                     {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		checkmem((yyval.a_constr));
 		(yyval.a_constr)->type = ACT_EL_VALUE;
 		(yyval.a_constr)->value = (yyvsp[0].a_value);
 	}
-#line 4399 "asn1p_y.c"
+#line 4407 "asn1p_y.c"
     break;
 
   case 248: /* SubtypeElements: ContainedSubtype  */
-#line 1929 "asn1p_y.y"
+#line 1931 "asn1p_y.y"
                            {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		checkmem((yyval.a_constr));
 		(yyval.a_constr)->type = ACT_EL_TYPE;
 		(yyval.a_constr)->containedSubtype = (yyvsp[0].a_value);
 	}
-#line 4410 "asn1p_y.c"
-    break;
-
-  case 254: /* PermittedAlphabet: TOK_FROM Constraint  */
-#line 1945 "asn1p_y.y"
-                            {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CT_FROM, (yyvsp[0].a_constr), 0);
-	}
 #line 4418 "asn1p_y.c"
     break;
 
-  case 255: /* SizeConstraint: TOK_SIZE Constraint  */
-#line 1950 "asn1p_y.y"
+  case 254: /* PermittedAlphabet: TOK_FROM Constraint  */
+#line 1947 "asn1p_y.y"
                             {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CT_SIZE, (yyvsp[0].a_constr), 0);
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CT_FROM, (yyvsp[0].a_constr), 0);
 	}
 #line 4426 "asn1p_y.c"
     break;
 
+  case 255: /* SizeConstraint: TOK_SIZE Constraint  */
+#line 1952 "asn1p_y.y"
+                            {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CT_SIZE, (yyvsp[0].a_constr), 0);
+	}
+#line 4434 "asn1p_y.c"
+    break;
+
   case 256: /* PatternConstraint: TOK_PATTERN TOK_cstring  */
-#line 1955 "asn1p_y.y"
+#line 1957 "asn1p_y.y"
                                 {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		(yyval.a_constr)->type = ACT_CT_PATTERN;
 		(yyval.a_constr)->value = asn1p_value_frombuf((yyvsp[0].tv_opaque).buf, (yyvsp[0].tv_opaque).len, 0);
 	}
-#line 4436 "asn1p_y.c"
+#line 4444 "asn1p_y.c"
     break;
 
   case 257: /* PatternConstraint: TOK_PATTERN Identifier  */
-#line 1960 "asn1p_y.y"
+#line 1962 "asn1p_y.y"
                                  {
 		asn1p_ref_t *ref;
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
@@ -4446,11 +4454,11 @@ yyreduce:
 		(yyval.a_constr)->value = asn1p_value_fromref(ref, 0);
 		free((yyvsp[0].tv_str));
 	}
-#line 4450 "asn1p_y.c"
+#line 4458 "asn1p_y.c"
     break;
 
   case 258: /* ValueRange: LowerEndValue ConstraintRangeSpec UpperEndValue  */
-#line 1972 "asn1p_y.y"
+#line 1974 "asn1p_y.y"
                                                     {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		checkmem((yyval.a_constr));
@@ -4458,93 +4466,93 @@ yyreduce:
 		(yyval.a_constr)->range_start = (yyvsp[-2].a_value);
 		(yyval.a_constr)->range_stop = (yyvsp[0].a_value);
     }
-#line 4462 "asn1p_y.c"
+#line 4470 "asn1p_y.c"
     break;
 
   case 260: /* LowerEndValue: TOK_MIN  */
-#line 1982 "asn1p_y.y"
+#line 1984 "asn1p_y.y"
               {
 		(yyval.a_value) = asn1p_value_fromint(-123);
 		(yyval.a_value)->type = ATV_MIN;
     }
-#line 4471 "asn1p_y.c"
+#line 4479 "asn1p_y.c"
     break;
 
   case 262: /* UpperEndValue: TOK_MAX  */
-#line 1989 "asn1p_y.y"
+#line 1991 "asn1p_y.y"
               {
 		(yyval.a_value) = asn1p_value_fromint(321);
 		(yyval.a_value)->type = ATV_MAX;
     }
-#line 4480 "asn1p_y.c"
+#line 4488 "asn1p_y.c"
     break;
 
   case 264: /* BitStringValue: TOK_bstring  */
-#line 1997 "asn1p_y.y"
+#line 1999 "asn1p_y.y"
                     {
 		(yyval.a_value) = _convert_bitstring2binary((yyvsp[0].tv_str), 'B');
 		checkmem((yyval.a_value));
 		free((yyvsp[0].tv_str));
 	}
-#line 4490 "asn1p_y.c"
+#line 4498 "asn1p_y.c"
     break;
 
   case 265: /* BitStringValue: TOK_hstring  */
-#line 2002 "asn1p_y.y"
+#line 2004 "asn1p_y.y"
                       {
 		(yyval.a_value) = _convert_bitstring2binary((yyvsp[0].tv_str), 'H');
 		checkmem((yyval.a_value));
 		free((yyvsp[0].tv_str));
 	}
-#line 4500 "asn1p_y.c"
+#line 4508 "asn1p_y.c"
     break;
 
   case 266: /* ContainedSubtype: TOK_INCLUDES Type  */
-#line 2010 "asn1p_y.y"
+#line 2012 "asn1p_y.y"
                       {
 		(yyval.a_value) = asn1p_value_fromtype((yyvsp[0].a_expr));
 		checkmem((yyval.a_value));
 		asn1p_expr_free((yyvsp[0].a_expr));
     }
-#line 4510 "asn1p_y.c"
+#line 4518 "asn1p_y.c"
     break;
 
   case 267: /* ContainedSubtype: DefinedUntaggedType  */
-#line 2016 "asn1p_y.y"
+#line 2018 "asn1p_y.y"
                           {
 		(yyval.a_value) = asn1p_value_fromtype((yyvsp[0].a_expr));
 		checkmem((yyval.a_value));
 		asn1p_expr_free((yyvsp[0].a_expr));
     }
-#line 4520 "asn1p_y.c"
-    break;
-
-  case 268: /* InnerTypeConstraints: TOK_WITH TOK_COMPONENT SingleTypeConstraint  */
-#line 2028 "asn1p_y.y"
-                                                    {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CT_WCOMP, (yyvsp[0].a_constr), 0);
-	}
 #line 4528 "asn1p_y.c"
     break;
 
+  case 268: /* InnerTypeConstraints: TOK_WITH TOK_COMPONENT SingleTypeConstraint  */
+#line 2030 "asn1p_y.y"
+                                                    {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CT_WCOMP, (yyvsp[0].a_constr), 0);
+	}
+#line 4536 "asn1p_y.c"
+    break;
+
   case 269: /* InnerTypeConstraints: TOK_WITH TOK_COMPONENTS MultipleTypeConstraints  */
-#line 2031 "asn1p_y.y"
+#line 2033 "asn1p_y.y"
                                                           {
         assert((yyvsp[0].a_constr)->type == ACT_CA_CSV);
         (yyvsp[0].a_constr)->type = ACT_CT_WCOMPS;
         (yyval.a_constr) = (yyvsp[0].a_constr);
 	}
-#line 4538 "asn1p_y.c"
+#line 4546 "asn1p_y.c"
     break;
 
   case 273: /* FullSpecification: '{' TypeConstraints '}'  */
-#line 2039 "asn1p_y.y"
+#line 2041 "asn1p_y.y"
                                            { (yyval.a_constr) = (yyvsp[-1].a_constr); }
-#line 4544 "asn1p_y.c"
+#line 4552 "asn1p_y.c"
     break;
 
   case 274: /* PartialSpecification: '{' "..." ',' TypeConstraints '}'  */
-#line 2041 "asn1p_y.y"
+#line 2043 "asn1p_y.y"
                                               {
         assert((yyvsp[-1].a_constr)->type == ACT_CA_CSV);
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
@@ -4557,30 +4565,30 @@ yyreduce:
             asn1p_constraint_insert((yyval.a_constr), (yyvsp[-1].a_constr)->elements[i]);
         }
     }
-#line 4561 "asn1p_y.c"
+#line 4569 "asn1p_y.c"
     break;
 
   case 275: /* TypeConstraints: NamedConstraint  */
-#line 2054 "asn1p_y.y"
+#line 2056 "asn1p_y.y"
                     {
         (yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
         (yyval.a_constr)->type = ACT_CA_CSV;
         asn1p_constraint_insert((yyval.a_constr), (yyvsp[0].a_constr));
     }
-#line 4571 "asn1p_y.c"
+#line 4579 "asn1p_y.c"
     break;
 
   case 276: /* TypeConstraints: TypeConstraints ',' NamedConstraint  */
-#line 2059 "asn1p_y.y"
+#line 2061 "asn1p_y.y"
                                           {
         (yyval.a_constr) = (yyvsp[-2].a_constr);
         asn1p_constraint_insert((yyval.a_constr), (yyvsp[0].a_constr));
 	}
-#line 4580 "asn1p_y.c"
+#line 4588 "asn1p_y.c"
     break;
 
   case 277: /* NamedConstraint: IdentifierAsValue optConstraint optPresenceConstraint  */
-#line 2065 "asn1p_y.y"
+#line 2067 "asn1p_y.y"
                                                               {
         (yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
         checkmem((yyval.a_constr));
@@ -4589,53 +4597,53 @@ yyreduce:
         if((yyvsp[-1].a_constr)) asn1p_constraint_insert((yyval.a_constr), (yyvsp[-1].a_constr));
         (yyval.a_constr)->presence = (yyvsp[0].a_pres);
     }
-#line 4593 "asn1p_y.c"
+#line 4601 "asn1p_y.c"
     break;
 
   case 278: /* optPresenceConstraint: %empty  */
-#line 2079 "asn1p_y.y"
+#line 2081 "asn1p_y.y"
         { (yyval.a_pres) = ACPRES_DEFAULT; }
-#line 4599 "asn1p_y.c"
+#line 4607 "asn1p_y.c"
     break;
 
   case 279: /* optPresenceConstraint: PresenceConstraint  */
-#line 2080 "asn1p_y.y"
+#line 2082 "asn1p_y.y"
                              { (yyval.a_pres) = (yyvsp[0].a_pres); }
-#line 4605 "asn1p_y.c"
-    break;
-
-  case 280: /* PresenceConstraint: TOK_PRESENT  */
-#line 2084 "asn1p_y.y"
-                    {
-		(yyval.a_pres) = ACPRES_PRESENT;
-	}
 #line 4613 "asn1p_y.c"
     break;
 
-  case 281: /* PresenceConstraint: TOK_ABSENT  */
-#line 2087 "asn1p_y.y"
-                     {
-		(yyval.a_pres) = ACPRES_ABSENT;
+  case 280: /* PresenceConstraint: TOK_PRESENT  */
+#line 2086 "asn1p_y.y"
+                    {
+		(yyval.a_pres) = ACPRES_PRESENT;
 	}
 #line 4621 "asn1p_y.c"
     break;
 
-  case 282: /* PresenceConstraint: TOK_OPTIONAL  */
-#line 2090 "asn1p_y.y"
-                       {
-		(yyval.a_pres) = ACPRES_OPTIONAL;
+  case 281: /* PresenceConstraint: TOK_ABSENT  */
+#line 2089 "asn1p_y.y"
+                     {
+		(yyval.a_pres) = ACPRES_ABSENT;
 	}
 #line 4629 "asn1p_y.c"
     break;
 
+  case 282: /* PresenceConstraint: TOK_OPTIONAL  */
+#line 2092 "asn1p_y.y"
+                       {
+		(yyval.a_pres) = ACPRES_OPTIONAL;
+	}
+#line 4637 "asn1p_y.c"
+    break;
+
   case 286: /* $@5: %empty  */
-#line 2105 "asn1p_y.y"
+#line 2107 "asn1p_y.y"
                 { asn1p_lexer_hack_push_opaque_state(); }
-#line 4635 "asn1p_y.c"
+#line 4643 "asn1p_y.c"
     break;
 
   case 287: /* UserDefinedConstraint: TOK_CONSTRAINED TOK_BY '{' $@5 Opaque  */
-#line 2105 "asn1p_y.y"
+#line 2107 "asn1p_y.y"
                                                                            {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		checkmem((yyval.a_constr));
@@ -4644,62 +4652,62 @@ yyreduce:
 		checkmem((yyval.a_constr)->value);
 		(yyval.a_constr)->value->type = ATV_UNPARSED;
 	}
-#line 4648 "asn1p_y.c"
+#line 4656 "asn1p_y.c"
     break;
 
   case 288: /* ContentsConstraint: TOK_CONTAINING Type  */
-#line 2116 "asn1p_y.y"
+#line 2118 "asn1p_y.y"
                             {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		(yyval.a_constr)->type = ACT_CT_CTNG;
 		(yyval.a_constr)->value = asn1p_value_fromtype((yyvsp[0].a_expr));
 		asn1p_expr_free((yyvsp[0].a_expr));
 	}
-#line 4659 "asn1p_y.c"
+#line 4667 "asn1p_y.c"
     break;
 
   case 289: /* ConstraintRangeSpec: ".."  */
-#line 2125 "asn1p_y.y"
+#line 2127 "asn1p_y.y"
                                 { (yyval.a_ctype) = ACT_EL_RANGE; }
-#line 4665 "asn1p_y.c"
+#line 4673 "asn1p_y.c"
     break;
 
   case 290: /* ConstraintRangeSpec: ".." '<'  */
-#line 2126 "asn1p_y.y"
+#line 2128 "asn1p_y.y"
                                 { (yyval.a_ctype) = ACT_EL_RLRANGE; }
-#line 4671 "asn1p_y.c"
+#line 4679 "asn1p_y.c"
     break;
 
   case 291: /* ConstraintRangeSpec: '<' ".."  */
-#line 2127 "asn1p_y.y"
+#line 2129 "asn1p_y.y"
                                 { (yyval.a_ctype) = ACT_EL_LLRANGE; }
-#line 4677 "asn1p_y.c"
+#line 4685 "asn1p_y.c"
     break;
 
   case 292: /* ConstraintRangeSpec: '<' ".." '<'  */
-#line 2128 "asn1p_y.y"
+#line 2130 "asn1p_y.y"
                                 { (yyval.a_ctype) = ACT_EL_ULRANGE; }
-#line 4683 "asn1p_y.c"
-    break;
-
-  case 293: /* TableConstraint: SimpleTableConstraint  */
-#line 2131 "asn1p_y.y"
-                              {
-		(yyval.a_constr) = (yyvsp[0].a_constr);
-	}
 #line 4691 "asn1p_y.c"
     break;
 
-  case 294: /* TableConstraint: ComponentRelationConstraint  */
-#line 2134 "asn1p_y.y"
-                                      {
+  case 293: /* TableConstraint: SimpleTableConstraint  */
+#line 2133 "asn1p_y.y"
+                              {
 		(yyval.a_constr) = (yyvsp[0].a_constr);
 	}
 #line 4699 "asn1p_y.c"
     break;
 
+  case 294: /* TableConstraint: ComponentRelationConstraint  */
+#line 2136 "asn1p_y.y"
+                                      {
+		(yyval.a_constr) = (yyvsp[0].a_constr);
+	}
+#line 4707 "asn1p_y.c"
+    break;
+
   case 295: /* SimpleTableConstraint: '{' TypeRefName '}'  */
-#line 2143 "asn1p_y.y"
+#line 2145 "asn1p_y.y"
                             {
 		asn1p_ref_t *ref = asn1p_ref_new(yylineno, currentModule);
 		asn1p_constraint_t *ct;
@@ -4713,30 +4721,30 @@ yyreduce:
 		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_CRC, ct, 0);
 		free((yyvsp[-1].tv_str));
 	}
-#line 4717 "asn1p_y.c"
-    break;
-
-  case 296: /* ComponentRelationConstraint: SimpleTableConstraint '{' AtNotationList '}'  */
-#line 2159 "asn1p_y.y"
-                                                     {
-		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_CRC, (yyvsp[-3].a_constr), (yyvsp[-1].a_constr));
-	}
 #line 4725 "asn1p_y.c"
     break;
 
+  case 296: /* ComponentRelationConstraint: SimpleTableConstraint '{' AtNotationList '}'  */
+#line 2161 "asn1p_y.y"
+                                                     {
+		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_CRC, (yyvsp[-3].a_constr), (yyvsp[-1].a_constr));
+	}
+#line 4733 "asn1p_y.c"
+    break;
+
   case 297: /* AtNotationList: AtNotationElement  */
-#line 2165 "asn1p_y.y"
+#line 2167 "asn1p_y.y"
                           {
 		(yyval.a_constr) = asn1p_constraint_new(yylineno, currentModule);
 		checkmem((yyval.a_constr));
 		(yyval.a_constr)->type = ACT_EL_VALUE;
 		(yyval.a_constr)->value = asn1p_value_fromref((yyvsp[0].a_ref), 0);
 	}
-#line 4736 "asn1p_y.c"
+#line 4744 "asn1p_y.c"
     break;
 
   case 298: /* AtNotationList: AtNotationList ',' AtNotationElement  */
-#line 2171 "asn1p_y.y"
+#line 2173 "asn1p_y.y"
                                                {
 		asn1p_constraint_t *ct;
 		ct = asn1p_constraint_new(yylineno, currentModule);
@@ -4745,11 +4753,11 @@ yyreduce:
 		ct->value = asn1p_value_fromref((yyvsp[0].a_ref), 0);
 		CONSTRAINT_INSERT((yyval.a_constr), ACT_CA_CSV, (yyvsp[-2].a_constr), ct);
 	}
-#line 4749 "asn1p_y.c"
+#line 4757 "asn1p_y.c"
     break;
 
   case 299: /* AtNotationElement: '@' ComponentIdList  */
-#line 2185 "asn1p_y.y"
+#line 2187 "asn1p_y.y"
                             {
 		char *p = malloc(strlen((yyvsp[0].tv_str)) + 2);
 		int ret;
@@ -4761,11 +4769,11 @@ yyreduce:
 		free(p);
 		free((yyvsp[0].tv_str));
 	}
-#line 4765 "asn1p_y.c"
+#line 4773 "asn1p_y.c"
     break;
 
   case 300: /* AtNotationElement: '@' '.' ComponentIdList  */
-#line 2196 "asn1p_y.y"
+#line 2198 "asn1p_y.y"
                                   {
 		char *p = malloc(strlen((yyvsp[0].tv_str)) + 3);
 		int ret;
@@ -4778,19 +4786,19 @@ yyreduce:
 		free(p);
 		free((yyvsp[0].tv_str));
 	}
-#line 4782 "asn1p_y.c"
-    break;
-
-  case 301: /* ComponentIdList: Identifier  */
-#line 2212 "asn1p_y.y"
-                   {
-		(yyval.tv_str) = (yyvsp[0].tv_str);
-	}
 #line 4790 "asn1p_y.c"
     break;
 
+  case 301: /* ComponentIdList: Identifier  */
+#line 2214 "asn1p_y.y"
+                   {
+		(yyval.tv_str) = (yyvsp[0].tv_str);
+	}
+#line 4798 "asn1p_y.c"
+    break;
+
   case 302: /* ComponentIdList: ComponentIdList '.' Identifier  */
-#line 2215 "asn1p_y.y"
+#line 2217 "asn1p_y.y"
                                          {
 		int l1 = strlen((yyvsp[-2].tv_str));
 		int l3 = strlen((yyvsp[0].tv_str));
@@ -4802,63 +4810,63 @@ yyreduce:
 		free((yyvsp[-2].tv_str));
 		free((yyvsp[0].tv_str));
 	}
-#line 4806 "asn1p_y.c"
+#line 4814 "asn1p_y.c"
     break;
 
   case 303: /* optMarker: %empty  */
-#line 2235 "asn1p_y.y"
+#line 2237 "asn1p_y.y"
         {
 		(yyval.a_marker).flags = EM_NOMARK;
 		(yyval.a_marker).default_value = 0;
 	}
-#line 4815 "asn1p_y.c"
+#line 4823 "asn1p_y.c"
     break;
 
   case 304: /* optMarker: Marker  */
-#line 2239 "asn1p_y.y"
+#line 2241 "asn1p_y.y"
                  { (yyval.a_marker) = (yyvsp[0].a_marker); }
-#line 4821 "asn1p_y.c"
+#line 4829 "asn1p_y.c"
     break;
 
   case 305: /* Marker: TOK_OPTIONAL  */
-#line 2243 "asn1p_y.y"
+#line 2245 "asn1p_y.y"
                      {
 		(yyval.a_marker).flags = EM_OPTIONAL | EM_INDIRECT;
 		(yyval.a_marker).default_value = 0;
 	}
-#line 4830 "asn1p_y.c"
+#line 4838 "asn1p_y.c"
     break;
 
   case 306: /* Marker: TOK_DEFAULT Value  */
-#line 2247 "asn1p_y.y"
+#line 2249 "asn1p_y.y"
                             {
 		(yyval.a_marker).flags = EM_DEFAULT;
 		(yyval.a_marker).default_value = (yyvsp[0].a_value);
 	}
-#line 4839 "asn1p_y.c"
+#line 4847 "asn1p_y.c"
     break;
 
   case 307: /* IdentifierList: IdentifierElement  */
-#line 2254 "asn1p_y.y"
+#line 2256 "asn1p_y.y"
                       {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
     }
-#line 4849 "asn1p_y.c"
+#line 4857 "asn1p_y.c"
     break;
 
   case 308: /* IdentifierList: IdentifierList ',' IdentifierElement  */
-#line 2259 "asn1p_y.y"
+#line 2261 "asn1p_y.y"
                                            {
 		(yyval.a_expr) = (yyvsp[-2].a_expr);
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
     }
-#line 4858 "asn1p_y.c"
+#line 4866 "asn1p_y.c"
     break;
 
   case 309: /* IdentifierElement: Identifier  */
-#line 2265 "asn1p_y.y"
+#line 2267 "asn1p_y.y"
                {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -4866,30 +4874,30 @@ yyreduce:
 		(yyval.a_expr)->meta_type = AMT_VALUE;
 		(yyval.a_expr)->Identifier = (yyvsp[0].tv_str);
     }
-#line 4870 "asn1p_y.c"
+#line 4878 "asn1p_y.c"
     break;
 
   case 310: /* NamedNumberList: NamedNumber  */
-#line 2274 "asn1p_y.y"
+#line 2276 "asn1p_y.y"
                     {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
 	}
-#line 4880 "asn1p_y.c"
+#line 4888 "asn1p_y.c"
     break;
 
   case 311: /* NamedNumberList: NamedNumberList ',' NamedNumber  */
-#line 2279 "asn1p_y.y"
+#line 2281 "asn1p_y.y"
                                           {
 		(yyval.a_expr) = (yyvsp[-2].a_expr);
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
 	}
-#line 4889 "asn1p_y.c"
+#line 4897 "asn1p_y.c"
     break;
 
   case 312: /* NamedNumber: Identifier '(' SignedNumber ')'  */
-#line 2286 "asn1p_y.y"
+#line 2288 "asn1p_y.y"
                                         {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -4898,11 +4906,11 @@ yyreduce:
 		(yyval.a_expr)->Identifier = (yyvsp[-3].tv_str);
 		(yyval.a_expr)->value = (yyvsp[-1].a_value);
 	}
-#line 4902 "asn1p_y.c"
+#line 4910 "asn1p_y.c"
     break;
 
   case 313: /* NamedNumber: Identifier '(' DefinedValue ')'  */
-#line 2294 "asn1p_y.y"
+#line 2296 "asn1p_y.y"
                                           {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -4911,30 +4919,30 @@ yyreduce:
 		(yyval.a_expr)->Identifier = (yyvsp[-3].tv_str);
 		(yyval.a_expr)->value = (yyvsp[-1].a_value);
 	}
-#line 4915 "asn1p_y.c"
+#line 4923 "asn1p_y.c"
     break;
 
   case 314: /* NamedBitList: NamedBit  */
-#line 2304 "asn1p_y.y"
+#line 2306 "asn1p_y.y"
                  {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
 	}
-#line 4925 "asn1p_y.c"
+#line 4933 "asn1p_y.c"
     break;
 
   case 315: /* NamedBitList: NamedBitList ',' NamedBit  */
-#line 2309 "asn1p_y.y"
+#line 2311 "asn1p_y.y"
                                     {
 		(yyval.a_expr) = (yyvsp[-2].a_expr);
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
 	}
-#line 4934 "asn1p_y.c"
+#line 4942 "asn1p_y.c"
     break;
 
   case 316: /* NamedBit: Identifier '(' "number" ')'  */
-#line 2316 "asn1p_y.y"
+#line 2318 "asn1p_y.y"
                                       {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -4943,11 +4951,11 @@ yyreduce:
 		(yyval.a_expr)->Identifier = (yyvsp[-3].tv_str);
 		(yyval.a_expr)->value = asn1p_value_fromint((yyvsp[-1].a_int));
 	}
-#line 4947 "asn1p_y.c"
+#line 4955 "asn1p_y.c"
     break;
 
   case 317: /* NamedBit: Identifier '(' DefinedValue ')'  */
-#line 2324 "asn1p_y.y"
+#line 2326 "asn1p_y.y"
                                           {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -4956,11 +4964,11 @@ yyreduce:
 		(yyval.a_expr)->Identifier = (yyvsp[-3].tv_str);
 		(yyval.a_expr)->value = (yyvsp[-1].a_value);
 	}
-#line 4960 "asn1p_y.c"
+#line 4968 "asn1p_y.c"
     break;
 
   case 318: /* Enumerations: UniverationList  */
-#line 2334 "asn1p_y.y"
+#line 2336 "asn1p_y.y"
                     {
 		(yyval.a_expr) = (yyvsp[0].a_expr);
         asn1p_expr_t *first_memb = TQ_FIRST(&((yyval.a_expr)->members));
@@ -4974,30 +4982,30 @@ yyreduce:
                 "The ENUMERATION list cannot be empty.");
         }
     }
-#line 4978 "asn1p_y.c"
+#line 4986 "asn1p_y.c"
     break;
 
   case 319: /* UniverationList: UniverationElement  */
-#line 2349 "asn1p_y.y"
+#line 2351 "asn1p_y.y"
                            {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
 	}
-#line 4988 "asn1p_y.c"
+#line 4996 "asn1p_y.c"
     break;
 
   case 320: /* UniverationList: UniverationList ',' UniverationElement  */
-#line 2354 "asn1p_y.y"
+#line 2356 "asn1p_y.y"
                                                  {
 		(yyval.a_expr) = (yyvsp[-2].a_expr);
 		asn1p_expr_add((yyval.a_expr), (yyvsp[0].a_expr));
 	}
-#line 4997 "asn1p_y.c"
+#line 5005 "asn1p_y.c"
     break;
 
   case 321: /* UniverationElement: Identifier  */
-#line 2361 "asn1p_y.y"
+#line 2363 "asn1p_y.y"
                    {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -5005,11 +5013,11 @@ yyreduce:
 		(yyval.a_expr)->meta_type = AMT_VALUE;
 		(yyval.a_expr)->Identifier = (yyvsp[0].tv_str);
 	}
-#line 5009 "asn1p_y.c"
+#line 5017 "asn1p_y.c"
     break;
 
   case 322: /* UniverationElement: Identifier '(' SignedNumber ')'  */
-#line 2368 "asn1p_y.y"
+#line 2370 "asn1p_y.y"
                                           {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -5018,11 +5026,11 @@ yyreduce:
 		(yyval.a_expr)->Identifier = (yyvsp[-3].tv_str);
 		(yyval.a_expr)->value = (yyvsp[-1].a_value);
 	}
-#line 5022 "asn1p_y.c"
+#line 5030 "asn1p_y.c"
     break;
 
   case 323: /* UniverationElement: Identifier '(' DefinedValue ')'  */
-#line 2376 "asn1p_y.y"
+#line 2378 "asn1p_y.y"
                                           {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -5031,11 +5039,11 @@ yyreduce:
 		(yyval.a_expr)->Identifier = (yyvsp[-3].tv_str);
 		(yyval.a_expr)->value = (yyvsp[-1].a_value);
 	}
-#line 5035 "asn1p_y.c"
+#line 5043 "asn1p_y.c"
     break;
 
   case 324: /* UniverationElement: SignedNumber  */
-#line 2384 "asn1p_y.y"
+#line 2386 "asn1p_y.y"
                        {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -5043,11 +5051,11 @@ yyreduce:
 		(yyval.a_expr)->meta_type = AMT_VALUE;
 		(yyval.a_expr)->value = (yyvsp[0].a_value);
 	}
-#line 5047 "asn1p_y.c"
+#line 5055 "asn1p_y.c"
     break;
 
   case 325: /* UniverationElement: "..."  */
-#line 2391 "asn1p_y.y"
+#line 2393 "asn1p_y.y"
                         {
 		(yyval.a_expr) = NEW_EXPR();
 		checkmem((yyval.a_expr));
@@ -5056,169 +5064,169 @@ yyreduce:
 		(yyval.a_expr)->expr_type = A1TC_EXTENSIBLE;
 		(yyval.a_expr)->meta_type = AMT_VALUE;
 	}
-#line 5060 "asn1p_y.c"
+#line 5068 "asn1p_y.c"
     break;
 
   case 326: /* SignedNumber: "number"  */
-#line 2402 "asn1p_y.y"
+#line 2404 "asn1p_y.y"
                    {
 		(yyval.a_value) = asn1p_value_fromint((yyvsp[0].a_int));
 		checkmem((yyval.a_value));
 	}
-#line 5069 "asn1p_y.c"
+#line 5077 "asn1p_y.c"
     break;
 
   case 327: /* SignedNumber: "negative number"  */
-#line 2406 "asn1p_y.y"
+#line 2408 "asn1p_y.y"
                               {
 		(yyval.a_value) = asn1p_value_fromint((yyvsp[0].a_int));
 		checkmem((yyval.a_value));
 	}
-#line 5078 "asn1p_y.c"
+#line 5086 "asn1p_y.c"
     break;
 
   case 328: /* RealValue: TOK_realnumber  */
-#line 2413 "asn1p_y.y"
+#line 2415 "asn1p_y.y"
                        {
 		(yyval.a_value) = asn1p_value_fromdouble((yyvsp[0].a_dbl));
 		checkmem((yyval.a_value));
 	}
-#line 5087 "asn1p_y.c"
+#line 5095 "asn1p_y.c"
     break;
 
   case 329: /* optTag: %empty  */
-#line 2444 "asn1p_y.y"
+#line 2446 "asn1p_y.y"
         { memset(&(yyval.a_tag), 0, sizeof((yyval.a_tag))); }
-#line 5093 "asn1p_y.c"
+#line 5101 "asn1p_y.c"
     break;
 
   case 330: /* optTag: Tag  */
-#line 2445 "asn1p_y.y"
+#line 2447 "asn1p_y.y"
               { (yyval.a_tag) = (yyvsp[0].a_tag); }
-#line 5099 "asn1p_y.c"
+#line 5107 "asn1p_y.c"
     break;
 
   case 331: /* Tag: TagTypeValue TagPlicit  */
-#line 2449 "asn1p_y.y"
+#line 2451 "asn1p_y.y"
                                {
 		(yyval.a_tag) = (yyvsp[-1].a_tag);
 		(yyval.a_tag).tag_mode = (yyvsp[0].a_tag).tag_mode;
 	}
-#line 5108 "asn1p_y.c"
+#line 5116 "asn1p_y.c"
     break;
 
   case 332: /* TagTypeValue: '[' TagClass "number" ']'  */
-#line 2456 "asn1p_y.y"
+#line 2458 "asn1p_y.y"
                                     {
 		(yyval.a_tag) = (yyvsp[-2].a_tag);
 		(yyval.a_tag).tag_value = (yyvsp[-1].a_int);
 	}
-#line 5117 "asn1p_y.c"
+#line 5125 "asn1p_y.c"
     break;
 
   case 333: /* TagClass: %empty  */
-#line 2462 "asn1p_y.y"
+#line 2464 "asn1p_y.y"
         { (yyval.a_tag).tag_class = TC_CONTEXT_SPECIFIC; }
-#line 5123 "asn1p_y.c"
+#line 5131 "asn1p_y.c"
     break;
 
   case 334: /* TagClass: TOK_UNIVERSAL  */
-#line 2463 "asn1p_y.y"
+#line 2465 "asn1p_y.y"
                         { (yyval.a_tag).tag_class = TC_UNIVERSAL; }
-#line 5129 "asn1p_y.c"
+#line 5137 "asn1p_y.c"
     break;
 
   case 335: /* TagClass: TOK_APPLICATION  */
-#line 2464 "asn1p_y.y"
+#line 2466 "asn1p_y.y"
                           { (yyval.a_tag).tag_class = TC_APPLICATION; }
-#line 5135 "asn1p_y.c"
+#line 5143 "asn1p_y.c"
     break;
 
   case 336: /* TagClass: TOK_PRIVATE  */
-#line 2465 "asn1p_y.y"
+#line 2467 "asn1p_y.y"
                       { (yyval.a_tag).tag_class = TC_PRIVATE; }
-#line 5141 "asn1p_y.c"
+#line 5149 "asn1p_y.c"
     break;
 
   case 337: /* TagPlicit: %empty  */
-#line 2469 "asn1p_y.y"
+#line 2471 "asn1p_y.y"
         { (yyval.a_tag).tag_mode = TM_DEFAULT; }
-#line 5147 "asn1p_y.c"
+#line 5155 "asn1p_y.c"
     break;
 
   case 338: /* TagPlicit: TOK_IMPLICIT  */
-#line 2470 "asn1p_y.y"
+#line 2472 "asn1p_y.y"
                        { (yyval.a_tag).tag_mode = TM_IMPLICIT; }
-#line 5153 "asn1p_y.c"
+#line 5161 "asn1p_y.c"
     break;
 
   case 339: /* TagPlicit: TOK_EXPLICIT  */
-#line 2471 "asn1p_y.y"
+#line 2473 "asn1p_y.y"
                        { (yyval.a_tag).tag_mode = TM_EXPLICIT; }
-#line 5159 "asn1p_y.c"
+#line 5167 "asn1p_y.c"
     break;
 
   case 340: /* TypeRefName: TOK_typereference  */
-#line 2475 "asn1p_y.y"
+#line 2477 "asn1p_y.y"
                           {
 		checkmem((yyvsp[0].tv_str));
 		(yyval.tv_str) = (yyvsp[0].tv_str);
 	}
-#line 5168 "asn1p_y.c"
+#line 5176 "asn1p_y.c"
     break;
 
   case 341: /* TypeRefName: TOK_capitalreference  */
-#line 2479 "asn1p_y.y"
+#line 2481 "asn1p_y.y"
                                {
 		checkmem((yyvsp[0].tv_str));
 		(yyval.tv_str) = (yyvsp[0].tv_str);
 	}
-#line 5177 "asn1p_y.c"
+#line 5185 "asn1p_y.c"
     break;
 
   case 342: /* optIdentifier: %empty  */
-#line 2487 "asn1p_y.y"
+#line 2489 "asn1p_y.y"
         { (yyval.tv_str) = 0; }
-#line 5183 "asn1p_y.c"
-    break;
-
-  case 343: /* optIdentifier: Identifier  */
-#line 2488 "asn1p_y.y"
-                     {
-		(yyval.tv_str) = (yyvsp[0].tv_str);
-	}
 #line 5191 "asn1p_y.c"
     break;
 
+  case 343: /* optIdentifier: Identifier  */
+#line 2490 "asn1p_y.y"
+                     {
+		(yyval.tv_str) = (yyvsp[0].tv_str);
+	}
+#line 5199 "asn1p_y.c"
+    break;
+
   case 344: /* Identifier: "identifier"  */
-#line 2494 "asn1p_y.y"
+#line 2496 "asn1p_y.y"
                        {
 		checkmem((yyvsp[0].tv_str));
 		(yyval.tv_str) = (yyvsp[0].tv_str);
 	}
-#line 5200 "asn1p_y.c"
+#line 5208 "asn1p_y.c"
     break;
 
   case 345: /* IdentifierAsReference: Identifier  */
-#line 2501 "asn1p_y.y"
+#line 2503 "asn1p_y.y"
                {
 		(yyval.a_ref) = asn1p_ref_new(yylineno, currentModule);
 		asn1p_ref_add_component((yyval.a_ref), (yyvsp[0].tv_str), RLT_lowercase);
 		free((yyvsp[0].tv_str));
     }
-#line 5210 "asn1p_y.c"
-    break;
-
-  case 346: /* IdentifierAsValue: IdentifierAsReference  */
-#line 2508 "asn1p_y.y"
-                          {
-		(yyval.a_value) = asn1p_value_fromref((yyvsp[0].a_ref), 0);
-    }
 #line 5218 "asn1p_y.c"
     break;
 
+  case 346: /* IdentifierAsValue: IdentifierAsReference  */
+#line 2510 "asn1p_y.y"
+                          {
+		(yyval.a_value) = asn1p_value_fromref((yyvsp[0].a_ref), 0);
+    }
+#line 5226 "asn1p_y.c"
+    break;
 
-#line 5222 "asn1p_y.c"
+
+#line 5230 "asn1p_y.c"
 
       default: break;
     }
@@ -5411,7 +5419,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 2512 "asn1p_y.y"
+#line 2514 "asn1p_y.y"
 
 
 

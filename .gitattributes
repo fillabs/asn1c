@@ -1,0 +1,3 @@
+*.ac text eol=LF
+*.am text eol=LF
+*.m4 text eol=LF
