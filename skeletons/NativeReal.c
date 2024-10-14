@@ -46,6 +46,7 @@ asn_TYPE_operation_t asn_OP_NativeReal = {
     0,
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
     NativeReal_compare,
+    NativeReal_copy,
 #if !defined(ASN_DISABLE_BER_SUPPORT)
     NativeReal_decode_ber,
     NativeReal_encode_der,
@@ -61,8 +62,10 @@ asn_TYPE_operation_t asn_OP_NativeReal = {
     0,
 #endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
+    NativeReal_decode_jer,
     NativeReal_encode_jer,
 #else
+    0,
     0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 #if !defined(ASN_DISABLE_OER_SUPPORT)
@@ -108,6 +111,9 @@ asn_TYPE_descriptor_t asn_DEF_NativeReal = {
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
         0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+        0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
         asn_generic_no_constraint
     },
     0, 0,  /* No members */
@@ -145,6 +151,35 @@ NativeReal_compare(const asn_TYPE_descriptor_t *td, const void *aptr,
     } else {
         return 1;
     }
+}
+
+int
+NativeReal_copy(const asn_TYPE_descriptor_t *td, void **aptr,
+                   const void *bptr) {
+    size_t float_size = NativeReal__float_size(td);
+    void *a = *aptr;
+    const void *b = bptr;
+
+    if(!b) {
+        if(a) {
+            FREEMEM(a);
+            *aptr = 0;
+        }
+        return 0;
+    }
+
+    if(!a) {
+        a = *aptr = MALLOC(float_size);
+        if(!a) return -1;
+    }
+
+    if(float_size == sizeof(float)) {
+        *(float *)a = *(const float *)b;
+    } else {
+        *(double *)a = *(const double *)b;
+    }
+
+    return 0;
 }
 
 void

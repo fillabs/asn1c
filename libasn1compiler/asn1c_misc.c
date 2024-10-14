@@ -38,14 +38,28 @@ reserved_keyword(const char *str) {
 	return 0;
 }
 
-const char *
-asn1c_prefix()
-{
-	const char *prefix = getenv("ASN1C_PREFIX");
+const char *asn1c_prefix = NULL;
 
-	if(!prefix) prefix = "";
+void 
+asn1c_prefix_set(const char *prefix) {
+    asn1c_prefix = prefix;
+}
 
-	return prefix;
+const char * 
+asn1c_prefix_get() {
+	const char *prefix;
+
+    prefix = asn1c_prefix;
+    if (prefix) 
+        return prefix;
+
+    prefix = getenv("ASN1C_PREFIX");
+    if (prefix) 
+        return prefix;
+
+    prefix = "";
+
+    return prefix;
 }
 
 /*
@@ -68,7 +82,7 @@ asn1c_make_identifier(enum ami_flags_e flags, asn1p_expr_t *expr, ...) {
 	int sptr_cnt = 0;
 
 	if(flags & AMI_USE_PREFIX)
-		prefix = asn1c_prefix();
+		prefix = asn1c_prefix_get();
 
 	if(expr) {
 		/*
@@ -348,7 +362,7 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 		}
 	}
 
-	prefix = stdname ? "" : asn1c_prefix();
+	prefix = stdname ? "" : asn1c_prefix_get();
 
 	switch(_format) {
 	case TNF_UNMODIFIED:

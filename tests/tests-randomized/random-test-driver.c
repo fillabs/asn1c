@@ -23,6 +23,7 @@ static const struct encoding_map {
     {"OER", "oer", ATS_CANONICAL_OER},
     {"UPER", "uper", ATS_UNALIGNED_CANONICAL_PER},
     {"XER", "xer", ATS_CANONICAL_XER},
+    {"JER", "jer", ATS_JER},
 };
 
 static enum asn_transfer_syntax
@@ -52,7 +53,7 @@ static void __attribute__((constructor)) initialize() {
     syntax = lookup_syntax(data_dir);
     if(syntax == ATS_INVALID) {
         fprintf(stderr,
-                "Expected ASN1_DATA_DIR={der,oer,uper,xer} environment "
+                "Expected ASN1_DATA_DIR={der,oer,uper,xer,jer} environment "
                 "variable.\n");
         exit(EX_UNAVAILABLE);
     }
@@ -93,7 +94,8 @@ usage(const char *progname) {
             "BER)\n"
             "   OER             Canonical Octet Encoding Rules\n"
             "   UPER            Canonical Unaligned Packed Encoding Rules\n"
-            "   XER             XML Encoding Rules\n",
+            "   XER             XML Encoding Rules\n"
+            "   JER             JSON Encoding Rules\n",
             progname);
 }
 
@@ -325,12 +327,85 @@ check_random_roundtrip(enum asn_transfer_syntax syntax, size_t max_random_value_
             enc.name);
 }
 
+static void
+check_copy_op(enum asn_transfer_syntax syntax, size_t max_random_value_size, int iterations, int debug) {
+    struct encoding_map enc;
+
+    for(size_t i = 0; i < sizeof(encodings)/sizeof(encodings[0]); i++) {
+        enc = encodings[i];
+        if(enc.syntax == syntax) {
+            fprintf(stderr, "Testing %d iterations of round-trip for %s\n",
+                    iterations, enc.name);
+            break;
+        }
+    }
+
+    for(int i = 0; i < iterations; i++) {
+        T_t *structure = 0;
+        T_t *new_structure = 0;
+
+        if(asn_random_fill(&asn_DEF_T, (void **)&structure,
+                           max_random_value_size)
+           == -1) {
+            assert(structure == 0);
+            fprintf(stderr, "Can't generate %d'th value, skipping\n", i);
+            continue;
+        }
+        assert(structure != 0);
+
+        if(debug) {
+            fprintf(stderr, "Random structure %s:\n",
+                    sizeof(ASN1_STR) > 60 ? "T" : ASN1_STR);
+            asn_fprint(stderr, &asn_DEF_T, structure);
+            xer_fprint(stderr, &asn_DEF_T, structure);
+        }
+
+        int cr = asn_DEF_T.op->copy_struct(&asn_DEF_T, (void**)&new_structure, 
+                                           structure);
+        if(cr != 0) {
+            fprintf(stderr, "Copying structure %s:\n",
+                    sizeof(ASN1_STR) > 60 ? "T" : ASN1_STR);
+            asn_fprint(stderr, &asn_DEF_T, structure);
+            assert(cr == 0);
+            exit(EX_SOFTWARE);
+        }
+        assert(new_structure != 0);
+
+        /*
+         * Confirm that we decoded the same data.
+         */
+        int cmp = asn_DEF_T.op->compare_struct(&asn_DEF_T, structure,
+                                               new_structure);
+        if(cmp != 0 || debug) {
+            fprintf(stderr, "Random %s value:\n", ASN1_STR);
+            asn_fprint(stderr, &asn_DEF_T, structure);
+            xer_fprint(stderr, &asn_DEF_T, structure);
+            fprintf(stderr, "Copied %s value:\n", ASN1_STR);
+            asn_fprint(stderr, &asn_DEF_T, new_structure);
+            xer_fprint(stderr, &asn_DEF_T, new_structure);
+            assert(cmp == 0);
+        }
+        ASN_STRUCT_FREE(asn_DEF_T, structure);
+        ASN_STRUCT_FREE(asn_DEF_T, new_structure);
+
+        if(i < 5) {
+            fprintf(stderr, "[%03d] copy OK\n", i);
+        } else if(i == 5) {
+            fprintf(stderr, "... and so on\n");
+        }
+    }
+
+    fprintf(stderr, "OK %d iterations of copy-op for %s\n", iterations,
+            enc.name);
+}
+
 int main(int argc, char **argv) {
     uint32_t enabled_encodings = 0;
     enum {
         MODE_UNKNOWN,
         MODE_GENERATE_RANDOM_DATA,
-        MODE_CHECK_RANDOM_ROUNDTRIP
+        MODE_CHECK_RANDOM_ROUNDTRIP,
+        MODE_CHECK_COPY_OP
     } mode = MODE_UNKNOWN;
     const char *generate_into_dir = NULL;
     int iterations = 100;
@@ -338,7 +413,7 @@ int main(int argc, char **argv) {
     int debug = 0;
     int c;
 
-    while((c = getopt(argc, argv, "cde:g:hn:s:")) != -1) {
+    while((c = getopt(argc, argv, "cde:g:hn:s:y")) != -1) {
         switch(c) {
         case 'c':
             mode = MODE_CHECK_RANDOM_ROUNDTRIP;
@@ -375,6 +450,9 @@ int main(int argc, char **argv) {
             }
             max_random_value_size = atoi(optarg);
             break;
+        case 'y':
+            mode = MODE_CHECK_COPY_OP;
+            break;
         default:
             usage(argv[0]);
             exit(2);
@@ -405,6 +483,10 @@ int main(int argc, char **argv) {
             case MODE_CHECK_RANDOM_ROUNDTRIP:
                 check_random_roundtrip(syntax, max_random_value_size,
                                        iterations, debug);
+                break;
+            case MODE_CHECK_COPY_OP:
+                check_copy_op(syntax, max_random_value_size,
+                              iterations, debug);
                 break;
             }
         }

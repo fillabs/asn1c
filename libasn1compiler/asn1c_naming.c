@@ -193,7 +193,7 @@ c_name_impl(arg_t *arg, asn1p_expr_t *expr, int avoid_keywords) {
     construct_base_name(&tmp_compoundable_part_name, expr, compound_names, 0, 0);
     construct_base_name(&compound_part_name, expr, 1, 0, 0);
 
-    if(strlen(asn1c_prefix()) == 0) {
+    if(strlen(asn1c_prefix_get()) == 0) {
         if(!expr->_anonymous_type) {
             if(arg->embed) {
                 abuf_printf(&b_short_name, "%s", b_as_member.buffer);
@@ -209,16 +209,16 @@ c_name_impl(arg_t *arg, asn1p_expr_t *expr, int avoid_keywords) {
    } else {
         if(!expr->_anonymous_type) {
             if(arg->embed) {
-                abuf_printf(&b_short_name, "%s%s", asn1c_prefix(), b_as_member.buffer);
+                abuf_printf(&b_short_name, "%s%s", asn1c_prefix_get(), b_as_member.buffer);
             } else {
-                abuf_printf(&b_short_name, "%s%s_t", asn1c_prefix(), b_as_member.buffer);
+                abuf_printf(&b_short_name, "%s%s_t", asn1c_prefix_get(), b_as_member.buffer);
             }
         }
-        abuf_printf(&b_full_name, "struct %s%s", asn1c_prefix(), b_base_name.buffer);
-        abuf_printf(&b_presence_enum, "enum %s%s_PR", asn1c_prefix(), tmp_compoundable_part_name.buffer);
-        abuf_printf(&b_presence_name, "%s%s_PR", asn1c_prefix(), tmp_compoundable_part_name.buffer);
-        abuf_printf(&b_members_enum, "enum %s%s", asn1c_prefix(), b_base_name.buffer);
-        abuf_printf(&b_members_name, "e_%s%s", asn1c_prefix(), tmp_compoundable_part_name.buffer);
+        abuf_printf(&b_full_name, "struct %s%s", asn1c_prefix_get(), b_base_name.buffer);
+        abuf_printf(&b_presence_enum, "enum %s%s_PR", asn1c_prefix_get(), tmp_compoundable_part_name.buffer);
+        abuf_printf(&b_presence_name, "%s%s_PR", asn1c_prefix_get(), tmp_compoundable_part_name.buffer);
+        abuf_printf(&b_members_enum, "enum %s%s", asn1c_prefix_get(), b_base_name.buffer);
+        abuf_printf(&b_members_name, "e_%s%s", asn1c_prefix_get(), tmp_compoundable_part_name.buffer);
     }
 
     names.type.asn_name = b_type_asn_name.buffer;
@@ -268,7 +268,7 @@ c_member_name(arg_t *arg, asn1p_expr_t *expr) {
     abuf_clear(&ab);
 
     /* NB: do not use part_name, doesn't work for -fcompound-names */
-    abuf_str(&ab, asn1c_prefix());
+    abuf_str(&ab, asn1c_prefix_get());
     abuf_str(&ab, c_name_impl(arg, arg->expr, 0).base_name);
     abuf_str(&ab, "_");
     abuf_str(&ab, asn1c_make_identifier(0, expr, 0));
@@ -283,7 +283,7 @@ c_presence_name(arg_t *arg, asn1p_expr_t *expr) {
 
     abuf_clear(&ab);
 
-    abuf_str(&ab, asn1c_prefix());
+    abuf_str(&ab, asn1c_prefix_get());
     if(expr) {
         /* NB: do not use part_name, doesn't work for -fcompound-names */
         abuf_str(&ab, c_name_impl(arg, arg->expr, 0).base_name);

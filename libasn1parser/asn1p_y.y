@@ -1832,7 +1832,9 @@ optManyConstraints:
 optSizeOrConstraint:
 	{ $$ = 0; }
 	| Constraint
-	| SizeConstraint
+	| SizeConstraint {
+		CONSTRAINT_INSERT($$, ACT_CA_SET, $1, 0);
+    }
 	;
 
 Constraint:

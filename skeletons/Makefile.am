@@ -102,8 +102,10 @@ libasn1cskeletons_la_SOURCES =                  \
     uper_support.c uper_support.h               \
     xer_decoder.c xer_decoder.h                 \
     xer_encoder.c xer_encoder.h                 \
+    jer_decoder.c jer_decoder.h                 \
     jer_encoder.c jer_encoder.h                 \
     xer_support.c xer_support.h                 \
+    jer_support.c jer_support.h                 \
     ANY_aper.c                                  \
     ANY_ber.c                                   \
     ANY_uper.c                                  \
@@ -125,6 +127,7 @@ libasn1cskeletons_la_SOURCES =                  \
     BOOLEAN_xer.c                               \
     BOOLEAN_jer.c                               \
     ENUMERATED_aper.c                           \
+    ENUMERATED_jer.c                            \
     ENUMERATED_oer.c                            \
     ENUMERATED_uper.c                           \
     GeneralizedTime_ber.c                       \
@@ -181,6 +184,7 @@ libasn1cskeletons_la_SOURCES =                  \
     OPEN_TYPE_ber.c                             \
     OPEN_TYPE_uper.c                            \
     OPEN_TYPE_xer.c                             \
+    OPEN_TYPE_jer.c                             \
     REAL_aper.c                                 \
     REAL_oer.c                                  \
     REAL_print.c                                \
@@ -203,6 +207,7 @@ libasn1cskeletons_la_SOURCES =                  \
     UniversalString_jer.c                       \
     asn_codecs_prim_ber.c                       \
     asn_codecs_prim_xer.c                       \
+    asn_codecs_prim_jer.c                       \
     constr_CHOICE_aper.c                        \
     constr_CHOICE_ber.c                         \
     constr_CHOICE_print.c                       \

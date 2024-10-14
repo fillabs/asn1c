@@ -162,6 +162,8 @@ static syntax_selector input_encodings[] = {
      "Input is in Aligned PER (Packed Encoding Rules)"},
     {"xer", ATS_BASIC_XER, CODEC_OFFSET(xer_decoder),
      "Input is in XER (XML Encoding Rules)"},
+    {"jer", ATS_JER, CODEC_OFFSET(jer_decoder),
+     "Input is in JER (JSON Encoding Rules)"},
     {0, ATS_INVALID, 0, 0}};
 
 static syntax_selector output_encodings[] = {

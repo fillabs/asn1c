@@ -282,6 +282,52 @@ asn1p_wsyntx_clone(asn1p_wsyntx_t *wx) {
 	return nw;
 }
 
+asn1p_wsyntx_t*
+asn1p_wsyntx_default(const struct asn1p_expr_s *eclass) {
+    /* 
+     * Default syntax: { &literal field , * } 
+     */
+    asn1p_wsyntx_t *syntax;
+    asn1p_expr_t *member;
+    asn1p_wsyntx_chunk_t *chunk;
+
+    syntax = asn1p_wsyntx_new();
+    if(!syntax) {
+        return NULL;
+    }
+
+#define ADD_DC(ctype, ctoken) \
+    do { \
+        chunk = asn1p_wsyntx_chunk_new(); \
+        if(!chunk) { \
+            asn1p_wsyntx_free(syntax); \
+            return NULL; \
+        } \
+        chunk->type = ctype; \
+        chunk->content.token = strdup(ctoken); \
+        TQ_ADD(&(syntax->chunks), chunk, next); \
+    } while(0)
+
+    TQ_FOR(member, (&eclass->members), next) {
+
+        /* &literal */
+        ADD_DC(WC_LITERAL, member->Identifier);
+
+        /* whitespace */
+        ADD_DC(WC_WHITESPACE, " ");
+
+        /* field */
+        ADD_DC(WC_FIELD, member->Identifier);
+
+        /* comma separator */
+        if(TQ_NEXT(member, next)) {
+            ADD_DC(WC_LITERAL, ",");
+        }
+    }
+
+    return syntax;
+}
+
 asn1p_wsyntx_chunk_t *
 asn1p_wsyntx_chunk_fromstring(char *token, int do_copy) {
 	asn1p_wsyntx_chunk_t *wc;

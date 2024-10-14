@@ -187,6 +187,16 @@ compile_and_test() {
         return 3
     fi
 
+    echo "Checking random data copy"
+    copy_check_cmd="${ASAN_ENV_FLAGS} ./random-test-driver -s ${rmax} ${encodings} -y"
+    echo "(${reproduce_make} && ${copy_check_cmd})" > .test-reproduce
+    if eval "$copy_check_cmd"; then
+        echo "Copy test OK"
+    else
+        { echo "RETRY:"; cat .test-reproduce ; }
+        return 3
+    fi
+
     echo "Generating new random data"
     rm -rf random-data
     cmd="${ASAN_ENV_FLAGS} UBSAN_OPTIONS=print_stacktrace=1"

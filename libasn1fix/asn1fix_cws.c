@@ -31,12 +31,6 @@ asn1f_check_class_object(arg_t *arg) {
 		return 0;
 	}
 
-	if(!eclass->with_syntax) {
-		DEBUG("Can't process classes without %s just yet",
-			"WITH SYNTAX");
-		return 0;
-	}
-
 	row = asn1p_ioc_row_new(eclass);
 	assert(row);
 
@@ -266,12 +260,6 @@ asn1f_parse_class_object(arg_t *arg) {
 	DEBUG("Value %s of CLASS %s found at line %d",
 		expr->Identifier, eclass->Identifier, expr->_lineno);
 
-	if(!eclass->with_syntax) {
-		DEBUG("Can't process classes without %s just yet",
-			"WITH SYNTAX");
-		return 0;
-	}
-
     struct parse_object_key key = {
         .arg = arg,
         .expr = expr,
@@ -308,10 +296,70 @@ asn1f_parse_class_object(arg_t *arg) {
 	return 0;
 }
 
-#define	SKIPSPACES	for(; buf < bend && isspace(*buf); buf++)
+#define	SKIPSPACES \
+    for(; buf < bend && isspace(*buf); buf++)
 
 static int
-_asn1f_parse_class_object_data(arg_t *arg, asn1p_expr_t *eclass,
+_asn1f_parse_class_object_data_default_syntx(arg_t *arg, asn1p_expr_t *eclass,
+		struct asn1p_ioc_row_s *row, asn1p_wsyntx_t *syntax,
+		const uint8_t *buf, const uint8_t *bend,
+		int optional_mode, const uint8_t **newpos, int counter) {
+    int ret;
+
+    /* Default syntax: { FieldSetting , * }
+     * where, FieldSetting ::= PrimitiveFieldName Setting
+     * and, FieldSetting is a reference and Setting is not
+     * Contrary to with the defined WITH SYNTAX, 
+     * FieldSetting's can appear in any order */
+
+    asn1p_expr_t* cm;
+    SKIPSPACES;
+    for (; buf < bend; ++buf) {
+        /* find possible literal PrimitiveFieldName */
+        if(*buf != '&') {
+            continue;
+        }
+        TQ_FOR(cm, &(eclass->members), next) {
+            /* PrimitiveFieldName */
+			int id_len = strlen(cm->Identifier);
+            if(id_len > (bend - buf)) {
+                continue;
+            }
+            if(memcmp(buf, cm->Identifier, id_len) == 0) {
+                buf += strlen(cm->Identifier);
+                SKIPSPACES;
+
+                /* Setting */
+                const uint8_t *p = 0;
+                for(p = buf; p < bend && (*p) != ','; p++) {}
+
+                struct asn1p_ioc_cell_s *cell;
+                cell = asn1p_ioc_row_cell_fetch(row,
+                        cm->Identifier);
+                if(cell == NULL) {
+                    if(newpos) *newpos = buf;
+                    return -1;
+                }
+                DEBUG("Reference %s satisfied by %s (%d)",
+                        cm->Identifier,
+                        buf, p - buf);
+                ret = _asn1f_assign_cell_value(arg, cell, buf, p, counter);
+                if(ret) return ret;
+                buf = p;
+                SKIPSPACES;
+                if(newpos) *newpos = buf;
+
+                break;
+            }
+        }
+    }
+
+	if(newpos) *newpos = buf;
+	return 0;
+}
+
+static int
+_asn1f_parse_class_object_data_defined_syntx(arg_t *arg, asn1p_expr_t *eclass,
 		struct asn1p_ioc_row_s *row, asn1p_wsyntx_t *syntax,
 		const uint8_t *buf, const uint8_t *bend,
 		int optional_mode, const uint8_t **newpos, int counter) {
@@ -389,6 +437,27 @@ _asn1f_parse_class_object_data(arg_t *arg, asn1p_expr_t *eclass,
 
 	if(newpos) *newpos = buf;
 	return 0;
+}
+
+static int
+_asn1f_parse_class_object_data(arg_t *arg, asn1p_expr_t *eclass,
+		struct asn1p_ioc_row_s *row, asn1p_wsyntx_t *syntax,
+		const uint8_t *buf, const uint8_t *bend,
+		int optional_mode, const uint8_t **newpos, int counter) {
+
+    if(!eclass->with_syntax) {
+        /* Assume default syntax */
+        return 
+            _asn1f_parse_class_object_data_default_syntx(
+                    arg, eclass, row, syntax, buf, bend, 
+                    optional_mode, newpos, counter);
+    } else {
+        /* WITH SYNTAX {} */
+        return 
+            _asn1f_parse_class_object_data_defined_syntx(
+                    arg, eclass, row, syntax, buf, bend, 
+                    optional_mode, newpos, counter);
+    }
 }
 
 

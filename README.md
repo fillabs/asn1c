@@ -2,7 +2,7 @@
 
 ASN.1 to C compiler takes the ASN.1 module files (example) and generates
 the C++ compatible C source code. That code can be used to serialize
-the native C structures into compact and unambiguous BER/OER/PER/XER-based
+the native C structures into compact and unambiguous BER/OER/PER/XER/JER-based
 data files, and deserialize the files back.
 
 Various ASN.1 based formats are widely used in the industry,
@@ -40,10 +40,11 @@ BASIC-OER      | oer_encode()               | *-OER         | oer_decode()
 CANONICAL-OER  | oer_encode()               | *-OER         | oer_decode()
 BASIC-UPER     | uper_encode()              | *-UPER        | uper_decode()
 CANONICAL-UPER | uper_encode()              | *-UPER        | uper_decode()
-*-APER         | _not supported_            | *-APER        | _not supported_
+BASIC-APER     | aper_encode()              | *-APER        | aper_decode()
+CANONICAL-APER | aper_encode()              | *-APER        | aper_decode()
 BASIC-XER      | xer_encode(XER_F_BASIC)    | *-XER         | xer_decode()
 CANONICAL-XER  | xer_encode(XER_F_CANONICAL)| *-XER         | xer_decode()
-JER            | jer_encode()               | JER           | _not supported_
+JER            | jer_encode()               | JER           | jer_decode()
 
 *) Asterisk means both BASIC and CANONICAL variants.
 </details>

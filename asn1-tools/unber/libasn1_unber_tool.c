@@ -53,6 +53,7 @@
 #include <RELATIVE-OID_rfill.c>
 #include <asn_codecs_prim.c>
 #include <asn_codecs_prim_ber.c>
+#include <asn_codecs_prim_jer.c>
 #include <asn_codecs_prim_xer.c>
 #include <asn1p_integer.c>
 #include <asn_internal.c>
@@ -824,6 +825,24 @@ xer_decode_general(const asn_codec_ctx_t *opt_codec_ctx, asn_struct_ctx_t *ctx,
     return rv;
 }
 
+asn_dec_rval_t
+jer_decode_general(const asn_codec_ctx_t *opt_codec_ctx, asn_struct_ctx_t *ctx,
+                   void *struct_key, const void *buf_ptr, size_t size,
+                   int (*otd)(void *struct_key, const void *chunk_buf,
+                              size_t chunk_size),
+                   ssize_t (*br)(void *struct_key, const void *chunk_buf,
+                                 size_t chunk_size, int have_more)) {
+    asn_dec_rval_t rv = {0, 0};
+    (void)opt_codec_ctx;
+    (void)ctx;
+    (void)struct_key;
+    (void)buf_ptr;
+    (void)size;
+    (void)otd;
+    (void)br;
+    return rv;
+}
+
 size_t
 xer_whitespace_span(const void *chunk_buf, size_t chunk_size) {
     (void)chunk_buf;
@@ -831,8 +850,24 @@ xer_whitespace_span(const void *chunk_buf, size_t chunk_size) {
     return 0;
 }
 
+size_t
+jer_whitespace_span(const void *chunk_buf, size_t chunk_size) {
+    (void)chunk_buf;
+    (void)chunk_size;
+    return 0;
+}
+
 int
 OCTET_STRING_compare(const asn_TYPE_descriptor_t *td, const void *a,
+                     const void *b) {
+    (void)td;
+    (void)a;
+    (void)b;
+    return 0;
+}
+
+int
+OCTET_STRING_copy(const asn_TYPE_descriptor_t *td, void **a,
                      const void *b) {
     (void)td;
     (void)a;

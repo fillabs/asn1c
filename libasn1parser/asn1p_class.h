@@ -84,6 +84,10 @@ asn1p_wsyntx_chunk_t *asn1p_wsyntx_chunk_clone(asn1p_wsyntx_chunk_t *);
 asn1p_wsyntx_t *asn1p_wsyntx_new(void);
 void asn1p_wsyntx_free(asn1p_wsyntx_t *);
 asn1p_wsyntx_t *asn1p_wsyntx_clone(asn1p_wsyntx_t *);
+/*
+ * Creates a default syntax of some class
+ */
+asn1p_wsyntx_t *asn1p_wsyntx_default(const struct asn1p_expr_s *eclass);
 
 /*
  * RETURN VALUES:

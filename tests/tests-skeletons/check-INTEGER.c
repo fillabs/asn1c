@@ -2,9 +2,11 @@
 #include <assert.h>
 
 #include <asn_application.h>
+#include <asn_system.h>
 #include <INTEGER.h>
 
 #define CHECK_XER(a,b,c)        check_xer(__LINE__, a, b, c)
+#define CHECK_JER(a,b,c)        check_jer(__LINE__, a, b, c)
 
 static char *shared_scratch_start;
 
@@ -101,7 +103,7 @@ check_unsigned(uint8_t *buf, int size, unsigned long check_long, int check_ret) 
 	printf("]: ");
 
 	ret = asn_INTEGER2ulong(&val, &rlong);
-	printf(" (%lu, %d) vs (%lu, %d)\n",
+	printf(" (%ju, %d) vs (%ju, %d)\n",
 		rlong, ret, check_long, check_ret);
 	assert(ret == check_ret);
 	assert(rlong == check_long);
@@ -132,7 +134,137 @@ check_unsigned(uint8_t *buf, int size, unsigned long check_long, int check_ret) 
 	ret = INTEGER_print(&asn_DEF_INTEGER, &val, 0, _print2buf, scratch);
 	assert(shared_scratch_start < scratch + sizeof(scratch));
 	assert(ret == 0);
-	ret = snprintf(verify, sizeof(verify), "%lu", check_long);
+	ret = snprintf(verify, sizeof(verify), "%ju", check_long);
+	assert(ret < (int)sizeof(verify));
+	ret = strcmp(scratch, verify);
+	printf("         [%s] vs [%s]: %d%s\n",
+		scratch, verify, ret,
+		(check_ret == -1)?" (expected to fail)":""
+		);
+	if(check_ret == -1) {
+		assert(strcmp(scratch, verify));
+	} else {
+		assert(strcmp(scratch, verify) == 0);
+	}
+}
+
+static void
+check_64(uint8_t *buf, size_t size, int64_t check_i64, int check_ret) {
+	char scratch[128];
+	char verify[32];
+	INTEGER_t val;
+	uint8_t *buf_end = buf + size;
+	int ret = 0;
+	int64_t rint64 = 123;
+
+	assert(buf);
+	assert(size > 0);
+
+	val.buf = buf;
+	val.size = size;
+
+	printf("Testing: [");
+	for(; buf < buf_end; buf++) {
+		if(buf != val.buf) printf(":");
+		printf("%02x", *buf);
+	}
+	printf("]: ");
+
+	ret = asn_INTEGER2int64(&val, &rint64);
+	printf(" (%"ASN_PRId64", %d) vs (%"ASN_PRId64", %d)\n",
+		rint64, ret, check_i64, check_ret);
+	assert(ret == check_ret);
+	printf("%"ASN_PRId64" %"ASN_PRId64"\n", rint64, check_i64);
+	assert(rint64 == check_i64);
+
+	if(check_ret == 0) {
+		INTEGER_t val2;
+		int64_t rint642;
+		val2.buf = 0;
+		val2.size = 0;
+		ret = asn_int642INTEGER(&val2, rint64);
+		assert(ret == 0);
+		assert(val2.buf);
+		assert(val2.size <= val.size);	/* At least as compact */
+		ret = asn_INTEGER2int64(&val, &rint642);
+		assert(ret == 0);
+		assert(rint64 == rint642);
+		ASN_STRUCT_RESET(asn_DEF_INTEGER, &val2);
+	}
+
+	shared_scratch_start = scratch;
+	ret = INTEGER_print(&asn_DEF_INTEGER, &val, 0, _print2buf, scratch);
+	assert(shared_scratch_start < scratch + sizeof(scratch));
+	assert(ret == 0);
+	ret = snprintf(verify, sizeof(verify), "%"ASN_PRId64"", check_i64);
+	assert(ret < 0 || (size_t)ret < sizeof(verify));
+	ret = strcmp(scratch, verify);
+	printf("         [%s] vs [%s]: %d%s\n",
+		scratch, verify, ret,
+		(check_ret == -1)?" (expected to fail)":""
+		);
+	if(check_ret == -1) {
+		assert(strcmp(scratch, verify));
+	} else {
+		assert(strcmp(scratch, verify) == 0);
+	}
+}
+
+static void
+check_unsigned_64(uint8_t *buf, int size, uint64_t check_u64, int check_ret) {
+	char scratch[128];
+	char verify[32];
+	INTEGER_t val;
+	uint8_t *buf_end = buf + size;
+	int ret = -1;
+	uint64_t ruint64 = 123;
+
+	assert(buf);
+	assert(size >= 0);
+
+	val.buf = buf;
+	val.size = size;
+
+	printf("Testing: [");
+	for(; buf < buf_end; buf++) {
+		if(buf != val.buf) printf(":");
+		printf("%02x", *buf);
+	}
+	printf("]: ");
+
+	ret = asn_INTEGER2uint64(&val, &ruint64);
+	printf(" (%"ASN_PRIu64", %d) vs (%"ASN_PRIu64", %d)\n",
+		ruint64, ret, check_u64, check_ret);
+	assert(ret == check_ret);
+	assert(ruint64 == check_u64);
+
+	if(check_ret == 0) {
+		INTEGER_t val2;
+        uint64_t ruint642;
+		val2.buf = 0;
+		val2.size = 0;
+		ret = asn_uint642INTEGER(&val2, ruint64);
+		assert(ret == 0);
+		assert(val2.buf);
+		if(val2.size > val.size) {
+			/* At least as compact */
+			printf("val2.size=%d, val.size=%d\n",
+				(int)val2.size, (int)val.size);
+			assert(val2.size <= val.size);
+		}
+		ret = asn_INTEGER2uint64(&val, &ruint642);
+		assert(ret == 0);
+		assert(ruint64 == ruint642);
+		ASN_STRUCT_RESET(asn_DEF_INTEGER, &val2);
+	}
+
+	return;
+
+	shared_scratch_start = scratch;
+	ret = INTEGER_print(&asn_DEF_INTEGER, &val, 0, _print2buf, scratch);
+	assert(shared_scratch_start < scratch + sizeof(scratch));
+	assert(ret == 0);
+	ret = snprintf(verify, sizeof(verify), "%"ASN_PRIu64"", check_u64);
 	assert(ret < (int)sizeof(verify));
 	ret = strcmp(scratch, verify);
 	printf("         [%s] vs [%s]: %d%s\n",
@@ -151,7 +283,7 @@ check_xer(int lineno, int tofail, char *xmldata, long orig_value) {
 	INTEGER_t *st = 0;
 	asn_dec_rval_t rc;
 	long value;
-	int ret;
+	int ret = -1;
 
 	printf("%03d: [%s] vs %ld: ", lineno, xmldata, orig_value);
 
@@ -179,15 +311,48 @@ check_xer(int lineno, int tofail, char *xmldata, long orig_value) {
 }
 
 static void
+check_jer(int lineno, int tofail, char *jsondata, long orig_value) {
+	INTEGER_t *st = 0;
+	asn_dec_rval_t rc;
+	long value = 0;
+	int ret = -1;
+
+	printf("%03d: [%s] vs %ld: ", lineno, jsondata, orig_value);
+    fflush(stdout);
+
+	rc = jer_decode(0, &asn_DEF_INTEGER, (void *)&st,
+		jsondata, strlen(jsondata));
+	if(rc.code != RC_OK) {
+		assert(tofail);
+		printf("\tfailed, as expected\n");
+		ASN_STRUCT_FREE(asn_DEF_INTEGER, st);
+		return;
+	}
+    if(tofail) {
+        printf("\tnot failed, as expected!\n");
+	    assert(!tofail);
+    }
+
+	ret = asn_INTEGER2long(st, &value);
+	assert(ret == 0);
+
+	printf("\t%ld\n", value);
+
+	assert(value == orig_value);
+
+	ASN_STRUCT_FREE(asn_DEF_INTEGER, st);
+}
+
+static void
 check_strtoimax() {
     const intmax_t intmax_max = ((~(uintmax_t)0) >> 1);
     const intmax_t intmax_min = -((intmax_t)intmax_max) - 1;
     char positive_max[32];
     char negative_min[32];
     const int len_pmax = snprintf(positive_max, sizeof(positive_max),
-        "+%" ASN_PRIdMAX, intmax_max);
+        "%jd", intmax_max);
     const int len_nmin = snprintf(negative_min, sizeof(negative_min),
-        "%" ASN_PRIdMAX, intmax_min);
+        "%jd", intmax_min);
     assert(len_pmax < (int)sizeof(positive_max));
     assert(len_nmin < (int)sizeof(negative_min));
 
@@ -319,10 +484,15 @@ main() {
 	uint8_t buf14[] = { 0x00, 0x80, 0x00, 0x00 };
 	uint8_t buf15[] = { 0x00, 0x80, 0x00, 0x00, 0x00 };
 	uint8_t buf16[] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
+	uint8_t buf17[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+	uint8_t buf18[] = { 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+	uint8_t buf19[] = { 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+	uint8_t buf20[] = { 0x00, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
 #define	UCHECK(buf, val, ret)	check_unsigned(buf, sizeof(buf), val, ret)
-
 #define	CHECK(buf, val, ret)	check(buf, sizeof(buf), val, ret)
+#define	UCHECK64(buf, val, ret)	check_unsigned_64(buf, sizeof(buf), val, ret)
+#define	CHECK64(buf, val, ret)	check_64(buf, sizeof(buf), val, ret)
 
 	CHECK(buf1, 1, 0);
 	CHECK(buf2, -1, 0);
@@ -341,6 +511,28 @@ main() {
 	UCHECK(buf14, 0x800000, 0);
 	UCHECK(buf15, 0x80000000UL, 0);
 	UCHECK(buf16, 0xffff0000UL, 0);
+
+	CHECK64(buf1, 1, 0);
+	CHECK64(buf2, -1, 0);
+	CHECK64(buf3, -1, 0);
+	CHECK64(buf4, -16, 0);
+	CHECK64(buf5, 257, 0);
+	CHECK64(buf6, 123, -1);
+	CHECK64(buf7, 123, -1);
+	CHECK64(buf8, 0x7F7E7D7C, 0);
+	CHECK64(buf9, 0x7F7E7D7C, 0);
+	CHECK64(buf10, 0x7F7E7D7C, 0);
+	UCHECK64(buf10, 0x7F7E7D7C, 0);
+	CHECK64(buf11, -2147483647-1, 0);	/* 0x80000000 */
+	CHECK64(buf12, -32768, 0);
+	CHECK64(buf13, -128, 0);
+	UCHECK64(buf14, 0x800000, 0);
+	UCHECK64(buf15, 0x80000000UL, 0);
+	UCHECK64(buf16, 0xffff0000UL, 0);
+	CHECK64(buf17, 0xffffffffffffffffLL, 0);
+	UCHECK64(buf18, 0xffffffffffffffffULL, 0);
+	CHECK64(buf19, 0x7fffffffffffffffLL, 0);
+	UCHECK64(buf20, 0x7fffffffffffffffULL, 0);
 
 	CHECK_XER(-1, "", 0);
 	CHECK_XER(-1, "<INTEGER></INTEGER>", 0);
@@ -419,6 +611,90 @@ main() {
 	} else {
                 assert(sizeof(long) == 8);
         }
+#endif
+
+	CHECK_JER(-1, "", 0);
+	CHECK_JER(-1, " ", 0);
+	CHECK_JER(-1, "-", 0);
+	CHECK_JER(-1, "+", 0);
+	CHECK_JER(-1, "+-", 0);
+	CHECK_JER(-1, " -", 0);
+	CHECK_JER(-1, " +", 0);
+	CHECK_JER(-1, " +-", 0);
+	CHECK_JER(-1, "- ", 0);
+	CHECK_JER(-1, "+ ", 0);
+	CHECK_JER(-1, "+- ", 0);
+	CHECK_JER(-1, " - ", 0);
+	CHECK_JER(-1, " + ", 0);
+	CHECK_JER(-1, " +- ", 0);
+	CHECK_JER(-1, "+0", 0);
+	CHECK_JER(0, "-0", 0);
+	CHECK_JER(-1, "+1", 0);
+	CHECK_JER(0, "-1", -1);
+	CHECK_JER(0, "1", 1);
+	CHECK_JER(0, "-15", -15);
+	CHECK_JER(-1, "+15", 0);
+	CHECK_JER(0, "15", 15);
+	CHECK_JER(0, " 15", 15);
+	CHECK_JER(0, " 15 ", 15);
+	CHECK_JER(0, "15 ", 15);
+	CHECK_JER(-1, " +15 ", 0);
+	CHECK_JER(-1, " 015 ", 0);
+	CHECK_JER(-1, "015 ", 0);
+	CHECK_JER(-1, " 015", 0);
+	CHECK_JER(-1, " 0 15", 0);
+	CHECK_JER(-1, " 0 15 ", 0);
+	CHECK_JER(-1, "0 15", 0);
+	CHECK_JER(-1, " +15 -", 0);
+	CHECK_JER(-1, " +15 1", 0);
+	CHECK_JER(-1, "+ 15", 0);
+	CHECK_JER(-1, "12e34", 0);
+	CHECK_JER(-1, "12 e34", 0);
+	CHECK_JER(-1, "12 e", 0);
+	CHECK_JER(0, "1234", 1234);
+	CHECK_JER(-1, "1234 5678", 0);
+	CHECK_JER(0, "-2147483647", -2147483647);
+	CHECK_JER(0, "-2147483648", -2147483647-1);
+	CHECK_JER(-1, "+2147483647", 0);
+	CHECK_JER(0, "2147483647", 2147483647);
+	if(sizeof(long) == 4) {
+		CHECK_JER( 0, "-2147483648", -2147483648);
+		CHECK_JER(-1, "-2147483649", 0);
+		CHECK_JER(-1, "2147483648", 0);
+		CHECK_JER(-1, "2147483649", 0);
+		CHECK_JER(-1, "3147483649", 0);
+		CHECK_JER(-1, "4147483649", 0);
+		CHECK_JER(-1, "5147483649", 0); /* special */
+		CHECK_JER(-1, "9147483649", 0);
+		CHECK_JER(-1, "9999999999", 0);
+		CHECK_JER(-1, "-5147483649", 0);/* special */
+		CHECK_JER(-1, "-9147483649", 0);
+		CHECK_JER(-1, "-9999999999", 0);
+	}
+#ifdef  TEST_64BIT
+	if(sizeof(long) == 8) {
+		CHECK_JER(0, "2147483648", 2147483648);
+		CHECK_JER(0, "2147483649", 2147483649);
+		CHECK_JER(0, "3147483649", 3147483649);
+		CHECK_JER(0, "4147483649", 4147483649);
+		CHECK_JER(0, "5147483649", 5147483649);
+		CHECK_JER(0, "9147483649", 9147483649);
+		CHECK_JER(0, "9999999999", 9999999999);
+		CHECK_JER(0, "9223372036854775807", 9223372036854775807);
+		CHECK_JER(-1, "9223372036854775808", 0);
+		CHECK_JER(-1, "10223372036854775807", 0);
+		CHECK_JER(-1, "50223372036854775807", 0);
+		CHECK_JER(-1, "100223372036854775807", 0);
+		CHECK_JER(-1, "500223372036854775807", 0);
+		CHECK_JER(0, "-9223372036854775808", -9223372036854775807-1);
+		CHECK_JER(-1, "-9223372036854775809", 0);
+		CHECK_JER(-1, "-10223372036854775807", 0);
+		CHECK_JER(-1, "-50223372036854775807", 0);
+		CHECK_JER(-1, "-100223372036854775807", 0);
+		CHECK_JER(-1, "-500223372036854775807", 0);
+	} else {
+        assert(sizeof(long) == 8);
+    }
 #endif
 
     check_strtoimax();

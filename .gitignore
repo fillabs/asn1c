@@ -52,6 +52,7 @@ stamp-h*
 /tests/tests-asn1c-smoke/*.asn
 /tests/tests-asn1c-smoke/*.txt
 /tests/tests-asn1c-smoke/converter-example
+/tests/tests-asn1c-smoke/test-*
 
 # /tests/
 /tests/tests-c-compiler/test-*

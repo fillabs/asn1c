@@ -6,6 +6,7 @@
 #define	_JER_ENCODER_H_
 
 #include <asn_application.h>
+#include <jer_support.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,15 +14,13 @@ extern "C" {
 
 struct asn_TYPE_descriptor_s;	/* Forward declaration */
 
-/* Flags used by the jer_encode() and (*jer_type_encoder_f), defined below
- *
- * This isn't actually used, it might be used in the future to support
- * both normal JSON and prettified JSON output or removed.
- * It came from XER
+/*
+ * Flags used by the jer_encode() and (*jer_type_encoder_f), defined below
  */
 enum jer_encoder_flags_e {
 	/* Mode of encoding */
-	JER_F	= 0x01,	/* JER (pretty-printing) */
+	JER_F	        = 0x01,	/* JER (pretty-printing) */
+	JER_F_MINIFIED	= 0x02,	/* JER (minified) */
 };
 
 /*
@@ -30,6 +29,7 @@ enum jer_encoder_flags_e {
  */
 asn_enc_rval_t jer_encode(const struct asn_TYPE_descriptor_s *type_descriptor,
                           const void *struct_ptr, /* Structure to be encoded */
+                          enum jer_encoder_flags_e jer_flags,
                           asn_app_consume_bytes_f *consume_bytes_cb,
                           void *app_key /* Arbitrary callback argument */
 );
@@ -72,6 +72,7 @@ enum jer_equivalence_e jer_equivalent(
  */
 typedef asn_enc_rval_t(jer_type_encoder_f)(
     const struct asn_TYPE_descriptor_s *type_descriptor,
+    const asn_jer_constraints_t *constraints,
     const void *struct_ptr, /* Structure to be encoded */
     int ilevel,             /* Level of indentation */
     enum jer_encoder_flags_e jer_flags,

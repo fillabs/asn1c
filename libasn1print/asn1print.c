@@ -61,7 +61,7 @@ static int safe_printf(const char *fmt, ...) {
 
 /* Pedantically check fwrite's return value. */
 static size_t safe_fwrite(const void *ptr, size_t size) {
-    size_t ret;
+    size_t ret = 0;
 
     switch(print_method_) {
     case PRINT_STDOUT:
@@ -82,7 +82,7 @@ static size_t safe_fwrite(const void *ptr, size_t size) {
  */
 int
 asn1print(asn1p_t *asn, enum asn1print_flags flags) {
-	asn1p_module_t *mod;
+	asn1p_module_t *mod = NULL;
 	int modno = 0;
 
 	if(asn == NULL) {
@@ -111,7 +111,7 @@ asn1print(asn1p_t *asn, enum asn1print_flags flags) {
 
 static int
 asn1print_module(asn1p_t *asn, asn1p_module_t *mod, enum asn1print_flags flags) {
-	asn1p_expr_t *tc;
+	asn1p_expr_t *tc = NULL;
 
 	if(flags & APF_PRINT_XML_DTD)
 		safe_printf("<!-- ASN.1 module\n");
@@ -169,7 +169,7 @@ asn1print_module(asn1p_t *asn, asn1p_module_t *mod, enum asn1print_flags flags) 
 static int
 asn1print_oid(int prior_len, asn1p_oid_t *oid, enum asn1print_flags flags) {
 	size_t accum = prior_len;
-	int ac;
+	int ac = 0;
 
 	(void)flags;	/* Unused argument */
 

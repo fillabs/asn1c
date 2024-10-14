@@ -4,6 +4,7 @@ check_PROGRAMS =                \
     check-ber_tlv_tag           \
     check-length                \
     check-bits                  \
+    check-copy                  \
     check-OIDs                  \
     check-GeneralizedTime       \
     check-OCTET_STRING          \
@@ -27,6 +28,7 @@ check_PROGRAMS +=                   \
     check-32-ber_tlv_tag            \
     check-32-length                 \
     check-32-bits                   \
+    check-32-copy                   \
     check-32-OIDs                   \
     check-32-GeneralizedTime        \
     check-32-OCTET_STRING           \
@@ -54,6 +56,9 @@ check_32_length_SOURCES=check-length.c
 check_32_bits_CFLAGS=$(CFLAGS_M32)
 check_32_bits_LDADD=$(LDADD_32)
 check_32_bits_SOURCES=check-bits.c
+check_32_copy_CFLAGS=$(CFLAGS_M32)
+check_32_copy_LDADD=$(LDADD_32)
+check_32_copy_SOURCES=check-copy.c
 check_32_OIDs_CFLAGS=$(CFLAGS_M32)
 check_32_OIDs_LDADD=$(LDADD_32)
 check_32_OIDs_SOURCES=check-OIDs.c
