@@ -485,6 +485,107 @@ test_range_bits_64_signed_offsets(void) {
     }
 }
 
+/*
+ * Purpose: verify that APER rejects a determinant wider than a 33-bit
+ *          constrained INTEGER can represent before consuming payload bytes.
+ * Original source: regression derived from the reported APER INTEGER parser
+ *                  differential and signed-shift defect.
+ * Version: 2026-09-24.
+ * Parameters: none.
+ * Returns: none.
+ * Errors: assertions fail if the malformed value is accepted or alignment
+ *         advances past the determinant before rejection.
+ * Responsible party: asn1c maintainers.
+ * History: added with the APER constrained INTEGER length hardening.
+ * Example: the eight-octet determinant 0xE0 must fail for a 33-bit range
+ *          whose maximum representation is five octets.
+ */
+static void
+test_reject_overlong_length_determinant(void) {
+    static const uint8_t input_data[] = {
+        0xE0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05
+    };
+    INTEGER_t *decoded_st = 0;
+    struct asn_INTEGER_specifics_s specs;
+    struct asn_per_constraints_s cts;
+    asn_dec_rval_t dec_rval;
+    asn_per_data_t pd;
+
+    memset(&specs, 0, sizeof(specs));
+    memset(&cts, 0, sizeof(cts));
+    memset(&pd, 0, sizeof(pd));
+
+    specs.field_width = sizeof(uint64_t);
+    specs.field_unsigned = 1;
+    asn_DEF_INTEGER.specifics = &specs;
+
+    cts.value.flags = APC_CONSTRAINED;
+    cts.value.range_bits = 33;
+    cts.value.effective_bits = 33;
+    cts.value.lower_bound = 0;
+    cts.value.upper_bound = INTMAX_C(8589934591);
+
+    pd.buffer = input_data;
+    pd.nboff = 0;
+    pd.nbits = 8 * sizeof(input_data);
+    pd.moved = 0;
+
+    dec_rval = INTEGER_decode_aper(0, &asn_DEF_INTEGER, &cts,
+                                   (void **)&decoded_st, &pd);
+    assert(dec_rval.code == RC_FAIL);
+    assert(pd.nboff == 3);
+
+    ASN_STRUCT_FREE(asn_DEF_INTEGER, decoded_st);
+}
+
+/*
+ * Purpose: verify that APER rejects constraints wider than the uintmax_t
+ *          accumulator used by the constrained INTEGER decoder.
+ * Original source: regression for the APER accumulator-width validation.
+ * Version: 2026-09-24.
+ * Parameters: none.
+ * Returns: none.
+ * Errors: assertion failure if unsupported constraint metadata is decoded.
+ * Responsible party: asn1c maintainers.
+ * History: added with the explicit APER accumulator-width guard.
+ * Example: a 65-bit APER range must fail before reading its determinant.
+ */
+static void
+test_reject_unsupported_accumulator_width(void) {
+    static const uint8_t input_data[] = {0x00};
+    INTEGER_t *decoded_st = 0;
+    struct asn_INTEGER_specifics_s specs;
+    struct asn_per_constraints_s cts;
+    asn_dec_rval_t dec_rval;
+    asn_per_data_t pd;
+
+    memset(&specs, 0, sizeof(specs));
+    memset(&cts, 0, sizeof(cts));
+    memset(&pd, 0, sizeof(pd));
+
+    specs.field_width = sizeof(uint64_t);
+    specs.field_unsigned = 1;
+    asn_DEF_INTEGER.specifics = &specs;
+
+    cts.value.flags = APC_CONSTRAINED;
+    cts.value.range_bits = 65;
+    cts.value.effective_bits = 65;
+    cts.value.lower_bound = 0;
+    cts.value.upper_bound = INTMAX_MAX;
+
+    pd.buffer = input_data;
+    pd.nboff = 0;
+    pd.nbits = 8 * sizeof(input_data);
+    pd.moved = 0;
+
+    dec_rval = INTEGER_decode_aper(0, &asn_DEF_INTEGER, &cts,
+                                   (void **)&decoded_st, &pd);
+    assert(dec_rval.code == RC_FAIL);
+    assert(pd.nboff == 0);
+
+    ASN_STRUCT_FREE(asn_DEF_INTEGER, decoded_st);
+}
+
 int
 main(void) {
     test_range_bits_17();
@@ -496,5 +597,7 @@ main(void) {
     test_unaligned_length_field();
     test_extensible_root_value();
     test_range_bits_64_signed_offsets();
+    test_reject_overlong_length_determinant();
+    test_reject_unsupported_accumulator_width();
     return 0;
 }

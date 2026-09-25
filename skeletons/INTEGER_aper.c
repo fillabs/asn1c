@@ -6,7 +6,20 @@
 #include <asn_internal.h>
 #include <INTEGER.h>
 
-/* Return ceil(log2(v)) for positive v. */
+/*
+ * Purpose: calculate the number of bits needed to encode a bounded positive
+ *          integer whose values run from zero through v - 1.
+ * Original source: added for X.691 section 13.2.6 APER INTEGER support.
+ * Version: 2026-07-06.
+ * Parameters: v - positive upper bound (exclusive) for the encoded value.
+ * Returns: the smallest unsigned bit count with 2^bits >= v.
+ * Errors: none; callers must provide a non-zero value and a representable
+ *         size_t bound.
+ * Responsible party: asn1c maintainers.
+ * History: retained while the APER constrained INTEGER length determinant
+ *          was corrected to use its constrained bit field.
+ * Example: aper_log2_ceil_size(5) returns 3.
+ */
 static unsigned
 aper_log2_ceil_size(size_t v) {
     unsigned bits = 0;
@@ -103,13 +116,26 @@ INTEGER_decode_aper(const asn_codec_ctx_t *opt_codec_ctx,
                 uintmax_t offset = 0;
                 intmax_t value;
 
+                /*
+                 * The offset accumulator is uintmax_t, so reject constraint
+                 * metadata wider than the value representation it can hold.
+                 */
+                if((size_t)ct->range_bits > 8 * sizeof(offset))
+                    ASN__DECODE_FAILED;
+
                 len_minus_one = per_get_few_bits(pd, length_bits);
                 if(len_minus_one < 0) ASN__DECODE_STARVED;
                 len = (ssize_t)len_minus_one + 1;
+                /*
+                 * The constrained determinant is rounded to a power-of-two
+                 * bit field. Reject unused determinant values before aligning
+                 * or reading any payload octets.
+                 */
                 if(len <= 0 || (size_t)len > max_range_bytes
                    || (size_t)len > sizeof(offset))
                     ASN__DECODE_FAILED;
-                ASN_DEBUG("Constrained INTEGER>16 decode: range_bits=%d max_bytes=%" ASN_PRI_SIZE " len_bits=%u len=%" ASN_PRI_SSIZE,
+                ASN_DEBUG("Constrained INTEGER>16 decode: range_bits=%d max_bytes=%" ASN_PRI_SIZE
+                          " len_bits=%u len=%" ASN_PRI_SSIZE,
                           ct->range_bits, max_range_bytes, length_bits, len);
 
                 if(aper_get_align(pd) < 0) ASN__DECODE_FAILED;
@@ -383,7 +409,8 @@ INTEGER_encode_aper(const asn_TYPE_descriptor_t *td,
 
             if(num_bytes > max_range_bytes || num_bytes > sizeof(buf))
                 ASN__ENCODE_FAILED;
-            ASN_DEBUG("Constrained INTEGER>16 encode: range_bits=%d max_bytes=%" ASN_PRI_SIZE " len_bits=%u len=%" ASN_PRI_SIZE " offset=%" ASN_PRIuMAX,
+            ASN_DEBUG("Constrained INTEGER>16 encode: range_bits=%d max_bytes=%" ASN_PRI_SIZE
+                      " len_bits=%u len=%" ASN_PRI_SIZE " offset=%" ASN_PRIuMAX,
                       ct->range_bits, max_range_bytes, length_bits, num_bytes, v);
 
             tmp = v;
