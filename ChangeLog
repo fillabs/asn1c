@@ -70,6 +70,14 @@ Changes since v1.5.0:
 	  BIT STRING values continue to preserve trailing zero bits.
 
 	SECURITY FIXES:
+	* Hardened variable-size JER BIT STRING decoding.  The decoder now requires
+	  the X.697 "value" and "length" members exactly once, rejects unknown or
+	  trailing members, and does not assign a first- or last-member winner to
+	  duplicate JSON names.  This prevents duplicate-member parser differentials
+	  from silently changing the decoded bit string across implementations.
+	  X.697 clause 24.3 defines the two required members but does not define a
+	  duplicate-name resolution rule; RFC 8259 section 4 recommends unique names
+	  and documents duplicate-name behavior as unpredictable.
 	* Fixed generated OPEN TYPE selector code for Information Object Sets
 	  whose rows define the selected open type but omit the constraining
 	  key field.  The generated selector now validates both the constraining

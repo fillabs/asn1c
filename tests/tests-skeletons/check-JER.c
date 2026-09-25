@@ -6,6 +6,7 @@
 
 #include <asn_application.h>
 #include <OCTET_STRING.h>
+#include <BIT_STRING.h>
 #include <BOOLEAN.h>
 #include <jer_decoder.h>
 
@@ -197,6 +198,70 @@ test_jer_decode_with_file(void) {
     printf("✓ File-based JSON decoding test passed\n");
 }
 
+/*
+ * Test strict JER decoding of variable-length BIT STRING objects.
+ *
+ * Original source: regression test added for the JER duplicate-member issue.
+ * Version: 2026-09-24.
+ * Input parameters: none; the test supplies valid and malformed JER literals.
+ * Return value: none; assertions abort the test on an unexpected result.
+ * Exceptions: none; decoder failures are checked through return codes.
+ * Responsible party: asn1c maintainers.
+ * History: added to ensure each X.697 value/length member occurs once and
+ * that unknown or malformed object members are not silently skipped.
+ * Use example: run the check-JER test executable from the build tree.
+ */
+static void
+test_jer_decode_bit_string_object(void) {
+    static const char *valid[] = {
+        "{\"value\":\"AB\",\"length\":8}",
+        "{ \n \"value\" : \"AB\" ,\t \"length\" : 8 \n }"
+    };
+    static const char *invalid[] = {
+        "{\"value\":\"AB\",\"length\":8,\"value\":\"CD\",\"length\":8}",
+        "{\"value\":\"AB\",\"length\":8,\"length\":0}",
+        "{\"value\":\"AB\",\"length\":8,\"unknown\":0}",
+        "{\"value\":\"AB\",\"length\":8,}",
+        "{\"value\":\"AB\",\"length\":8x}"
+    };
+    size_t i;
+
+    for(i = 0; i < sizeof(valid) / sizeof(valid[0]); i++) {
+        BIT_STRING_t *bits = NULL;
+        asn_dec_rval_t rval = asn_decode(NULL, ATS_JER, &asn_DEF_BIT_STRING,
+                                          (void **)&bits, valid[i],
+                                          strlen(valid[i]));
+        assert(rval.code == RC_OK);
+        assert(bits != NULL);
+        assert(bits->size == 1);
+        assert(bits->buf[0] == 0xAB);
+        assert(bits->bits_unused == 0);
+        ASN_STRUCT_FREE(asn_DEF_BIT_STRING, bits);
+    }
+
+    {
+        BIT_STRING_t *bits = NULL;
+        const char *minified = "{\"value\":\"AB\",\"length\":8}";
+        asn_dec_rval_t rval = asn_decode(NULL, ATS_JER_MINIFIED,
+                                          &asn_DEF_BIT_STRING, (void **)&bits,
+                                          minified, strlen(minified));
+        assert(rval.code == RC_OK);
+        assert(bits != NULL && bits->size == 1 && bits->buf[0] == 0xAB);
+        ASN_STRUCT_FREE(asn_DEF_BIT_STRING, bits);
+    }
+
+    for(i = 0; i < sizeof(invalid) / sizeof(invalid[0]); i++) {
+        BIT_STRING_t *bits = NULL;
+        asn_dec_rval_t rval = asn_decode(NULL, ATS_JER, &asn_DEF_BIT_STRING,
+                                          (void **)&bits, invalid[i],
+                                          strlen(invalid[i]));
+        assert(rval.code != RC_OK);
+        if(bits) ASN_STRUCT_FREE(asn_DEF_BIT_STRING, bits);
+    }
+
+    printf("✓ BIT STRING JER object validation test passed\n");
+}
+
 int
 main(void) {
     printf("Running JER (JSON Encoding Rules) decoding tests...\n");
@@ -205,6 +270,7 @@ main(void) {
     test_jer_decode_small_json();
     test_jer_decode_large_json();
     test_jer_decode_with_file();
+    test_jer_decode_bit_string_object();
     
     printf("✓ All JER decoding tests passed!\n");
     return 0;
