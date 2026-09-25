@@ -178,7 +178,7 @@ asn__format_to_callback(
 #define	ASN__DEFAULT_STACK_MAX	(30000)
 
 /* Define ASN_REJECT_UNKNOWN_EXTENSIONS to restore strict decode failure for
- * unknown UPER/OER CHOICE alternatives and UPER ENUMERATED additions. */
+ * unknown UPER/OER CHOICE alternatives and UPER/APER ENUMERATED additions. */
 
 /*
  * Recursion depth limit for encoding/decoding to prevent stack overflow

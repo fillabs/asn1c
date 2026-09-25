@@ -15,7 +15,7 @@
 #include <NativeInteger.h>
 #include <limits.h>
 
-/* Unknown UPER extension ordinals are stored as LONG_MAX - ordinal. */
+/* Unknown UPER/APER extension ordinals are stored as LONG_MAX - ordinal. */
 #define ASN_NATIVE_ENUMERATED_UNKNOWN_EXT_BASE (LONG_MAX - 65535L)
 #define ASN_NATIVE_ENUMERATED_IS_UNKNOWN_EXT(v) \
     ((v) >= ASN_NATIVE_ENUMERATED_UNKNOWN_EXT_BASE)

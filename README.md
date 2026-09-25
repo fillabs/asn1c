@@ -35,9 +35,9 @@ hardening of integer decoder edge cases.
 > strict behavior.
 
 This forward-compatible default applies to unknown alternatives of extensible
-UPER/OER `CHOICE` values and unknown additions of extensible UPER `ENUMERATED`
-values. Existing deployments may rely on the old `RC_FAIL` result as an
-implicit input-validation gate or as a protocol error in a state machine.
+UPER/OER `CHOICE` values and unknown additions of extensible UPER/APER
+`ENUMERATED` values. Existing deployments may rely on the old `RC_FAIL` result
+as an implicit input-validation gate or as a protocol error in a state machine.
 Compile all decoder skeleton objects with the macro and perform a clean rebuild;
 defining it only in application code does not change an already-built runtime
 library. Compatibility warning contributed by <shakespark@gmail.com>.
@@ -125,13 +125,14 @@ For the list of asn1c command line options, see `asn1c -h` or `man asn1c`.
 
 The comprehensive documentation on this compiler is in [doc/asn1c-usage.pdf](doc/asn1c-usage.pdf).
 
-Extensible UPER and OER types decode unknown extension additions
-forward-compatibly by default. Unknown CHOICE alternatives are skipped and
-reported with no selected local alternative; unknown UPER ENUMERATED values
-are represented by the reserved `LONG_MAX - extension_index` range so they
-can be relayed with the same PER transfer syntax. Applications that require
-the historical strict rejection behavior may compile generated skeletons
-with `ASN_REJECT_UNKNOWN_EXTENSIONS`; this forfeits forward compatibility.
+Extensible UPER and OER types, plus extensible APER `ENUMERATED` types, decode
+unknown extension additions forward-compatibly by default. Unknown CHOICE
+alternatives are skipped and reported with no selected local alternative;
+unknown UPER/APER ENUMERATED values are represented by the reserved
+`LONG_MAX - extension_index` range so they can be relayed with the same PER
+transfer syntax. Applications that require the historical strict rejection
+behavior may compile generated skeletons with `ASN_REJECT_UNKNOWN_EXTENSIONS`;
+this forfeits forward compatibility.
 
 Please also read the [FAQ](FAQ) file.
 
