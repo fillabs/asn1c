@@ -125,14 +125,14 @@ asn_TYPE_descriptor_t asn_DEF_ChoiceField = {
 /*** <<< INCLUDES [SeqA] >>> ***/
 
 #include "TerA_DuplicateA.h"
-#include "TerA_DuplicateB.h"
+#include "TerB_DuplicateB.h"
 #include <constr_SEQUENCE.h>
 
 /*** <<< TYPE-DECLS [SeqA] >>> ***/
 
 typedef struct SeqA {
 	TerA_DuplicateA_t	 fieldA;
-	TerA_DuplicateB_t	 fieldB;
+	TerB_DuplicateB_t	 fieldB;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
@@ -170,7 +170,7 @@ asn_TYPE_member_t asn_MBR_SeqA_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct SeqA, fieldB),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
-		.type = &asn_DEF_TerA_DuplicateB,
+		.type = &asn_DEF_TerB_DuplicateB,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
@@ -234,14 +234,14 @@ asn_TYPE_descriptor_t asn_DEF_SeqA = {
 /*** <<< INCLUDES [SeqB] >>> ***/
 
 #include "TerB_DuplicateA.h"
-#include "TerB_DuplicateB.h"
+#include "TerA_DuplicateB.h"
 #include <constr_SEQUENCE.h>
 
 /*** <<< TYPE-DECLS [SeqB] >>> ***/
 
 typedef struct SeqB {
 	TerB_DuplicateA_t	 fieldA;
-	TerB_DuplicateB_t	 fieldB;
+	TerA_DuplicateB_t	 fieldB;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
@@ -279,7 +279,7 @@ asn_TYPE_member_t asn_MBR_SeqB_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct SeqB, fieldB),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
-		.type = &asn_DEF_TerB_DuplicateB,
+		.type = &asn_DEF_TerA_DuplicateB,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)

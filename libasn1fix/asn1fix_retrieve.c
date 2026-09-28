@@ -48,40 +48,43 @@ asn1f_lookup_in_module(asn1p_module_t *mod, const char *name) {
 asn1p_module_t *
 asn1f_lookup_in_imports(arg_t *arg, asn1p_module_t *mod, const char *name) {
 	asn1p_xports_t *xp;
-	int explicitly_imported = 0;	/* Listed in the IMPORTS clause */
+	asn1p_expr_t *tc;
+	int explicitly_imported = 0;	/* Listed in an IMPORTS clause */
 
 	/*
 	 * Search in which exactly module this name is defined.
+	 * First, a module whose IMPORTS clause lists the name (X.680 (02/2021)
+	 * 13.19: an imported Symbol has the meaning it has in the module that
+	 * its SymbolsFromModule names).
+	 * An explicit listing takes precedence over the fallback below,
+	 * in any IMPORTS group and at any position in the group.
 	 */
 	TQ_FOR(xp, &(mod->imports), xp_next) {
-        asn1p_module_t *fromModule =
-            asn1f_lookup_module(arg, xp->fromModuleName, NULL, 0);
-        asn1p_expr_t *tc = (asn1p_expr_t *)0;
-
-        TQ_FOR(tc, &(xp->xp_members), next) {
-            if(strcmp(name, tc->Identifier) == 0) {
-				explicitly_imported = 1;
+		TQ_FOR(tc, &(xp->xp_members), next) {
+			if(strcmp(name, tc->Identifier) == 0)
 				break;
-			}
-
-			/*
-			 * In strict mode, an unqualified name MUST be listed
-			 * explicitly in the IMPORTS group's xp_members to be
-			 * considered as imported from this group.  This avoids
-			 * picking up a same-named type that happens to live in a
-			 * from-module that exports unrelated names.
-			 */
-			if(arg->flags & A1F_PREFER_IMPORT_SOURCE)
-				continue;
-
-			if(!fromModule)
-				continue;
-
-            asn1p_expr_t *v =
-                asn1f_lookup_in_module(fromModule, name);
-            if(v) break;
 		}
-		if(tc) break;
+		if(tc) {
+			explicitly_imported = 1;
+			break;
+		}
+	}
+
+	/*
+	 * Whole-module fallback (not in strict mode): a module that the
+	 * IMPORTS clause mentions, and that defines the name.
+	 * In strict mode, an unqualified name MUST be listed explicitly in
+	 * the IMPORTS group's xp_members to be considered as imported from
+	 * this group. This avoids picking up a same-named type that happens
+	 * to live in a from-module that exports unrelated names.
+	 */
+	if(xp == NULL && !(arg->flags & A1F_PREFER_IMPORT_SOURCE)) {
+		TQ_FOR(xp, &(mod->imports), xp_next) {
+			asn1p_module_t *fromModule =
+				asn1f_lookup_module(arg, xp->fromModuleName, NULL, 0);
+			if(fromModule && asn1f_lookup_in_module(fromModule, name))
+				break;
+		}
 	}
 	if(xp == NULL) {
 		errno = ESRCH;
@@ -110,7 +113,7 @@ asn1f_lookup_in_imports(arg_t *arg, asn1p_module_t *mod, const char *name) {
 	/*
 	 * The name was found only by the whole-module fallback above: it is
 	 * not listed in this IMPORTS clause. If that module does not export
-	 * it, the name is not imported from there (X.680 13.16 b). Report
+	 * it, the name is not imported from there (X.680 (02/2021) 13.16 b). Report
 	 * "not found" without a diagnostic, so that the caller can look up
 	 * the name in other scopes (for example, in the module that defines
 	 * the referencing type).
