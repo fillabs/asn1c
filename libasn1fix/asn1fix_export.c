@@ -2,6 +2,14 @@
 #include "asn1fix_export.h"
 
 static asn1p_t *asn1f_ssn_asn_;
+static int quiet_lookups;	/* See asn1f_quiet_lookups() */
+
+int
+asn1f_quiet_lookups(int quiet) {
+    int previous = quiet_lookups;
+    quiet_lookups = quiet;
+    return previous;
+}
 
 static void
 _add_standard_namespaces(asn1_namespace_t *ns) {
@@ -38,7 +46,7 @@ asn1f_lookup_module_ex(asn1p_t *asn, const char *module_name,
     memset(&arg, 0, sizeof(arg));
 
     arg.asn = asn;
-    arg.eh = a1f_replace_me_with_proper_interface_arg.eh;
+    arg.eh = quiet_lookups ? 0 : a1f_replace_me_with_proper_interface_arg.eh;
     arg.debug = a1f_replace_me_with_proper_interface_arg.debug;
     arg.flags = a1f_replace_me_with_proper_interface_arg.flags;
     return asn1f_lookup_module(&arg, module_name, oid, 0);
@@ -55,7 +63,7 @@ asn1f_lookup_symbol_ex(asn1p_t *asn, asn1_namespace_t *ns, asn1p_expr_t *expr,
     arg.ns = ns;
     arg.mod = expr->module;
     arg.expr = expr;
-    arg.eh = a1f_replace_me_with_proper_interface_arg.eh;
+    arg.eh = quiet_lookups ? 0 : a1f_replace_me_with_proper_interface_arg.eh;
     arg.debug = a1f_replace_me_with_proper_interface_arg.debug;
     arg.flags = a1f_replace_me_with_proper_interface_arg.flags;
 
@@ -77,7 +85,7 @@ asn1f_class_access_ex(asn1p_t *asn,
 	arg.mod = mod;
 	arg.ns = ns;
 	arg.expr = expr;
-	arg.eh = a1f_replace_me_with_proper_interface_arg.eh;
+	arg.eh = quiet_lookups ? 0 : a1f_replace_me_with_proper_interface_arg.eh;
 	arg.debug = a1f_replace_me_with_proper_interface_arg.debug;
 	arg.flags = a1f_replace_me_with_proper_interface_arg.flags;
 
@@ -95,7 +103,7 @@ asn1f_find_terminal_type_ex(asn1p_t *asn, asn1_namespace_t *ns,
     arg.ns = ns;
     arg.mod = expr->module;
     arg.expr = expr;
-    arg.eh = a1f_replace_me_with_proper_interface_arg.eh;
+    arg.eh = quiet_lookups ? 0 : a1f_replace_me_with_proper_interface_arg.eh;
     arg.debug = a1f_replace_me_with_proper_interface_arg.debug;
     arg.flags = a1f_replace_me_with_proper_interface_arg.flags;
 
@@ -111,7 +119,7 @@ asn1f_find_ancestor_type_with_PER_constraint_ex(asn1p_t *asn, asn1p_expr_t *expr
 	arg.asn = asn;
 	arg.mod = expr->module;
 	arg.expr = expr;
-	arg.eh = a1f_replace_me_with_proper_interface_arg.eh;
+	arg.eh = quiet_lookups ? 0 : a1f_replace_me_with_proper_interface_arg.eh;
 	arg.debug = a1f_replace_me_with_proper_interface_arg.debug;
 	arg.flags = a1f_replace_me_with_proper_interface_arg.flags;
 
@@ -128,7 +136,7 @@ asn1f_fix_dereference_values_ex(asn1p_t *asn, asn1p_module_t *mod,
 	arg.asn = asn;
 	arg.mod = mod;
 	arg.expr = expr;
-	arg.eh = a1f_replace_me_with_proper_interface_arg.eh;
+	arg.eh = quiet_lookups ? 0 : a1f_replace_me_with_proper_interface_arg.eh;
 	arg.debug = a1f_replace_me_with_proper_interface_arg.debug;
 	arg.flags = a1f_replace_me_with_proper_interface_arg.flags;
 

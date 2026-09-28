@@ -24,6 +24,15 @@ char const *asn1f_printable_reference(const asn1p_ref_t *ref);
 char const *asn1f_printable_value(asn1p_value_t *value);
 
 /*
+ * Control the diagnostics of the lookup functions in this interface.
+ * With quiet != 0, they report no WARNING and no FATAL diagnostic.
+ * Use this for a speculative lookup whose failure the caller handles,
+ * for example a lookup of a parameterized type without its actual
+ * parameters. Returns the previous setting.
+ */
+int asn1f_quiet_lookups(int quiet);
+
+/*
  *  Exportable version of an asn1f_lookup_symbol().
  */
 asn1p_expr_t *asn1f_lookup_symbol_ex(

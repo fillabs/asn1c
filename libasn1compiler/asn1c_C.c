@@ -1857,10 +1857,14 @@ asn1c_lang_C_type_SIMPLE_TYPE(arg_t *arg) {
 			const char *resolved_include;
 			asn1p_expr_t *saved_rhs;
 			
+			int saved_quiet;
+
 			/* Get include name without rhs_pspecs (same as GEN_POS_INCLUDE_BASE) */
 			saved_rhs = expr->rhs_pspecs;
 			expr->rhs_pspecs = NULL;
+			saved_quiet = asn1f_quiet_lookups(1);
 			base_include = strdup(asn1c_type_name(arg, expr, TNF_INCLUDE));
+			asn1f_quiet_lookups(saved_quiet);
 			expr->rhs_pspecs = saved_rhs;
 			
 			/* Get include name with rhs_pspecs */
