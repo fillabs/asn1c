@@ -109,15 +109,13 @@ CBOR and other encoding rules.
     Helps prevent namespace collisions.
 
 -fprefer-import-source
-:   Require an explicit name listing in the IMPORTS group (`xp_members`) for
-    a symbol to be considered as imported from that group.
-    Without this option, the resolver falls back to scanning the whole body of
-    the FROM module when the name is not found in the group's member list.
-    That fallback can silently bind a symbol to the wrong module when two
-    different modules export identically-named types and a consumer imports one
-    from each.
-    Enable this option to suppress the fallback and ensure each imported name
-    resolves only to the module explicitly named in the IMPORTS declaration.
+:   Resolve only names that an IMPORTS group lists (`xp_members`).
+    In both modes, a name listed in any IMPORTS group resolves to the module
+    that its group names (X.680 13.19).
+    Without this option, a name that no IMPORTS group lists is also searched
+    for in the body of each FROM module (whole-module fallback), which X.680
+    does not allow.
+    Enable this option to disable that fallback.
 
 -fprefix=*prefix*
 :	Add the specified prefix to all generated type names and filenames.

@@ -753,7 +753,7 @@ usage(const char *av0) {
 "  -fline-refs           Include ASN.1 module's line numbers in comments\n"
 "  -fno-constraints      Do not generate the constraint checking code\n"
 "  -fno-include-deps     Do not generate the courtesy #includes for dependencies\n"
-"  -fprefer-import-source  Require strict xp_members match for IMPORTS (fixes ambiguous same-name imports)\n"
+"  -fprefer-import-source  Resolve only names listed in IMPORTS (no whole-module fallback)\n"
 "  -funnamed-unions      Enable unnamed unions in structures\n"
 "  -fwide-types          Use INTEGER_t instead of \"long\" by default, etc.\n"
 "  -flong-size=<bits>    Target C long size for native INTEGER storage.\n"
