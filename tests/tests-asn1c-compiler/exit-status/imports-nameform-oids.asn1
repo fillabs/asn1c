@@ -1,0 +1,23 @@
+-- For check-exit-status.sh (not scanned by check_fixer).
+-- Two IMPORTS groups name different modules whose OIDs differ only in
+-- NameForm arcs (no numbers). The X.680 13.16 e) check shall not report
+-- them as the same OBJECT IDENTIFIER. (The pre-existing module OID check and
+-- the OID lookup fail on NameForm
+-- arcs for other reasons, so the exit status is not 0.)
+
+ModuleNameFormA { iso standard 8571 } DEFINITIONS ::=
+BEGIN
+	X ::= INTEGER
+END
+
+ModuleNameFormC { iso member-body 8571 } DEFINITIONS ::=
+BEGIN
+	Y ::= BOOLEAN
+END
+
+ModuleNameFormB DEFINITIONS ::=
+BEGIN
+	IMPORTS X FROM ModuleNameFormA { iso standard 8571 }
+		Y FROM ModuleNameFormC { iso member-body 8571 };
+	T ::= SEQUENCE { x X, y Y }
+END
