@@ -171,6 +171,49 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 		}
 	}
 
+	/*
+	 * X.680 (02/2021) 13.16 e): the module references in the IMPORTS
+	 * clause shall be different from each other and from the importing
+	 * module. The object identifiers, when present, shall also be
+	 * different from each other and from the one of the importing module.
+	 */
+	{
+		asn1p_xports_t *xp, *xp2;
+		TQ_FOR(xp, &(arg->mod->imports), xp_next) {
+			asn1p_expr_t *first = TQ_FIRST(&(xp->xp_members));
+			int line = first ? first->_lineno : 0;
+			if(strcmp(xp->fromModuleName, arg->mod->ModuleName) == 0
+			|| (xp->identifier.oid && arg->mod->module_oid
+			    && asn1p_oid_compare(xp->identifier.oid,
+					arg->mod->module_oid) == 0)) {
+				FATAL("IMPORTS of module %s name the module itself "
+					"(%s) at line %d (X.680 13.16 e)",
+					arg->mod->ModuleName, xp->fromModuleName, line);
+				RET2RVAL(-1, rvalue);
+			}
+			for(xp2 = TQ_NEXT(xp, xp_next); xp2;
+					xp2 = TQ_NEXT(xp2, xp_next)) {
+				first = TQ_FIRST(&(xp2->xp_members));
+				line = first ? first->_lineno : 0;
+				if(strcmp(xp->fromModuleName, xp2->fromModuleName) == 0) {
+					FATAL("IMPORTS of module %s name module %s more "
+						"than once, at line %d (X.680 13.16 e)",
+						arg->mod->ModuleName, xp2->fromModuleName, line);
+					RET2RVAL(-1, rvalue);
+				} else if(xp->identifier.oid && xp2->identifier.oid
+				       && asn1p_oid_compare(xp->identifier.oid,
+						xp2->identifier.oid) == 0) {
+					FATAL("IMPORTS of module %s give modules %s and %s "
+						"the same OBJECT IDENTIFIER, at line %d "
+						"(X.680 13.16 e)",
+						arg->mod->ModuleName, xp->fromModuleName,
+						xp2->fromModuleName, line);
+					RET2RVAL(-1, rvalue);
+				}
+			}
+		}
+	}
+
 	switch((arg->mod->module_flags & MSF_MASK_TAGS)) {
 	case MSF_NOFLAGS:
 	case MSF_EXPLICIT_TAGS:

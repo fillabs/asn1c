@@ -1,0 +1,15 @@
+-- Semantic error for check-exit-status.sh (not scanned by check_fixer).
+-- Two IMPORTS groups name the same module, without OIDs
+-- (X.680 (02/2021) 13.16 e)).
+
+ModuleDupImportC DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	X ::= INTEGER
+	Y ::= BOOLEAN
+END
+
+ModuleDupImportD DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	IMPORTS X FROM ModuleDupImportC Y FROM ModuleDupImportC;
+	T ::= SEQUENCE { x X, y Y }
+END

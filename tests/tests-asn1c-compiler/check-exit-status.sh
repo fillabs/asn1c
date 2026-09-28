@@ -75,6 +75,8 @@ SE="$T/04-enum-SE.asn1"
 SE_CLASS="$T/102-class-ref-SE.asn1"        # fixer returns failure
 NOT_EXPORTED="$T/exit-status/imports-not-exported-second.asn1"
 UNRETURNED="$T/exit-status/imports-not-exported-param.asn1"  # fixer reports FATAL, returns success
+DUP_OID="$T/exit-status/imports-same-module-oid.asn1"
+DUP_NAME="$T/exit-status/imports-same-module.asn1"
 EXPORTS_OK="$T/16-constraint-OK.asn1"     # own non-exported symbol in a constraint
 CLASH="$T/72-same-names-OK.asn1"          # C name clash without -fcompound-names
 PARAM="$T/165-param-class-governed-objectset-OK.asn1"
@@ -90,6 +92,8 @@ expect_status class-ref-error    65 --fatal -E -F "$SE_CLASS"
 expect_status imported-not-exported 65 --fatal-with "does not mention Y" -E -F "$NOT_EXPORTED"
 expect_status unreturned-fatal    65 --fatal-with "does not mention Y" -E -F -fcompound-names "$UNRETURNED"
 expect_status unreturned-fatal-compile 65 --fatal-with "does not mention Y" -fcompound-names -no-gen-example "$UNRETURNED"
+expect_status imports-same-module-oid 65 --fatal-with "13.16 e" -E -F -fcompound-names "$DUP_OID"
+expect_status imports-same-module 65 --fatal-with "13.16 e" -E -F -fcompound-names "$DUP_NAME"
 expect_status unexported-own-sym  0  --no-fatal -E -F "$EXPORTS_OK"
 expect_status param-fix           0  --no-fatal -E -F "$PARAM"
 expect_status param-compile       0  --no-fatal -no-gen-example "$PARAM"
