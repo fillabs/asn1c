@@ -351,6 +351,30 @@ decoder context.
 **Bignum tags:** Tags 2 and 3 are used internally by the INTEGER encoder
 and decoder for values that exceed the 64-bit signed range, per RFC 8949.
 
+# EXIT STATUS
+
+**0**
+:   Success. No FATAL diagnostic was reported.
+
+**64** (`EX_USAGE`)
+:   Command line usage error, or no input files.
+
+**65** (`EX_DATAERR`)
+:   ASN.1 input error: a syntax error, or a FATAL diagnostic during
+    semantic processing (**-F** and code generation).
+
+**66** (`EX_NOINPUT`)
+:   An input file cannot be opened.
+
+**70** (`EX_SOFTWARE`)
+:   Printing or code generation failed, or reported a FATAL diagnostic.
+    Files can be written, but the output is incomplete.
+
+**72** (`EX_OSFILE`)
+:   Skeleton files were not found and **-Werror** is in effect.
+
+A FATAL diagnostic always gives a non-zero exit status.
+
 # SEE ALSO
 
 `unber`(1), `enber`(1).

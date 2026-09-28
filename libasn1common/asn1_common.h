@@ -56,6 +56,9 @@
 #ifndef EX_DATAERR
 #define EX_DATAERR 65
 #endif
+#ifndef EX_NOINPUT
+#define EX_NOINPUT 66
+#endif
 #ifndef EX_SOFTWARE
 #define EX_SOFTWARE 70
 #endif

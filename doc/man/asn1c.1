@@ -488,6 +488,30 @@ available for callers without decoder context.
 \f[B]Bignum tags:\f[R] Tags 2 and 3 are used internally by the INTEGER
 encoder and decoder for values that exceed the 64\-bit signed range, per
 RFC 8949.
+.SH EXIT STATUS
+.TP
+\f[B]0\f[R]
+Success.
+No FATAL diagnostic was reported.
+.TP
+\f[B]64\f[R] (\f[CR]EX_USAGE\f[R])
+Command line usage error, or no input files.
+.TP
+\f[B]65\f[R] (\f[CR]EX_DATAERR\f[R])
+ASN.1 input error: a syntax error, or a FATAL diagnostic during semantic
+processing (\f[B]\-F\f[R] and code generation).
+.TP
+\f[B]66\f[R] (\f[CR]EX_NOINPUT\f[R])
+An input file cannot be opened.
+.TP
+\f[B]70\f[R] (\f[CR]EX_SOFTWARE\f[R])
+Printing or code generation failed, or reported a FATAL diagnostic.
+Files can be written, but the output is incomplete.
+.TP
+\f[B]72\f[R] (\f[CR]EX_OSFILE\f[R])
+Skeleton files were not found and \f[B]\-Werror\f[R] is in effect.
+.PP
+A FATAL diagnostic always gives a non\-zero exit status.
 .SH SEE ALSO
 \f[CR]unber\f[R](1), \f[CR]enber\f[R](1).
 .SH AUTHORS

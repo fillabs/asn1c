@@ -84,6 +84,23 @@ is_integer(const char *str, long *out_val) {
 static void usage(const char *av0); /* Print the Usage screen and exit */
 static int importStandardModules(asn1p_t *asn, const char *skeletons_dir);
 
+/*
+ * Exit status (see asn1c(1), EXIT STATUS):
+ *   0            Success. No FATAL diagnostic was reported.
+ *   EX_USAGE     (64) Command line usage error.
+ *   EX_DATAERR   (65) ASN.1 input error: a syntax error, or a FATAL
+ *                     diagnostic during semantic processing.
+ *   EX_NOINPUT   (66) An input file cannot be opened.
+ *   EX_SOFTWARE  (70) Printing or code generation failed, or reported a
+ *                     FATAL diagnostic. The output is incomplete.
+ *   EX_OSFILE    (72) Skeleton files not found (with -Werror).
+ *
+ * A FATAL diagnostic always gives a non-zero exit status, also when the
+ * library that reports it continues its work.
+ */
+static int fixer_fatal_count; /* FATAL diagnostics via fixer_error_logger */
+static void fixer_error_logger(int _severity, const char *fmt, ...);
+
 
 
 int
@@ -407,7 +424,7 @@ main(int ac, char **av) {
                 "%s: No input files specified. "
                 "Try '%s -h' for more information\n",
                 bin_name, bin_name);
-        exit(1);
+        exit(EX_USAGE);
     }
 
     /*
@@ -450,8 +467,14 @@ main(int ac, char **av) {
 
         new_asn = asn1p_parse_file(av[i], asn1_parser_flags);
         if(new_asn == NULL) {
+            FILE *fp = fopen(av[i], "r");
             fprintf(stderr, "Cannot parse \"%s\"\n", av[i]);
-            exit_code = EX_DATAERR;
+            if(fp) {
+                fclose(fp);
+                exit_code = EX_DATAERR;
+            } else {
+                exit_code = EX_NOINPUT;
+            }
             goto cleanup;
         }
 
@@ -500,8 +523,11 @@ main(int ac, char **av) {
      * expand references, etc, etc.
      * This function will emit necessary warnings and error messages.
      */
-    ret = asn1f_process(asn, asn1_fixer_flags,
-                        NULL /* default fprintf(stderr) */);
+    /*
+     * The fixer keeps this logger for the lookups that the code generator
+     * makes later, so fixer_fatal_count also counts those diagnostics.
+     */
+    ret = asn1f_process(asn, asn1_fixer_flags, fixer_error_logger);
     switch(ret) {
     case 0:
         break; /* All clear */
@@ -514,6 +540,16 @@ main(int ac, char **av) {
         exit_code = EX_DATAERR; /* Fatal failure */
         goto cleanup;
     }
+    if(fixer_fatal_count) {
+        /*
+         * A FATAL diagnostic was reported, but not returned by the fixer.
+         * Do not generate code. With -E -F, still print the tree to help
+         * the diagnosis, then fail.
+         */
+        exit_code = EX_DATAERR;
+        if(!(print_arg__print_out && print_arg__fix_n_print))
+            goto cleanup;
+    }
 
     /*
      * Dump the parsed ASN.1 tree if -E specified and -F is given.
@@ -521,9 +557,8 @@ main(int ac, char **av) {
     if(print_arg__print_out && print_arg__fix_n_print) {
         if(asn1print(asn, asn1_printer_flags)) {
             exit_code = EX_SOFTWARE;
-            goto cleanup;
         }
-        return 0;
+        goto cleanup;
     }
 
     /*
@@ -542,6 +577,9 @@ main(int ac, char **av) {
                     asn1_compiler_flags, ac + optind, optind, av - optind,
                     complex_threshold)) {
         exit_code = EX_SOFTWARE;
+    }
+    if(fixer_fatal_count) {
+        exit_code = EX_SOFTWARE; /* FATAL during code generation lookups */
     }
 
 cleanup:
@@ -652,6 +690,27 @@ importStandardModules(asn1p_t *asn, const char *skeletons_dir) {
 }
 
 /*
+ * Same output as the default fixer logger. Counts FATAL diagnostics.
+ */
+static void
+fixer_error_logger(int _severity, const char *fmt, ...) {
+    va_list ap;
+    const char *pfx = "";
+
+    switch(_severity) {
+    case -1: pfx = "DEBUG: "; break;
+    case 0: pfx = "WARNING: "; break;
+    case 1: pfx = "FATAL: "; fixer_fatal_count++; break;
+    }
+
+    fprintf(stderr, "%s", pfx);
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+}
+
+/*
  * Print the usage screen and exit(EX_USAGE).
  */
 static void __attribute__((noreturn))
@@ -719,6 +778,10 @@ usage(const char *av0) {
 "  -print-class-matrix   Print out the collected object class matrix (debug)\n"
 "  -print-constraints    Explain subtype constraints (debug)\n"
 "  -print-lines          Generate \"-- #line\" comments in -E output\n"
+"\n"
+"Exit status: 0 success; 64 usage error; 65 ASN.1 input error;\n"
+"  66 input file cannot be opened; 70 printing or code generation failed\n"
+"  or reported a FATAL diagnostic (incomplete output); 72 skeletons not found.\n"
 
 	,
 	a1c_basename(av0, NULL), DATADIR);

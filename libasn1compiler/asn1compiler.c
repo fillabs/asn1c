@@ -12,6 +12,7 @@ asn_integer_native_type_e asn1c_integer_native_type = AINT_NATIVE_AUTO;
 asn_target_long_size_e asn1c_target_long_size = ASN_TARGET_LONG_AUTO;
 
 static void default_logger_cb(int, const char *fmt, ...);
+static int compiler_fatal_count;	/* FATAL diagnostics by default_logger_cb */
 static int asn1c_compile_expr(arg_t *arg, const asn1c_ioc_table_and_objset_t *);
 static int asn1c_detach_streams(asn1p_expr_t *expr);
 static void asn1c_mark_pdu_dependencies(arg_t *arg);
@@ -25,6 +26,7 @@ asn1_compile(asn1p_t *asn, const char *datadir, const char *destdir, enum asn1c_
 	arg_t *arg = &arg_s;
 	asn1p_module_t *mod;
 	int ret;
+	int fatal_count_at_start = compiler_fatal_count;
 
 	c_name_clash_finder_init();
 
@@ -157,6 +159,13 @@ asn1_compile(asn1p_t *asn, const char *datadir, const char *destdir, enum asn1c_
 		}
 	}
 
+	/*
+	 * Some FATAL diagnostics let the compilation proceed "for better
+	 * debugging". The output is then incomplete: report a failure.
+	 */
+	if(compiler_fatal_count > fatal_count_at_start)
+		return -1;
+
 	return 0;
 }
 
@@ -283,7 +292,7 @@ default_logger_cb(int _severity, const char *fmt, ...) {
 	switch(_severity) {
 	case -1: pfx = "DEBUG: "; break;
 	case 0: pfx = "WARNING: "; break;
-	case 1: pfx = "FATAL: "; break;
+	case 1: pfx = "FATAL: "; compiler_fatal_count++; break;
 	}
 
 	fprintf(stderr, "%s", pfx);
