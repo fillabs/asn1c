@@ -13,4 +13,4 @@ $(ASN1C):
 check-parsing.sh.log check-version-string.sh.log check-options.sh.log \
 check-generated-warnings.sh.log check-exit-status.sh.log: $(ASN1C)
 
-EXTRA_DIST = README $(srcdir)/*asn1*
+EXTRA_DIST = README $(srcdir)/*asn1* $(srcdir)/exit-status/*.asn1
