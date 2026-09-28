@@ -501,9 +501,8 @@ main(int ac, char **av) {
     if(print_arg__print_out && !print_arg__fix_n_print) {
         if(asn1print(asn, asn1_printer_flags)) {
             exit_code = EX_SOFTWARE;
-            goto cleanup;
         }
-        return 0;
+        goto cleanup;
     }
 
     /*
@@ -566,7 +565,7 @@ main(int ac, char **av) {
      */
     if(debug_type_names) {
         asn1c_debug_type_naming(asn, asn1_compiler_flags, debug_type_names);
-        return 0;
+        goto cleanup;
     }
 
     /*
@@ -583,6 +582,13 @@ main(int ac, char **av) {
     }
 
 cleanup:
+    /*
+     * The printer and the type naming can look up symbols through the
+     * fixer after the checks above. A FATAL diagnostic there means that
+     * the output is incomplete.
+     */
+    if(exit_code == 0 && fixer_fatal_count)
+        exit_code = EX_SOFTWARE;
     asn1p_delete(asn);
     asn1p_lex_destroy();
     if (exit_code) exit(exit_code);
