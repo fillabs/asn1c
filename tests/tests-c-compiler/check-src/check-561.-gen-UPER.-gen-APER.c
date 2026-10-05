@@ -5,22 +5,23 @@
 
 #include "Alt4.h"
 
-static const uint8_t expected[] = { 0x72, 0x00 };
+static const uint8_t uper_expected[] = { 0x72, 0x00 };
+static const uint8_t aper_expected[] = { 0x40, 0xc8 };
 
 static void
 check_uper(void) {
 	Alt4_t value = { .present = Alt4_PR_num, .choice.num = 200 };
 	Alt4_t *decoded = 0;
-	uint8_t buf[sizeof(expected)] = { 0 };
+	uint8_t buf[sizeof(uper_expected)] = { 0 };
 	asn_enc_rval_t er;
 	asn_dec_rval_t dr;
 
 	er = uper_encode_to_buffer(&asn_DEF_Alt4, 0, &value, buf, sizeof(buf));
 	assert(er.encoded == 10);
-	assert(memcmp(buf, expected, sizeof(expected)) == 0);
+	assert(memcmp(buf, uper_expected, sizeof(uper_expected)) == 0);
 
 	dr = uper_decode_complete(0, &asn_DEF_Alt4, (void **)&decoded,
-		expected, sizeof(expected));
+		uper_expected, sizeof(uper_expected));
 	assert(dr.code == RC_OK);
 	assert(decoded && decoded->present == Alt4_PR_num);
 	assert(decoded->choice.num == 200);
@@ -31,16 +32,16 @@ static void
 check_aper(void) {
 	Alt4_t value = { .present = Alt4_PR_num, .choice.num = 200 };
 	Alt4_t *decoded = 0;
-	uint8_t buf[sizeof(expected)] = { 0 };
+	uint8_t buf[sizeof(aper_expected)] = { 0 };
 	asn_enc_rval_t er;
 	asn_dec_rval_t dr;
 
 	er = aper_encode_to_buffer(&asn_DEF_Alt4, 0, &value, buf, sizeof(buf));
-	assert(er.encoded == 10);
-	assert(memcmp(buf, expected, sizeof(expected)) == 0);
+	assert(er.encoded == 16);
+	assert(memcmp(buf, aper_expected, sizeof(aper_expected)) == 0);
 
 	dr = aper_decode_complete(0, &asn_DEF_Alt4, (void **)&decoded,
-		expected, sizeof(expected));
+		aper_expected, sizeof(aper_expected));
 	assert(dr.code == RC_OK);
 	assert(decoded && decoded->present == Alt4_PR_num);
 	assert(decoded->choice.num == 200);
