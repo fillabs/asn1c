@@ -1,9 +1,11 @@
 -- For check-exit-status.sh (not scanned by check_fixer).
 -- Two IMPORTS groups name different modules whose OIDs differ only in
--- NameForm arcs (no numbers). The X.680 13.16 e) check shall not report
--- them as the same OBJECT IDENTIFIER. (The pre-existing module OID check and
--- the OID lookup fail on NameForm
--- arcs for other reasons, so the exit status is not 0.)
+-- NameForm arcs (no numbers): "standard" against "member-body". The
+-- X.680 13.16 e) check compares NameForm arcs by name, so it shall not
+-- report them as the same OBJECT IDENTIFIER (compare
+-- imports-same-nameform-oid.asn1). (The pre-existing module OID check and
+-- the OID lookup fail on NameForm arcs for other reasons, so the exit
+-- status is not 0.)
 
 ModuleNameFormA { iso standard 8571 } DEFINITIONS ::=
 BEGIN

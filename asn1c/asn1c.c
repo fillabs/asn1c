@@ -465,16 +465,21 @@ main(int ac, char **av) {
     for(i = 0; i < ac; i++) {
         asn1p_t *new_asn;
 
+        errno = 0;
         new_asn = asn1p_parse_file(av[i], asn1_parser_flags);
         if(new_asn == NULL) {
-            FILE *fp = fopen(av[i], "r");
+            /*
+             * asn1p_parse_file() sets errno to EINVAL when the file was
+             * opened but is not a regular file or not valid ASN.1, and
+             * keeps the errno of fopen() when the file cannot be opened.
+             * Do not open the file again to tell the two apart: that
+             * races with changes to the file and can block on a FIFO.
+             */
+            int parse_errno = errno;
             fprintf(stderr, "Cannot parse \"%s\"\n", av[i]);
-            if(fp) {
-                fclose(fp);
-                exit_code = EX_DATAERR;
-            } else {
-                exit_code = EX_NOINPUT;
-            }
+            exit_code = (parse_errno == EINVAL || parse_errno == 0)
+                            ? EX_DATAERR
+                            : EX_NOINPUT;
             goto cleanup;
         }
 

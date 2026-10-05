@@ -8,7 +8,7 @@ static void _default_error_logger(int _severity, const char *fmt, ...);
  * Internal check functions.
  */
 static int asn1f_fix_module__phase_1(arg_t *arg);
-static int oid_is_numeric(const asn1p_oid_t *oid);
+static int oid_certainly_equal(const asn1p_oid_t *a, const asn1p_oid_t *b);
 static int asn1f_fix_module__phase_2(arg_t *arg);
 static int asn1f_fix_simple(arg_t *arg);	/* For INTEGER/ENUMERATED */
 static int asn1f_fix_constructed(arg_t *arg);	/* For SEQUENCE/SET/CHOICE */
@@ -184,10 +184,8 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 			asn1p_expr_t *first = TQ_FIRST(&(xp->xp_members));
 			int line = first ? first->_lineno : 0;
 			if(strcmp(xp->fromModuleName, arg->mod->ModuleName) == 0
-			|| (oid_is_numeric(xp->identifier.oid)
-			    && oid_is_numeric(arg->mod->module_oid)
-			    && asn1p_oid_compare(xp->identifier.oid,
-					arg->mod->module_oid) == 0)) {
+			|| oid_certainly_equal(xp->identifier.oid,
+					arg->mod->module_oid)) {
 				FATAL("IMPORTS of module %s name the module itself "
 					"(%s) at line %d (X.680 13.16 e)",
 					arg->mod->ModuleName, xp->fromModuleName, line);
@@ -202,10 +200,8 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 						"than once, at line %d (X.680 13.16 e)",
 						arg->mod->ModuleName, xp2->fromModuleName, line);
 					RET2RVAL(-1, rvalue);
-				} else if(oid_is_numeric(xp->identifier.oid)
-				       && oid_is_numeric(xp2->identifier.oid)
-				       && asn1p_oid_compare(xp->identifier.oid,
-						xp2->identifier.oid) == 0) {
+				} else if(oid_certainly_equal(xp->identifier.oid,
+						xp2->identifier.oid)) {
 					FATAL("IMPORTS of module %s give modules %s and %s "
 						"the same OBJECT IDENTIFIER, at line %d "
 						"(X.680 13.16 e)",
@@ -673,14 +669,31 @@ asn1f_apply_unique_index(arg_t *arg) {
 }
 
 /*
- * An OID whose every arc has a number. asn1p_oid_compare() compares arc
- * numbers only, so an arc in NameForm (number -1) cannot be compared.
+ * Return 1 if the two OIDs certainly denote the same object identifier,
+ * 0 if they differ or cannot be compared.
+ * Two arcs match when both have a number and the numbers are equal
+ * (NumberForm or NameAndNumberForm), or when both are in NameForm
+ * (number -1) and the names are equal. An arc in NameForm against an
+ * arc with a number is not resolved here, so such OIDs are not
+ * reported as equal. asn1p_oid_compare() is not used: it compares arc
+ * numbers only, so it takes any two NameForm arcs for equal.
  */
 static int
-oid_is_numeric(const asn1p_oid_t *oid) {
-	if(oid == NULL || oid->arcs_count == 0) return 0;
-	for(int i = 0; i < oid->arcs_count; i++)
-		if(oid->arcs[i].number < 0) return 0;
+oid_certainly_equal(const asn1p_oid_t *a, const asn1p_oid_t *b) {
+	if(a == NULL || b == NULL) return 0;
+	if(a->arcs_count == 0 || a->arcs_count != b->arcs_count) return 0;
+	for(int i = 0; i < a->arcs_count; i++) {
+		const asn1p_oid_arc_t *aa = &a->arcs[i];
+		const asn1p_oid_arc_t *ba = &b->arcs[i];
+		if(aa->number >= 0 && ba->number >= 0) {
+			if(aa->number != ba->number) return 0;
+		} else if(aa->number < 0 && ba->number < 0
+		       && aa->name && ba->name) {
+			if(strcmp(aa->name, ba->name) != 0) return 0;
+		} else {
+			return 0;	/* Name against number: unresolved */
+		}
+	}
 	return 1;
 }
 

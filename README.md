@@ -204,19 +204,23 @@ of the types. You can specify multiple PDUs:
 
 The `-fgen-only-pdu-deps` option also works with `-pdu=all` and `-pdu=auto`.
 
-## Resolving ambiguous imports (-fprefer-import-source)
+## Resolving imported names (-fprefer-import-source)
 
-When two ASN.1 modules export identically-named types and a third module
-imports one from each, the resolver can silently bind to the wrong module's
-definition. Use `-fprefer-import-source` to restrict the lookup to the
-explicit IMPORTS list only:
+A name listed in an IMPORTS group always resolves to the module that its
+`FROM ModuleName` names (X.680 13.19), with or without this flag. So when
+two ASN.1 modules export identically-named types and a third module imports
+one from each, each name binds to the module that it is imported from.
+
+Without the flag (the default), a name that no IMPORTS group lists is also
+searched for in the body of each FROM module (whole-module fallback).
+X.680 does not allow this, but some specifications rely on it. Use
+`-fprefer-import-source` to disable the fallback and resolve only names
+that an IMPORTS group lists:
 
     asn1c -fprefer-import-source <module1.asn1> <module2.asn1> ...
 
-Without this flag (the default) the resolver falls back to scanning the full
-module body when a name is not found in the IMPORTS list, which can produce
-incorrect bindings. With the flag, only an explicit `FROM ModuleName` import
-is accepted, and an error is raised if the name cannot be resolved that way.
+With the flag, a name that is used but not listed in IMPORTS (and not
+defined locally) is reported as an error.
 
 # Model of operation
 

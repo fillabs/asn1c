@@ -87,6 +87,7 @@ UNRETURNED="$T/exit-status/imports-not-exported-param.asn1"  # fixer reports FAT
 DUP_OID="$T/exit-status/imports-same-module-oid.asn1"
 DUP_NAME="$T/exit-status/imports-same-module.asn1"
 NAMEFORM="$T/exit-status/imports-nameform-oids.asn1"
+DUP_NAMEFORM="$T/exit-status/imports-same-nameform-oid.asn1"
 EXPORTS_OK="$T/16-constraint-OK.asn1"     # own non-exported symbol in a constraint
 CLASH="$T/72-same-names-OK.asn1"          # C name clash without -fcompound-names
 PARAM="$T/165-param-class-governed-objectset-OK.asn1"
@@ -96,6 +97,8 @@ expect_status ok-fix              0  --no-fatal -E -F "$OK"
 expect_status ok-compile          0  --no-fatal -no-gen-example "$OK"
 expect_status no-input-files      64
 expect_status missing-file        66 -E "$TMPDIR_TEST/does-not-exist.asn1"
+mkdir -p "$TMPDIR_TEST/not-a-file.asn1"   # opened, but not a regular file
+expect_status not-a-regular-file  65 -E "$TMPDIR_TEST/not-a-file.asn1"
 expect_status syntax-error        65 -E "$NP"
 expect_status semantic-error      65 --fatal -E -F "$SE"
 expect_status class-ref-error    65 --fatal -E -F "$SE_CLASS"
@@ -105,6 +108,7 @@ expect_status unreturned-fatal-compile 65 --fatal-with "does not mention Y" -fco
 expect_status imports-same-module-oid 65 --fatal-with "13.16 e" -E -F -fcompound-names "$DUP_OID"
 expect_status imports-same-module 65 --fatal-with "13.16 e" -E -F -fcompound-names "$DUP_NAME"
 expect_status imports-nameform-oids 65 --without "13.16 e" -E -F -fcompound-names "$NAMEFORM"
+expect_status imports-same-nameform-oid 65 --fatal-with "the same OBJECT IDENTIFIER" -E -F -fcompound-names "$DUP_NAMEFORM"
 expect_status unexported-own-sym  0  --no-fatal -E -F "$EXPORTS_OK"
 expect_status param-fix           0  --no-fatal -E -F "$PARAM"
 expect_status param-compile       0  --no-fatal -no-gen-example "$PARAM"
