@@ -1,0 +1,10 @@
+CanonChoiceBug DEFINITIONS ::= BEGIN
+
+    Alt4 ::= CHOICE {
+        num  INTEGER (0..255),
+        str  VisibleString (SIZE (1..8)),
+        flag BOOLEAN,
+        raw  OCTET STRING
+    }
+
+END
