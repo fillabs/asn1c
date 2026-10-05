@@ -15,6 +15,9 @@ Changes since v1.5.0:
 	  by an earlier enum-specific branch in this fork; the new terminal-type rule
 	  covers the remaining alias classes and the added UPER/APER regression locks
 	  in the reported behavior and truncation safety.
+	* Corrected generated UPER/APER CHOICE maps so conversions between declaration
+	  order and canonical order use the right direction. Added canonical-order
+	  regression coverage in check-561. Fix in PR #562.
 	IMPORTANT UPGRADE NOTICE:
 	* Decoding behavior for unknown extensions has changed from "fail" to
 	  "skip/relay". Evaluate the impact on your application before upgrading;
