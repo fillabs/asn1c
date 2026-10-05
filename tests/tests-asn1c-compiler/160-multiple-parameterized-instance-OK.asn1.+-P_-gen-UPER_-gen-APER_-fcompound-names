@@ -845,8 +845,8 @@ static asn_TYPE_member_t asn_MBR_TotalRegionExtension__value_3[] = {
 		.name = "OCTET STRING"
 		},
 };
-static const unsigned asn_MAP_value_to_canonical_3[] = { 1, 4, 0, 3, 2, 5 };
-static const unsigned asn_MAP_value_from_canonical_3[] = { 2, 0, 4, 3, 1, 5 };
+static const unsigned asn_MAP_value_from_canonical_3[] = { 1, 4, 0, 3, 2, 5 };
+static const unsigned asn_MAP_value_to_canonical_3[] = { 2, 0, 4, 3, 1, 5 };
 static const asn_TYPE_tag2member_t asn_MAP_value_tag2el_3[] = {
     { (ASN_TAG_CLASS_UNIVERSAL | (1 << 2)), 1, 0, 1 }, /* BOOLEAN */
     { (ASN_TAG_CLASS_UNIVERSAL | (1 << 2)), 4, -1, 0 }, /* BOOLEAN */
