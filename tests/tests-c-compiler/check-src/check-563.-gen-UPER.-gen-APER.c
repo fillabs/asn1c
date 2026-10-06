@@ -4,7 +4,9 @@
 #include <string.h>
 
 #include "OctetRext.h"
+#include "OctetRmix.h"
 #include "Rext.h"
+#include "Rmix.h"
 #include <aper_decoder.h>
 #include <aper_encoder.h>
 #include <uper_decoder.h>
@@ -22,6 +24,24 @@ check_octet_identifier_size(void) {
 	assert(size_ct->flags & APC_EXTENSIBLE);
 	assert(size_ct->lower_bound == 1);
 	assert(size_ct->upper_bound == 2);
+}
+
+static void
+check_mixed_constraints(void) {
+	const asn_per_constraints_t *integer_constraints =
+		asn_DEF_Rmix.elements[0].encoding_constraints.per_constraints;
+	const asn_per_constraints_t *octet_constraints =
+		asn_DEF_OctetRmix.elements[0].encoding_constraints.per_constraints;
+
+	assert(integer_constraints);
+	assert(!(integer_constraints->value.flags & APC_EXTENSIBLE));
+	assert(integer_constraints->value.lower_bound == 1);
+	assert(integer_constraints->value.upper_bound == 10);
+
+	assert(octet_constraints);
+	assert(!(octet_constraints->size.flags & APC_EXTENSIBLE));
+	assert(octet_constraints->size.lower_bound == 1);
+	assert(octet_constraints->size.upper_bound == 1);
 }
 
 static void
@@ -67,6 +87,7 @@ check_aper(void) {
 int
 main(void) {
 	check_octet_identifier_size();
+	check_mixed_constraints();
 	check_uper();
 	check_aper();
 	return 0;

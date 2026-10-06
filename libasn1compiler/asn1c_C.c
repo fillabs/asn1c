@@ -3294,6 +3294,22 @@ asn1c_per_bound_fits_legacy_literal(asn1c_integer_t value) {
 }
 
 static int
+constraint_is_component_relation_only(const asn1p_constraint_t *constraint) {
+	unsigned int i;
+
+	if(!constraint) return 0;
+	if(constraint->type == ACT_CA_CRC) return 1;
+	if(constraint->type != ACT_CA_SET || constraint->el_count == 0) return 0;
+
+	for(i = 0; i < constraint->el_count; i++) {
+		if(!constraint_is_component_relation_only(constraint->elements[i]))
+			return 0;
+	}
+
+	return 1;
+}
+
+static int
 emit_single_member_PER_constraint(arg_t *arg, asn1cnst_range_t *range, int alphabetsize, const char *type) {
     if(!range || range->incompatible || range->not_PER_visible) {
         OUT("{ APC_UNCONSTRAINED,\t-1, -1,  0,  0 }");
@@ -3676,7 +3692,7 @@ emit_member_PER_constraints(arg_t *arg, asn1p_expr_t *expr, const char *pfx) {
 		 * marker from the governed type.  The base type's extensibility is
 		 * still PER-visible and must be retained in the member constraint.
 		 */
-		if(asn1p_get_component_relation_constraint(expr->constraints)) {
+		if(constraint_is_component_relation_only(expr->constraints)) {
 			asn1p_expr_t *terminal =
 				asn1f_find_terminal_type_ex(arg->asn, arg->ns, expr);
 			if(terminal && terminal != expr
@@ -3702,7 +3718,7 @@ emit_member_PER_constraints(arg_t *arg, asn1p_expr_t *expr, const char *pfx) {
 			expr->combined_constraints, ACT_CT_SIZE, 0, 0,
 			CPR_ignore_extension_additions);
 
-	if(asn1p_get_component_relation_constraint(expr->constraints)) {
+	if(constraint_is_component_relation_only(expr->constraints)) {
 		asn1p_expr_t *terminal =
 			asn1f_find_terminal_type_ex(arg->asn, arg->ns, expr);
 		if(terminal && terminal != expr && terminal->combined_constraints) {

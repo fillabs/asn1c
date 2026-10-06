@@ -37,4 +37,13 @@ OctetRext ::= SEQUENCE {
     payload ID-OCTETS-B-TYPE.&Content({OctetISet}{@id})
 }
 
+-- Explicit subtype constraints must not recover the base type's extension bit.
+Rmix ::= SEQUENCE {
+    id B-TYPE.&id({ISet}) (1..10)
+}
+
+OctetRmix ::= SEQUENCE {
+    id ID-OCTETS-B-TYPE.&id({OctetISet}) (SIZE (1))
+}
+
 END
