@@ -3702,6 +3702,22 @@ emit_member_PER_constraints(arg_t *arg, asn1p_expr_t *expr, const char *pfx) {
 			expr->combined_constraints, ACT_CT_SIZE, 0, 0,
 			CPR_ignore_extension_additions);
 
+	if(asn1p_get_component_relation_constraint(expr->constraints)) {
+		asn1p_expr_t *terminal =
+			asn1f_find_terminal_type_ex(arg->asn, arg->ns, expr);
+		if(terminal && terminal != expr && terminal->combined_constraints) {
+			asn1cnst_range_t *type_range =
+				asn1constraint_compute_PER_range(
+					terminal->Identifier, expr_get_type(arg, terminal),
+					terminal->combined_constraints, ACT_CT_SIZE,
+					0, 0, CPR_ignore_extension_additions);
+			if(range && type_range) {
+				range->extensible |= type_range->extensible;
+			}
+			if(type_range) asn1constraint_range_free(type_range);
+		}
+	}
+
 	/*
 	 * UTF8String (SIZE(lb..ub, ...)) has no PER-visible alphabet
 	 * constraint, but its extensible size constraint is still PER-visible.

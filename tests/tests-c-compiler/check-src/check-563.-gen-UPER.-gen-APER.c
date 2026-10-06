@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "OctetRext.h"
 #include "Rext.h"
 #include <aper_decoder.h>
 #include <aper_encoder.h>
@@ -10,6 +11,18 @@
 #include <uper_encoder.h>
 
 static const uint8_t expected[] = { 0x7f, 0x01, 0x00 };
+
+static void
+check_octet_identifier_size(void) {
+	const asn_per_constraints_t *constraints =
+		asn_DEF_OctetRext.elements[0].encoding_constraints.per_constraints;
+
+	assert(constraints);
+	const asn_per_constraint_t *size_ct = &constraints->size;
+	assert(size_ct->flags & APC_EXTENSIBLE);
+	assert(size_ct->lower_bound == 1);
+	assert(size_ct->upper_bound == 2);
+}
 
 static void
 check_uper(void) {
@@ -53,6 +66,7 @@ check_aper(void) {
 
 int
 main(void) {
+	check_octet_identifier_size();
 	check_uper();
 	check_aper();
 	return 0;

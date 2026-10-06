@@ -22,4 +22,19 @@ Rext ::= SEQUENCE {
     cnt B-TYPE.&Content({ISet}{@id})
 }
 
+ID-OCTETS-B-TYPE ::= CLASS {
+    &id OCTET STRING (SIZE (1..2, ...)) UNIQUE,
+    &Content
+} WITH SYNTAX { &Content IDENTIFIED BY &id }
+
+OctetISet ID-OCTETS-B-TYPE ::= {
+    { Null IDENTIFIED BY '01'H },
+    ...
+}
+
+OctetRext ::= SEQUENCE {
+    id ID-OCTETS-B-TYPE.&id({OctetISet}),
+    payload ID-OCTETS-B-TYPE.&Content({OctetISet}{@id})
+}
+
 END
