@@ -14,7 +14,7 @@ nobase_dist_smods_DATA =     \
 	standard-modules/ASN1C-UsefulInformationObjectClasses.asn1
 
 
-uninstall-local:
+uninstall-local: uninstall-nobase_dist_smodsDATA
 	-@echo -n " "
 	-rm -f -r $(DESTDIR)$(pkgdatadir)
 

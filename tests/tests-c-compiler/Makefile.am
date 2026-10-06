@@ -80,6 +80,7 @@ TESTS += check-src/check-548.-gen-APER.c
 TESTS += check-src/check-550.-gen-UPER.c
 TESTS += check-src/check-552.-gen-UPER.-gen-APER.c
 TESTS += check-src/check-561.-gen-UPER.-gen-APER.c
+TESTS += check-src/check-563.-gen-UPER.-gen-APER.c
 TESTS += check-src/check-173.-findirect-choice.-fcompound-names.-gen-UPER.-gen-APER.c
 TESTS += check-src/check-184.c
 TESTS += check-src/check-185.c
