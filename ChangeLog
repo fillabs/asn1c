@@ -1,4 +1,13 @@
 Changes since v1.5.0:
+	* Fixed generated filename collisions with skeleton files on
+	  case-insensitive filesystems (macOS, Windows). An ASN.1 type such as
+	  "Null ::= NULL" generated Null.[ch], which aliases the NULL.[ch]
+	  skeleton; the skeleton was then "retained local" and the build failed
+	  with "unknown type name 'NULL_t'" (seen in check-563). Generated files
+	  whose names case-insensitively match a skeleton basename are now
+	  disambiguated with an "asn1c_" prefix (e.g. Null.h -> asn1c_Null.h).
+	  Added smoke test check-skeleton-name-clash.sh.
+	  See docs/skeleton-filename-collision.md.
 	* Preserved PER extensibility for information-object identifier fields
 	  governed by object sets. Added UPER and APER regression coverage for
 	  issue #563.

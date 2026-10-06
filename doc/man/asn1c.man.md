@@ -125,7 +125,10 @@ CBOR and other encoding rules.
 	  ASN.1 types like "Time" would generate `Time.h`, which can conflict with 
 	  system header `<time.h>`. asn1c now automatically disambiguates these generated
 	  filenames (for example, `Time.h` becomes `asn1c_time.h` when no explicit prefix
-	  is set). Using `-fprefix=ASN1_` still generates `ASN1_Time.h` when you need a
+	  is set). Likewise, types whose names match a runtime skeleton file
+	  case-insensitively (e.g. "Null" vs `NULL.h`, "Integer" vs `INTEGER.h`)
+	  are generated as `asn1c_Null.h`, `asn1c_Integer.h`, etc.
+	  Using `-fprefix=ASN1_` still generates `ASN1_Time.h` when you need a
 	  project-specific naming convention.
 	
 	* **Multiple ASN.1 modules**: When generating code for multiple ASN.1 syntaxes
