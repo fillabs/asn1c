@@ -3676,18 +3676,21 @@ emit_member_PER_constraints(arg_t *arg, asn1p_expr_t *expr, const char *pfx) {
 		 * marker from the governed type.  The base type's extensibility is
 		 * still PER-visible and must be retained in the member constraint.
 		 */
-		asn1p_expr_t *terminal =
-			asn1f_find_terminal_type_ex(arg->asn, arg->ns, expr);
-		if(terminal && terminal != expr && terminal->combined_constraints) {
-			asn1cnst_range_t *type_range =
-				asn1constraint_compute_PER_range(
-					terminal->Identifier, expr_get_type(arg, terminal),
-					terminal->combined_constraints, ACT_EL_RANGE,
-					0, 0, CPR_ignore_extension_additions);
-			if(range && type_range) {
-				range->extensible |= type_range->extensible;
+		if(asn1p_get_component_relation_constraint(expr->constraints)) {
+			asn1p_expr_t *terminal =
+				asn1f_find_terminal_type_ex(arg->asn, arg->ns, expr);
+			if(terminal && terminal != expr
+			&& terminal->combined_constraints) {
+				asn1cnst_range_t *type_range =
+					asn1constraint_compute_PER_range(
+						terminal->Identifier, expr_get_type(arg, terminal),
+						terminal->combined_constraints, ACT_EL_RANGE,
+						0, 0, CPR_ignore_extension_additions);
+				if(range && type_range) {
+					range->extensible |= type_range->extensible;
+				}
+				if(type_range) asn1constraint_range_free(type_range);
 			}
-			if(type_range) asn1constraint_range_free(type_range);
 		}
 		if(emit_single_member_PER_constraint(arg, range, 0, 0))
 			return -1;
