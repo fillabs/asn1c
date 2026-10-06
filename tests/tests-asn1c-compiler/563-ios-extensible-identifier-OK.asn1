@@ -1,0 +1,25 @@
+-- Regression test for issue #563.
+-- An extensible integer used as an information-object identifier must retain
+-- its PER extension bit when the field constraint is generated from an object set.
+
+Issue563 DEFINITIONS ::= BEGIN
+
+I8e ::= INTEGER (1..128, ...)
+Null ::= NULL
+
+B-TYPE ::= CLASS {
+    &id I8e,
+    &Content
+} WITH SYNTAX { &Content IDENTIFIED BY &id }
+
+ISet B-TYPE ::= {
+    { Null IDENTIFIED BY 128 },
+    ...
+}
+
+Rext ::= SEQUENCE {
+    id B-TYPE.&id({ISet}),
+    cnt B-TYPE.&Content({ISet}{@id})
+}
+
+END

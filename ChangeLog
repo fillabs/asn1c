@@ -1,4 +1,7 @@
 Changes since v1.5.0:
+	* Preserved PER extensibility for information-object identifier fields
+	  governed by object sets. Added UPER and APER regression coverage for
+	  issue #563.
 	* Made the generated-constraint warning regression test compatible with
 	  Automake's standard top_srcdir/top_builddir test environment.
 	* Avoided redundant parentheses around standalone equality comparisons in
