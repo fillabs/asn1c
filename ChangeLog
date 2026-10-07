@@ -1,21 +1,30 @@
+v1.5.3: 2026-10-07
+	* Corrected IMPORTS resolution and diagnostics. Explicitly imported names
+	  resolve from the module named by FROM; -fprefer-import-source disables
+	  the legacy whole-module fallback. Duplicate module references are
+	  diagnosed, OID equality checks avoid treating name-form arcs as numbers,
+	  parameterized imported types avoid spurious diagnostics, and all FATAL
+	  diagnostics produce a non-zero exit status. Added compiler regression
+	  coverage (PR #560 follow-up).
+	* Fixed PER extensibility handling for information-object identifier fields
+	  governed by object sets and for component-relation constraints. Recovery
+	  is limited to table-only constraints where appropriate. Added UPER and
+	  APER regression coverage for issue #563 (PR #564).
+	* Fixed a parallel uninstall race in the skeleton build that could cause
+	  make distcheck to fail (PR #564).
+	* Corrected generated UPER/APER CHOICE maps so conversions between
+	  declaration order and canonical order use the right direction. Added
+	  canonical-order regression coverage (PR #562; fix by Ruud Schramp).
+	* Prevented generated filenames from colliding with skeleton files on
+	  case-insensitive filesystems by disambiguating matching names with an
+	  asn1c_ prefix. Added a smoke test and documentation.
+	* Moved constraint enums to file scope and made asn1p_constr.h
+	  self-contained, so C++-based code analyzers can parse the declarations.
+	* Updated and regenerated the usage guide and man page to match current
+	  behavior, including the transfer-syntax API table and groff rendering.
+	  Added Markdown lint and VS Code workspace settings.
+
 Changes since v1.5.0:
-	* Moved the asn1p_constraint_type_e and asn1p_constr_pres_e enums in
-	  libasn1parser/asn1p_constr.h out of struct asn1p_constraint_s to file
-	  scope. C behavior is unchanged, but code analyzers that parse the
-	  headers as C++ can now resolve ACT_* and ACPRES_* identifiers (for
-	  example ACT_EL_RANGE in asn1c_misc.c).
-	* Fixed generated filename collisions with skeleton files on
-	  case-insensitive filesystems (macOS, Windows). An ASN.1 type such as
-	  "Null ::= NULL" generated Null.[ch], which aliases the NULL.[ch]
-	  skeleton; the skeleton was then "retained local" and the build failed
-	  with "unknown type name 'NULL_t'" (seen in check-563). Generated files
-	  whose names case-insensitively match a skeleton basename are now
-	  disambiguated with an "asn1c_" prefix (e.g. Null.h -> asn1c_Null.h).
-	  Added smoke test check-skeleton-name-clash.sh.
-	  See docs/skeleton-filename-collision.md.
-	* Preserved PER extensibility for information-object identifier fields
-	  governed by object sets. Added UPER and APER regression coverage for
-	  issue #563.
 	* Made the generated-constraint warning regression test compatible with
 	  Automake's standard top_srcdir/top_builddir test environment.
 	* Avoided redundant parentheses around standalone equality comparisons in
@@ -32,10 +41,6 @@ Changes since v1.5.0:
 	  by an earlier enum-specific branch in this fork; the new terminal-type rule
 	  covers the remaining alias classes and the added UPER/APER regression locks
 	  in the reported behavior and truncation safety.
-	* Corrected generated UPER/APER CHOICE maps so conversions between declaration
-	  order and canonical order use the right direction. Added canonical-order
-	  regression coverage in check-561. Fix in PR #562. Problem and fix provided
-	  by Ruud Schramp.
 	IMPORTANT UPGRADE NOTICE:
 	* Decoding behavior for unknown extensions has changed from "fail" to
 	  "skip/relay". Evaluate the impact on your application before upgrading;
