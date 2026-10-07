@@ -1,0 +1,12 @@
+Module DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+Cause ::= CHOICE {
+    radioNetwork INTEGER,
+    transport INTEGER
+}
+
+ResetRequest ::= SEQUENCE {
+    cause Cause
+}
+
+END

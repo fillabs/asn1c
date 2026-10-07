@@ -1,0 +1,23 @@
+
+-- Test [BASE64] encoding instruction prefix on a top-level named type.
+-- Verifies standard X.693 §21 syntax:
+--   ChecksumData ::= [BASE64] OCTET STRING
+-- The compiler should generate a custom Base64 encoder and pinned Base64
+-- decoder for ChecksumData (same result as ENCODING-CONTROL XER ::= base64).
+
+TestBase64Prefix DEFINITIONS XER INSTRUCTIONS AUTOMATIC TAGS ::= BEGIN
+
+-- Named type with [BASE64] prefix — canonical E-XER form
+ChecksumData ::= [BASE64] OCTET STRING
+
+-- [XER:BASE64] qualified form — works in any module
+SignatureBytes ::= [XER:BASE64] OCTET STRING
+
+-- A SEQUENCE using both named types
+MyPDU ::= SEQUENCE {
+    payload   OCTET STRING,   -- hex (default)
+    checksum  ChecksumData,   -- Base64 via named type
+    signature SignatureBytes  -- Base64 via named type
+}
+
+END

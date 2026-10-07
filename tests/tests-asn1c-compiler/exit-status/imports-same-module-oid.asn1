@@ -1,0 +1,27 @@
+-- Semantic error for check-exit-status.sh (not scanned by check_fixer).
+-- Two IMPORTS groups name the same module with the same OID
+-- (X.680 (02/2021) 13.16 e)).
+
+ModuleDupImportA
+	{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 168 1 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	X ::= INTEGER
+	Y ::= BOOLEAN
+END
+
+ModuleDupImportB
+	{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 168 2 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	IMPORTS
+		X FROM ModuleDupImportA
+			{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+			  spelio(9363) software(1) asn1c(5) test(1) 168 1 }
+		Y FROM ModuleDupImportA
+			{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+			  spelio(9363) software(1) asn1c(5) test(1) 168 1 };
+	T ::= SEQUENCE { x X, y Y }
+END

@@ -1,0 +1,23 @@
+-- Test for duplicate validation function names with nested ENUMERATED types
+-- This tests the fix for GitHub issue where multiple ENUMERATED types with 
+-- the same name in different nested contexts (e.g., different CHOICE branches)
+-- would generate duplicate validation function names, causing compilation errors.
+
+TestModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+CodebookConfig-r18 ::= SEQUENCE {
+    codebookType CHOICE {
+        type2 CHOICE {
+            typeII-CJT-r18 SEQUENCE {
+                paramCombination-CJT-r18                INTEGER (1..7),
+                restrictedCMR-Selection-r18             ENUMERATED {enable}
+            },
+            typeII-CJT-PortSelection-r18 SEQUENCE {
+                paramCombination-CJT-PS-r18            INTEGER (1..5),
+                restrictedCMR-Selection-r18            ENUMERATED {enable}
+            }
+        }
+    }
+}
+
+END

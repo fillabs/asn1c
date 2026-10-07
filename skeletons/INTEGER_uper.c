@@ -66,6 +66,8 @@ INTEGER_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
                 ASN_DEBUG("Got value %"ASN_PRIuMAX" + low %"ASN_PRIdMAX"",
                     uvalue, ct->lower_bound);
                 uvalue += ct->lower_bound;
+                if (uvalue > (uintmax_t)ct->upper_bound)
+                    ASN__DECODE_FAILED;
                 if(asn_umax2INTEGER(st, uvalue))
                     ASN__DECODE_FAILED;
             } else {
@@ -89,6 +91,7 @@ INTEGER_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
     }
 
     /* X.691, #12.2.3, #12.2.4 */
+    size_t bytes_received = 0;  /* Actual content bytes decoded from stream */
     do {
         ssize_t len = 0;
         void *p = NULL;
@@ -105,8 +108,41 @@ INTEGER_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
         ret = per_get_many_bits(pd, &st->buf[st->size], 0, 8 * len);
         if(ret < 0) ASN__DECODE_STARVED;
         st->size += len;
+        bytes_received += (size_t)len;
     } while(repeat);
     st->buf[st->size] = 0;  /* JIC */
+
+    /* INTEGER must have at least one content octet (X.691 §12.2.3) */
+    if(bytes_received == 0) {
+        ASN__DECODE_FAILED;
+    }
+
+    /* 
+     * Canonical UPER validation: X.691 11.3.6 - minimum octet encoding check.
+     * For unconstrained integers, verify that the encoding uses the minimum
+     * number of octets (leading 8 bits shall not all be zero unless the field
+     * is precisely 8 bits long).
+     */
+    if(opt_codec_ctx && opt_codec_ctx->uper_canonical && !ct && st->size > 1) {
+        /* Check for non-minimal encoding */
+        if(st->buf[0] == 0x00 && (st->buf[1] & 0x80) == 0) {
+            /* Leading zeros in positive number - not minimal */
+            if(opt_codec_ctx->uper_canonical_lenient) {
+                ASN_DEBUG("Non-canonical UPER: leading zeros in positive integer (lenient mode - continuing)");
+            } else {
+                ASN_DEBUG("Non-canonical UPER: leading zeros in positive integer");
+                ASN__DECODE_FAILED;
+            }
+        } else if(st->buf[0] == 0xFF && (st->buf[1] & 0x80) != 0) {
+            /* Leading ones in negative number - not minimal */
+            if(opt_codec_ctx->uper_canonical_lenient) {
+                ASN_DEBUG("Non-canonical UPER: leading ones in negative integer (lenient mode - continuing)");
+            } else {
+                ASN_DEBUG("Non-canonical UPER: leading ones in negative integer");
+                ASN__DECODE_FAILED;
+            }
+        }
+    }
 
     /* #12.2.3 */
     if(ct && ct->lower_bound) {
@@ -217,8 +253,57 @@ INTEGER_encode_uper(const asn_TYPE_descriptor_t *td,
 
     if(ct && ct->lower_bound) {
         ASN_DEBUG("Adjust lower bound to %"ASN_PRIdMAX"", ct->lower_bound);
-        /* TODO: adjust lower bound */
-        ASN__ENCODE_FAILED;
+        /*
+         * Encode semi-constrained integer by subtracting lower bound.
+         * Per X.691, the value is encoded as (value - lower_bound),
+         * which is always non-negative.
+         */
+        INTEGER_t adjusted_int;
+        memset(&adjusted_int, 0, sizeof(adjusted_int));
+
+        if(specs && specs->field_unsigned) {
+            if(value.u < (uintmax_t)ct->lower_bound) {
+                ASN__ENCODE_FAILED;
+            }
+            value.u -= (uintmax_t)ct->lower_bound;
+            if(asn_umax2INTEGER(&adjusted_int, value.u)) {
+                ASN_STRUCT_RESET(asn_DEF_INTEGER, &adjusted_int);
+                ASN__ENCODE_FAILED;
+            }
+        } else {
+            if(value.s < ct->lower_bound) {
+                ASN__ENCODE_FAILED;
+            }
+            value.s -= ct->lower_bound;
+            if(asn_imax2INTEGER(&adjusted_int, value.s)) {
+                ASN_STRUCT_RESET(asn_DEF_INTEGER, &adjusted_int);
+                ASN__ENCODE_FAILED;
+            }
+        }
+
+        /* Encode the adjusted value using unconstrained encoding */
+        buf = adjusted_int.buf;
+        end = adjusted_int.buf + adjusted_int.size;
+        while(buf < end) {
+            int need_eom = 0;
+            ssize_t mayEncode = uper_put_length(po, end - buf, &need_eom);
+            if(mayEncode < 0) {
+                ASN_STRUCT_RESET(asn_DEF_INTEGER, &adjusted_int);
+                ASN__ENCODE_FAILED;
+            }
+            if(per_put_many_bits(po, buf, 8 * mayEncode)) {
+                ASN_STRUCT_RESET(asn_DEF_INTEGER, &adjusted_int);
+                ASN__ENCODE_FAILED;
+            }
+            buf += mayEncode;
+            if(need_eom && uper_put_length(po, 0, 0)) {
+                ASN_STRUCT_RESET(asn_DEF_INTEGER, &adjusted_int);
+                ASN__ENCODE_FAILED;
+            }
+        }
+
+        ASN_STRUCT_RESET(asn_DEF_INTEGER, &adjusted_int);
+        ASN__ENCODED_OK(er);
     }
 
     for(buf = st->buf, end = st->buf + st->size; buf < end;) {

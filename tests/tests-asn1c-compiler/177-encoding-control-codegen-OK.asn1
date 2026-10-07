@@ -1,0 +1,21 @@
+
+-- Test custom encoder code generation
+
+TestEncodingControlCodeGen DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+Message ::= SEQUENCE {
+    hexData   HexData,
+    textData  TextData,
+    b64Data   Base64Data
+}
+
+HexData    ::= OCTET STRING
+TextData   ::= OCTET STRING
+Base64Data ::= OCTET STRING
+
+ENCODING-CONTROL XER
+    HexData  OCTET STRING ::= hexadecimal
+    TextData OCTET STRING ::= utf8
+END
+
+END

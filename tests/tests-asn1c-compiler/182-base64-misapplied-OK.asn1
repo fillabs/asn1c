@@ -1,0 +1,12 @@
+
+-- Negative test: [BASE64] applied to INTEGER must produce a compile error.
+-- This is a Compile-time Error (CE), NOT a semantic fixer error (SE).
+-- check_fixer processes this without error (the parser and fixer accept it).
+-- The error fires only during asn1c -P code generation:
+--   "XER encoding instruction 'base64' may only be applied to OCTET STRING"
+
+TestBase64MisappliedInt DEFINITIONS XER INSTRUCTIONS AUTOMATIC TAGS ::= BEGIN
+
+BadType ::= [BASE64] INTEGER
+
+END

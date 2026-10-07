@@ -6,16 +6,17 @@
 #include <OCTET_STRING.h>
 #include <BIT_STRING.h>
 
-enum encoding_type { HEX, BINARY, UTF8 };
+enum encoding_type { HEX, BINARY, UTF8, BASE64 };
 enum encoding_rules { XER, JER };
 
-#define check_xer(t, tag, buf, verify)  check_impl(__LINE__, XER, t, tag,  buf, verify)
-#define check_jer(t, buf, verify)       check_impl(__LINE__, JER, t, NULL, buf, verify)
+#define check_xer(t, tag, buf, verify)  check_impl(__LINE__, XER, t, tag,  buf, verify, 0)
+#define check_xer_bin(t, tag, buf, verify, verify_len)  check_impl(__LINE__, XER, t, tag,  buf, verify, verify_len)
+#define check_jer(t, buf, verify)       check_impl(__LINE__, JER, t, NULL, buf, verify, 0)
 
 static void
-check_impl(int lineno, enum encoding_rules rules, enum encoding_type type, char *tagname, char *xmlbuf, char *verify) {
+check_impl(int lineno, enum encoding_rules rules, enum encoding_type type, char *tagname, char *xmlbuf, char *verify, size_t verify_len) {
 	size_t xmllen = strlen(xmlbuf);
-	size_t verlen = verify ? strlen(verify) : 0;
+	size_t verlen = verify_len ? verify_len : (verify ? strlen(verify) : 0);
 	asn_TYPE_descriptor_t *td = &asn_DEF_OCTET_STRING;
 	OCTET_STRING_t *st = 0;
 	OCTET_STRING_t **stp = &st;
@@ -35,6 +36,9 @@ check_impl(int lineno, enum encoding_rules rules, enum encoding_type type, char 
             break;
         case UTF8:
             xer_decoder = OCTET_STRING_decode_xer_utf8;
+            break;
+        case BASE64:
+            xer_decoder = OCTET_STRING_decode_xer_base64;
             break;
         }
 
@@ -59,10 +63,11 @@ check_impl(int lineno, enum encoding_rules rules, enum encoding_type type, char 
         rc = jer_decoder(0, td, NULL, (void **)stp, xmlbuf, xmllen);
         break;
     }
-	printf("%03d: [%s] => [%s]:%zu vs [%s]:%zu, code %d\n",
+	printf("%03d: [%s] => [%.*s]:%zu vs [%s]:%zu, code %d\n",
 		lineno, xmlbuf,
-		st ? (const char *)st->buf : "", st ? st->size : 0,
-		verify ? verify : "", verlen, rc.code);
+		st && st->buf ? (int)st->size : 0,
+		st && st->buf ? (const char *)st->buf : "",
+		st ? st->size : 0, verify ? verify : "", verlen, rc.code);
 
 	if(verify) {
 		assert(rc.code == RC_OK);
@@ -152,18 +157,23 @@ main() {
 	check_xer(UTF8, "z", "<z z z>a&sdfsdfsdf;b</z z z>", "a&sdfsdfsdf;b");
 	check_xer(UTF8, "z", "<z z z>a&#x20;b</z z z>", "a b");
 	check_xer(UTF8, "z", "<z z z>a&#32;b</z z z>", "a b");
+	check_xer(UTF8, "z", "<z>a&#x20here</z>", "a here");
 	check_xer(UTF8, "z", "<z>a&#32323;b</z>", "a\347\271\203b");
 	check_xer(UTF8, "z", "<z>a&#x4fc4;|</z>", "a\xe4\xbf\x84|");
     /* Last unicode point */
 	check_xer(UTF8, "z", "<z>a&#x10ffff;|</z>", "a\xf4\x8f\xbf\xbf|");
 	check_xer(UTF8, "z", "<z>a&#1114111;|</z>", "a\xf4\x8f\xbf\xbf|");
-    /* One past the last unicode point */
-	check_xer(UTF8, "z", "<z>a&#x110000;|</z>", "a&#x110000;|");
-	check_xer(UTF8, "z", "<z>a&#1114112;|</z>", "a&#1114112;|");
-	check_xer(UTF8, "z", "<z>a&#3000000000;b</z>", "a&#3000000000;b");
-	check_xer(UTF8, "z", "<z>a&#5000000000;b</z>", "a&#5000000000;b");
+    /* Invalid or unsafe numeric character references */
+	check_xer(UTF8, "z", "<z>a&#x110000;|</z>", 0);
+	check_xer(UTF8, "z", "<z>a&#1114112;|</z>", 0);
+	check_xer(UTF8, "z", "<z>a&#3000000000;b</z>", 0);
+	check_xer(UTF8, "z", "<z>a&#5000000000;b</z>", 0);
 	check_xer(UTF8, "z", "<z>a&#300</z>", "a&#300");
-	check_xer(UTF8, "z", "<z>a&#-300;</z>", "a&#-300;");
+	check_xer(UTF8, "z", "<z>a&#-300;</z>", 0);
+	check_xer_bin(UTF8, "z", "<z>a&#0;b</z>", "a\0b", 3);
+	check_xer_bin(UTF8, "z", "<z>a&#x0;b</z>", "a\0b", 3);
+	check_xer(UTF8, "z", "<z>a&#;b</z>", 0);
+	check_xer(UTF8, "z", "<z>a&#x;b</z>", 0);
 	check_xer(UTF8, "z", "<z>a<ff/>b</z>", "a\014b");
 	check_xer(UTF8, "z", "<z>a<soh/>b</z>", "a\001b");
 	check_xer(UTF8, "z", "<z>a<bel/></z>", "a\007");
@@ -187,6 +197,17 @@ main() {
 	check_jer(UTF8, "\"hi\"", "hi");
 	check_jer(UTF8, "\"h i\"", "h i");
 
+	/* Base64 XER tests */
+	check_xer(BASE64, "tag", "<tag>SGVsbG8sIFdvcmxkIQ==</tag>", "Hello, World!");
+	check_xer_bin(BASE64, "z", "<z>AAECA//+/Q==</z>", "\x00\x01\x02\x03\xff\xfe\xfd", 7);
+	check_xer(BASE64, "tag", "<tag></tag>", "");
+	check_xer(BASE64, "tag", "<tag>QQ==</tag>", "A");
+	check_xer(BASE64, "tag", "<tag>QUI=</tag>", "AB");
+	check_xer(BASE64, "tag", "<tag>QUJD</tag>", "ABC");
+	/* Base64 with whitespace */
+	check_xer(BASE64, "tag", "<tag>SGVs bG8s\nIFdv cmxk IQ==</tag>", "Hello, World!");
+	/* Invalid Base64 - should fail */
+	check_xer(BASE64, "tag", "<tag>SGVs!bG8</tag>", 0);
+
 	return 0;
 }
-

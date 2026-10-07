@@ -1,0 +1,25 @@
+TestModule DEFINITIONS ::= BEGIN
+
+-- MAIN FIX: These used to fail but now work
+-- The error was: "syntax error, unexpected TOK_capitalreference, expecting '}'"
+
+BadClass1 ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type,
+    IDENTIFIED BY &id
+}
+
+BadClass2 ::= CLASS {
+    &value INTEGER UNIQUE,
+    IDENTIFIED BY &value
+}
+
+-- This still works as before (proper ASN.1 syntax)
+GoodClass ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type
+} WITH SYNTAX {
+    [HAS &Type] IDENTIFIED BY &id
+}
+
+END

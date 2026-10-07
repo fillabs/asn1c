@@ -9,6 +9,7 @@ typedef long	 Short_t;
 
 /*** <<< FUNC-DECLS [Short] >>> ***/
 
+extern asn_oer_constraints_t asn_OER_type_Short_constr_1;
 extern asn_TYPE_descriptor_t asn_DEF_Short;
 asn_struct_free_f Short_free;
 asn_struct_print_f Short_print;
@@ -17,6 +18,8 @@ ber_type_decoder_f Short_decode_ber;
 der_type_encoder_f Short_encode_der;
 xer_type_decoder_f Short_decode_xer;
 xer_type_encoder_f Short_encode_xer;
+cbor_type_decoder_f Short_decode_cbor;
+cbor_type_encoder_f Short_encode_cbor;
 oer_type_decoder_f Short_decode_oer;
 oer_type_encoder_f Short_encode_oer;
 
@@ -55,7 +58,7 @@ Short_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 /*** <<< CTDEFS [Short] >>> ***/
 
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_type_Short_constr_1 CC_NOTUSED = {
+asn_oer_constraints_t asn_OER_type_Short_constr_1 CC_NOTUSED = {
 	{ 2, 1 }	/* (0..65535) */,
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
@@ -83,7 +86,7 @@ asn_TYPE_descriptor_t asn_DEF_Short = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		Short_constraint
 	},
@@ -102,6 +105,7 @@ typedef Short_t	 Alias_t;
 
 /*** <<< FUNC-DECLS [Alias] >>> ***/
 
+extern asn_oer_constraints_t asn_OER_type_Alias_constr_1;
 extern asn_TYPE_descriptor_t asn_DEF_Alias;
 asn_struct_free_f Alias_free;
 asn_struct_print_f Alias_print;
@@ -110,6 +114,8 @@ ber_type_decoder_f Alias_decode_ber;
 der_type_encoder_f Alias_encode_der;
 xer_type_decoder_f Alias_decode_xer;
 xer_type_encoder_f Alias_encode_xer;
+cbor_type_decoder_f Alias_decode_cbor;
+cbor_type_encoder_f Alias_encode_cbor;
 oer_type_decoder_f Alias_decode_oer;
 oer_type_encoder_f Alias_encode_oer;
 
@@ -148,7 +154,7 @@ Alias_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 /*** <<< CTDEFS [Alias] >>> ***/
 
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_type_Alias_constr_1 CC_NOTUSED = {
+asn_oer_constraints_t asn_OER_type_Alias_constr_1 CC_NOTUSED = {
 	{ 2, 1 }	/* (0..65535) */,
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
@@ -176,7 +182,7 @@ asn_TYPE_descriptor_t asn_DEF_Alias = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		Alias_constraint
 	},
@@ -259,7 +265,7 @@ static asn_TYPE_member_t asn_MBR_Soo_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_foo_constraint_1
 		},
@@ -279,7 +285,7 @@ static asn_TYPE_member_t asn_MBR_Soo_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -299,7 +305,7 @@ static asn_TYPE_member_t asn_MBR_Soo_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -341,7 +347,7 @@ asn_TYPE_descriptor_t asn_DEF_Soo = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},
@@ -420,6 +426,20 @@ typedef struct EXTERNAL {
 
 extern asn_TYPE_descriptor_t asn_DEF_EXTERNAL;
 
+/*** <<< CODE [EXTERNAL] >>> ***/
+
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_encoding __attribute__((weak, alias("asn_DEF_encoding_5")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_encoding_5;
+static asn_TYPE_descriptor_t asn_DEF_encoding;
+__attribute__((constructor)) static void asn_DEF_encoding_5_alias_init(void) {
+	asn_DEF_encoding = asn_DEF_encoding_5;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
+
 /*** <<< CTDEFS [EXTERNAL] >>> ***/
 
 #if !defined(ASN_DISABLE_OER_SUPPORT)
@@ -430,7 +450,7 @@ static asn_oer_constraints_t asn_OER_type_encoding_constr_5 CC_NOTUSED = {
 
 /*** <<< STAT-DEFS [EXTERNAL] >>> ***/
 
-static asn_TYPE_member_t asn_MBR_encoding_5[] = {
+static asn_TYPE_member_t asn_MBR_EXTERNAL__encoding_5[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.single_ASN1_type),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		.tag_mode = +1,	/* EXPLICIT tag at current level */
@@ -444,7 +464,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -464,7 +484,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -484,7 +504,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -524,11 +544,11 @@ asn_TYPE_descriptor_t asn_DEF_encoding_5 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		CHOICE_constraint
 	},
-	asn_MBR_encoding_5,
+	asn_MBR_EXTERNAL__encoding_5,
 	3,	/* Elements count */
 	&asn_SPC_encoding_specs_5	/* Additional specs */
 };
@@ -547,7 +567,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -567,7 +587,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -587,7 +607,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -607,7 +627,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -655,7 +675,7 @@ asn_TYPE_descriptor_t asn_DEF_EXTERNAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},

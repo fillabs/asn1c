@@ -62,19 +62,19 @@ NativeEnumerated_decode_aper(const asn_codec_ctx_t *opt_codec_ctx,
         /*
          * X.691, #10.6: normally small non-negative whole number;
          */
-
-        /* XXX handle indefinite index length > 64k */
         value = aper_get_nsnnwn(pd);
         if(value < 0) ASN__DECODE_STARVED;
-        value += specs->extension - 1;
-        //if(value >= specs->map_count)
-        //    ASN__DECODE_FAILED;
-        if(value >= specs->map_count) {
-            ASN_DEBUG("Decoded unknown index value %s = %ld", td->name, value);
-            /* unknown index. Workaround => set the first enumeration value */
-            *native = specs->value2enum[0].nat_value;
+        if(value > ASN_UPER_NSNNWN_MAX) ASN__DECODE_FAILED;
+        if(value + specs->extension - 1 >= specs->map_count) {
+#ifdef ASN_REJECT_UNKNOWN_EXTENSIONS
+            ASN__DECODE_FAILED;
+#else
+            ASN_DEBUG("Decoded unknown extension index %ld for %s", value, td->name);
+            *native = LONG_MAX - value;
             return rval;
+#endif
         }
+        value += specs->extension - 1;
     }
 
     *native = specs->value2enum[value].nat_value;
@@ -108,12 +108,29 @@ NativeEnumerated_encode_aper(const asn_TYPE_descriptor_t *td,
     er.encoded = 0;
 
     native = *(const long *)sptr;
-    if(native < 0) ASN__ENCODE_FAILED;
 
     key.nat_value = native;
-    kf = bsearch(&key, specs->value2enum, specs->map_count,
-                 sizeof(key), NativeEnumerated__compar_value2enum);
+    if(specs->extension) {
+        int root_count = specs->extension - 1;
+        kf = bsearch(&key, specs->value2enum, root_count,
+                     sizeof(key), NativeEnumerated__compar_value2enum);
+        if(!kf)
+            kf = bsearch(&key, specs->value2enum + root_count,
+                         specs->map_count - root_count, sizeof(key),
+                         NativeEnumerated__compar_value2enum);
+    } else {
+        kf = bsearch(&key, specs->value2enum, specs->map_count,
+                     sizeof(key), NativeEnumerated__compar_value2enum);
+    }
     if(!kf) {
+        if((ct->flags & APC_EXTENSIBLE) && specs->extension
+           && ASN_NATIVE_ENUMERATED_IS_UNKNOWN_EXT(native)) {
+            value = LONG_MAX - native;
+            if(per_put_few_bits(po, 1, 1)
+               || aper_put_nsnnwn(po, (int)value))
+                ASN__ENCODE_FAILED;
+            ASN__ENCODED_OK(er);
+        }
         ASN_DEBUG("No element corresponds to %ld", native);
         ASN__ENCODE_FAILED;
     }

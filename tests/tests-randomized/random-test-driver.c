@@ -19,9 +19,12 @@ static const struct encoding_map {
     const char *dir_name;
     enum asn_transfer_syntax syntax;
 } encodings[] = {
+    {"BER", "ber", ATS_BER},
     {"DER", "der", ATS_DER},
     {"OER", "oer", ATS_CANONICAL_OER},
+    {"PER", "per", ATS_UNALIGNED_BASIC_PER},
     {"UPER", "uper", ATS_UNALIGNED_CANONICAL_PER},
+    {"APER", "aper", ATS_ALIGNED_CANONICAL_PER},
     {"XER", "xer", ATS_CANONICAL_XER},
     {"JER", "jer", ATS_JER},
 };
@@ -53,8 +56,8 @@ static void __attribute__((constructor)) initialize() {
     syntax = lookup_syntax(data_dir);
     if(syntax == ATS_INVALID) {
         fprintf(stderr,
-                "Expected ASN1_DATA_DIR={der,oer,uper,xer,jer} environment "
-                "variable.\n");
+                "Expected ASN1_DATA_DIR={ber,der,oer,per,uper,aper,xer,jer} "
+                "environment variable.\n");
         exit(EX_UNAVAILABLE);
     }
 }
@@ -92,8 +95,11 @@ usage(const char *progname) {
             "Encodings (ASN.1 Transfer Syntaxes):\n"
             "   DER             Distinguished Encoding Rules (compatible with "
             "BER)\n"
+            "   BER             Basic Encoding Rules\n"
             "   OER             Canonical Octet Encoding Rules\n"
+            "   PER             Basic Unaligned Packed Encoding Rules\n"
             "   UPER            Canonical Unaligned Packed Encoding Rules\n"
+            "   APER            Canonical Aligned Packed Encoding Rules\n"
             "   XER             XML Encoding Rules\n"
             "   JER             JSON Encoding Rules\n",
             progname);

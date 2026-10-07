@@ -7,6 +7,16 @@ set -o pipefail
 top_builddir=${top_builddir:-../..}
 top_srcdir=${top_srcdir:-../..}
 
+path_from_testdir() {
+    case "$1" in
+        /*) printf '%s\n' "$1" ;;
+        *) printf '../%s\n' "$1" ;;
+    esac
+}
+
+ASN1C="$(path_from_testdir "${top_builddir}")/asn1c/asn1c"
+SKELETONS_DIR="$(path_from_testdir "${top_srcdir}")/skeletons"
+
 cleanup() {
     rm -rf *.[acho] Makefile.am.* *.mk *.txt *.asn
     rm -f converter-example
@@ -33,7 +43,7 @@ verify() {
     rm -rf "test-${type}"
     mkdir "test-${type}"
     cd "test-${type}"
-    asncmd="../${top_builddir}/asn1c/asn1c -Wdebug-compiler -flink-skeletons -S ../${top_srcdir}/skeletons $flags test.asn"
+    asncmd="${ASN1C} -fall-defs-global -Wdebug-compiler -flink-skeletons -S ${SKELETONS_DIR} $flags test.asn"
 
     {
     echo "$asncmd"

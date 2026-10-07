@@ -74,8 +74,10 @@ jer_next_token(int *stateContext, const void *buffer, size_t size, pjer_chunk_ty
         *ch_type = PJER_WMORE;
 		return 0;		/* Try again with more data */
 	} else {
-		assert(arg.chunk_size);
-		assert(arg.chunk_buf == buffer);
+		if(arg.chunk_size == 0
+		|| arg.chunk_size > size
+		|| arg.chunk_buf != buffer)
+			return -1;
 	}
 
 	/*
@@ -258,6 +260,9 @@ jer_decode_general(const asn_codec_ctx_t *opt_codec_ctx,
                 break;	/* Check the rest down there */
 			}
 		}
+
+        if(consumed_myself == 0)
+            RETURN(RC_FAIL);
 
         ctx->phase = 2;	/* Phase out */
         RETURN(RC_OK);

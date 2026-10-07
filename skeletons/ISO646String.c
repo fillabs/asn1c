@@ -20,6 +20,7 @@ static asn_per_constraints_t asn_DEF_ISO646String_per_constraints = {
 };
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 asn_TYPE_operation_t asn_OP_ISO646String = {
+    .kind = ASN_KIND_PRIMITIVE,
     OCTET_STRING_free,
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     OCTET_STRING_print_utf8,  /* ASCII subset */
@@ -75,7 +76,14 @@ asn_TYPE_operation_t asn_OP_ISO646String = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-    0  /* Use generic outmost tag fetcher */
+    0,  /* Use generic outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    OCTET_STRING_decode_cbor_utf8,
+    OCTET_STRING_encode_cbor_utf8,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 asn_TYPE_descriptor_t asn_DEF_ISO646String = {
     "ISO646String",

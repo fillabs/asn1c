@@ -70,6 +70,9 @@ asn1p_parse_buffer(const char *buffer, int size /* = -1 */, const char *debug_fi
 
 /*
  * Parse the file identified by its name.
+ * On failure, errno tells why: the errno value of fopen() if the file
+ * cannot be opened, EINVAL otherwise (not a regular file, or not valid
+ * ASN.1).
  */
 asn1p_t *
 asn1p_parse_file(const char *filename, enum asn1p_flags flags) {
@@ -82,13 +85,15 @@ asn1p_parse_file(const char *filename, enum asn1p_flags flags) {
 	int ret;
 
 	if(_asn1p_set_flags(flags)) {
-		/* EINVAL */
+		errno = EINVAL;
 		return 0;
 	}
 
 	fp = fopen(filename, "r");
 	if(fp == NULL) {
+		int open_errno = errno;
 		perror(filename);
+		errno = open_errno;
 		return NULL;
 	}
 
@@ -118,11 +123,13 @@ asn1p_parse_file(const char *filename, enum asn1p_flags flags) {
 		assert(a);
 		if(_asn1p_fix_modules(a, filename)) {
 			asn1p_delete(a);
+			errno = EINVAL;
 			return NULL;	/* FIXME: destroy (a) */
 		}
-	} else if(a) {
-		asn1p_delete(a);
+	} else {
+		if(a) asn1p_delete(a);
 		a = NULL;
+		errno = EINVAL;
 	}
 
 	return a;

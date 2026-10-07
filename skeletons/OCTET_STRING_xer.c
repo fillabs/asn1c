@@ -14,11 +14,11 @@ OCTET_STRING_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
     const char * const h2c = "0123456789ABCDEF";
     const OCTET_STRING_t *st = (const OCTET_STRING_t *)sptr;
     asn_enc_rval_t er = { 0, 0, 0 };
-    char scratch[16 * 3 + 4];
+    char scratch[32 + 4];
     char *p = scratch;
+    char *scend = scratch + (sizeof(scratch) - 2);
     uint8_t *buf;
     uint8_t *end;
-    size_t i;
 
     if(!st || (!st->buf && st->size))
         ASN__ENCODE_FAILED;
@@ -26,40 +26,32 @@ OCTET_STRING_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
     er.encoded = 0;
 
     /*
-     * Dump the contents of the buffer in hexadecimal.
+     * Delegate to Base64 encoder when the caller requests it.
+     * XER_F_CANONICAL overrides: CXER must stay hex (X.693 §9.4).
+     */
+    if((flags & XER_F_BASE64) && !(flags & XER_F_CANONICAL))
+        return OCTET_STRING_encode_xer_base64(td, sptr, ilevel, flags, cb, app_key);
+
+    /*
+     * Dump the contents of the buffer as contiguous upper-case hex
+     * (xmlhstring per X.680 §22.3 / X.693 §8.4).
+     * Both BASIC-XER and CANONICAL-XER use the same format; the only
+     * difference is that BASIC-XER pretty-printing surrounds the value
+     * with ASN__TEXT_INDENT (handled by the caller, not here).
      */
     buf = st->buf;
     end = buf + st->size;
-    if(flags & XER_F_CANONICAL) {
-        char *scend = scratch + (sizeof(scratch) - 2);
-        for(; buf < end; buf++) {
-            if(p >= scend) {
-                ASN__CALLBACK(scratch, p - scratch);
-                p = scratch;
-            }
-            *p++ = h2c[(*buf >> 4) & 0x0F];
-            *p++ = h2c[*buf & 0x0F];
+    for(; buf < end; buf++) {
+        if(p >= scend) {
+            ASN__CALLBACK(scratch, p - scratch);
+            p = scratch;
         }
-
-        ASN__CALLBACK(scratch, p-scratch);  /* Dump the rest */
-    } else {
-        for(i = 0; buf < end; buf++, i++) {
-            if(!(i % 16) && (i || st->size > 16)) {
-                ASN__CALLBACK(scratch, p-scratch);
-                p = scratch;
-                ASN__TEXT_INDENT(1, ilevel);
-            }
-            *p++ = h2c[(*buf >> 4) & 0x0F];
-            *p++ = h2c[*buf & 0x0F];
-            *p++ = 0x20;
-        }
-        if(p - scratch) {
-            p--;  /* Remove the tail space */
-            ASN__CALLBACK(scratch, p-scratch);  /* Dump the rest */
-            if(st->size > 16)
-                ASN__TEXT_INDENT(1, ilevel-1);
-        }
+        *p++ = h2c[(*buf >> 4) & 0x0F];
+        *p++ = h2c[*buf & 0x0F];
     }
+    ASN__CALLBACK(scratch, p - scratch);  /* Dump the rest */
+
+    (void)ilevel;  /* Indentation is handled by the XER framework */
 
     ASN__ENCODED_OK(er);
 cb_failed:
@@ -343,36 +335,213 @@ static ssize_t OCTET_STRING__convert_binary(void *sptr, const void *chunk_buf, s
 }
 
 /*
+ * Convert from hexadecimal format to BIT STRING: "0455AA..."
+ * This is similar to OCTET_STRING__convert_hexadecimal but sets bits_unused to 0.
+ */
+static ssize_t BIT_STRING__convert_hexadecimal(void *sptr, const void *chunk_buf, size_t chunk_size, int have_more) {
+    BIT_STRING_t *st = (BIT_STRING_t *)sptr;
+    const char *chunk_stop = (const char *)chunk_buf;
+    const char *p = chunk_stop;
+    const char *pend = p + chunk_size;
+    unsigned int clv = 0;
+    int half = 0;	/* Half bit */
+    uint8_t *buf;
+
+    /* Reallocate buffer according to high cap estimation */
+    size_t new_size = st->size + (chunk_size + 1) / 2;
+    void *nptr = REALLOC(st->buf, new_size + 1);
+    if(!nptr) return -1;
+    st->buf = (uint8_t *)nptr;
+    buf = st->buf + st->size;
+
+    for(; p < pend; p++) {
+        int ch = *(const unsigned char *)p;
+        switch(ch) {
+        case 0x09: case 0x0a: case 0x0c: case 0x0d:
+        case 0x20:
+            /* Ignore whitespace */
+            continue;
+        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:  /*01234*/
+        case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:  /*56789*/
+            clv = (clv << 4) + (ch - 0x30);
+            break;
+        case 0x41: case 0x42: case 0x43:  /* ABC */
+        case 0x44: case 0x45: case 0x46:  /* DEF */
+            clv = (clv << 4) + (ch - 0x41 + 10);
+            break;
+        case 0x61: case 0x62: case 0x63:  /* abc */
+        case 0x64: case 0x65: case 0x66:  /* def */
+            clv = (clv << 4) + (ch - 0x61 + 10);
+            break;
+        default:
+            *buf = 0;  /* JIC */
+            return -1;
+        }
+        if(half++) {
+            half = 0;
+            *buf++ = clv;
+            chunk_stop = p + 1;
+        }
+    }
+
+    /*
+     * Check partial decoding.
+     */
+    if(half) {
+        if(have_more) {
+            /*
+             * Partial specification is fine,
+             * because no more PXER_TEXT data is available.
+             */
+            *buf++ = clv << 4;
+            chunk_stop = p;
+        }
+    } else {
+        chunk_stop = p;
+    }
+
+    st->size = buf - st->buf;  /* Adjust the buffer size */
+    st->bits_unused = 0;  /* For BIT STRING, hex means all bits are used */
+    assert(st->size <= new_size);
+    st->buf[st->size] = 0;  /* Courtesy termination */
+
+    return (chunk_stop - (const char *)chunk_buf);  /* Converted size */
+}
+
+/*
+ * Check if the content looks like binary format (only 0s, 1s, and whitespace).
+ * Returns 1 if content appears to be binary, 0 otherwise.
+ */
+static int
+BIT_STRING__is_binary(const void *chunk_buf, size_t chunk_size) {
+    const unsigned char *p = (const unsigned char *)chunk_buf;
+    const unsigned char *pend = p + chunk_size;
+
+    for (; p < pend; p++) {
+        unsigned char ch = *p;
+        switch(ch) {
+        case 0x09: case 0x0a: case 0x0c: case 0x0d:
+        case 0x20:
+            /* Whitespace is allowed */
+            continue;
+        case 0x30:  /* '0' */
+        case 0x31:  /* '1' */
+            /* Binary digits */
+            continue;
+        default:
+            /* Non-binary character found, not binary format */
+            return 0;
+        }
+    }
+    return 1;  /* Only binary characters found */
+}
+
+/*
+ * Auto-detect and convert from either binary or hexadecimal format for BIT STRING.
+ * Supports explicit prefixes per X.693:
+ *   - B'...' or b'...' for binary format
+ *   - H'...' or h'...' for hexadecimal format
+ * Without explicit prefixes, defaults to binary unless hexadecimal digits (2-9, A-F)
+ * are found in the string.
+ */
+static ssize_t
+BIT_STRING__convert_binary_or_hex(void *sptr, const void *chunk_buf,
+                                  size_t chunk_size, int have_more) {
+    const unsigned char *buf_start = (const unsigned char *)chunk_buf;
+    const unsigned char *p = buf_start;
+    const unsigned char *pend = p + chunk_size;
+    int explicit_binary = 0;
+    int explicit_hex = 0;
+
+    /* Skip leading whitespace */
+    while(p < pend && (*p == 0x09 || *p == 0x0a || *p == 0x0c ||
+                       *p == 0x0d || *p == 0x20)) {
+        p++;
+    }
+
+    /* Check for explicit B or H prefix */
+    if(p < pend) {
+        if((*p == 'B' || *p == 'b') && (p + 1) < pend && p[1] == '\'') {
+            explicit_binary = 1;
+            p += 2;  /* Skip B' */
+        } else if((*p == 'H' || *p == 'h') && (p + 1) < pend && p[1] == '\'') {
+            explicit_hex = 1;
+            p += 2;  /* Skip H' */
+        }
+    }
+
+    if(explicit_binary || explicit_hex) {
+        /* Find the closing quote and calculate actual content size */
+        const unsigned char *content_start = p;
+        const unsigned char *content_end = p;
+        while(content_end < pend && *content_end != '\'') {
+            content_end++;
+        }
+        size_t content_size = content_end - content_start;
+        ssize_t result;
+
+        if(explicit_binary) {
+            result = OCTET_STRING__convert_binary(sptr, content_start, content_size, have_more);
+        } else {
+            result = BIT_STRING__convert_hexadecimal(sptr, content_start, content_size, have_more);
+        }
+
+        if(result < 0) return result;
+
+        /* Return total consumed from original buffer including prefix and closing quote */
+        size_t total_consumed = (content_end - buf_start);
+        if(content_end < pend && *content_end == '\'') {
+            total_consumed++;  /* Include closing quote */
+        }
+        return total_consumed;
+    }
+
+    /* No explicit prefix - auto-detect based on content */
+    /* Default to binary unless hex digits (2-9, A-F) are found */
+    if(BIT_STRING__is_binary(chunk_buf, chunk_size)) {
+        return OCTET_STRING__convert_binary(sptr, chunk_buf, chunk_size, have_more);
+    } else {
+        return BIT_STRING__convert_hexadecimal(sptr, chunk_buf, chunk_size, have_more);
+    }
+}
+
+/*
  * Something like strtod(), but with stricter rules.
  */
 static int
 OS__strtoent(int base, const char *buf, const char *end, int32_t *ret_value) {
 	const int32_t last_unicode_codepoint = 0x10ffff;
-	int32_t val = 0;
+	int64_t val = 0;
+    int seen_digit = 0;
 	const char *p;
 
 	for(p = buf; p < end; p++) {
 		int ch = *p;
+        int digit = -1;
 
-        switch(ch) {
-        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:  /*01234*/
-        case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:  /*56789*/
-            val = val * base + (ch - 0x30);
-            break;
-        case 0x41: case 0x42: case 0x43:  /* ABC */
-        case 0x44: case 0x45: case 0x46:  /* DEF */
-            val = val * base + (ch - 0x41 + 10);
-            break;
-        case 0x61: case 0x62: case 0x63:  /* abc */
-        case 0x64: case 0x65: case 0x66:  /* def */
-            val = val * base + (ch - 0x61 + 10);
-            break;
-        case 0x3b:  /* ';' */
-            *ret_value = val;
+        if(ch >= 0x30 && ch <= 0x39) {
+            digit = ch - 0x30;
+        } else if(base == 16 && ch >= 0x41 && ch <= 0x46) {
+            digit = ch - 0x41 + 10;
+        } else if(base == 16 && ch >= 0x61 && ch <= 0x66) {
+            digit = ch - 0x61 + 10;
+        } else if(ch == 0x3b /* ';' */) {
+            if(!seen_digit) return -1;
+            if(val > last_unicode_codepoint) return -1;
+            if(val >= 0xd800 && val <= 0xdfff) return -1;
+            *ret_value = (int32_t)val;
             return (p - buf) + 1;
-        default:
-            return -1;  /* Character set error */
+        } else {
+            if(!seen_digit) return -1;
+            if(val > last_unicode_codepoint) return -1;
+            if(val >= 0xd800 && val <= 0xdfff) return -1;
+            *ret_value = (int32_t)val;
+            return p - buf;
         }
+
+        if(digit >= base) return -1;
+        seen_digit = 1;
+        val = val * base + digit;
 
         /* Value exceeds the Unicode range. */
         if(val > last_unicode_codepoint) {
@@ -381,7 +550,7 @@ OS__strtoent(int base, const char *buf, const char *end, int32_t *ret_value) {
     }
 
     *ret_value = -1;
-    return (p - buf);
+    return 0;
 }
 
 /*
@@ -431,12 +600,14 @@ OCTET_STRING__convert_entrefs(void *sptr, const void *chunk_buf,
                 pval = p + 2, base = 10;
             len = OS__strtoent(base, pval, p + len, &val);
             if(len == -1) {
-                /* Invalid charset. Just copy verbatim. */
-                *buf++ = ch;
-                continue;
+                ASN_DEBUG("XER OCTET STRING: invalid numeric character reference rejected");
+                st->buf[st->size] = 0;
+                return -1;
             }
-            if(!len || pval[len-1] != 0x3b) goto want_more;
-            assert(val > 0);
+            if(!len) goto want_more;
+            if(pval[len-1] != 0x3b) {
+                ASN_DEBUG("XER OCTET STRING: numeric character reference without semicolon accepted");
+            }
             p += (pval - p) + len - 1;  /* Advance past entref */
 
             if(val < 0x80) {
@@ -488,11 +659,13 @@ OCTET_STRING__convert_entrefs(void *sptr, const void *chunk_buf,
                     *buf = 0x3e;  /* '>' */
                 } else {
                     /* Unsupported entity reference */
+                    ASN_DEBUG("XER OCTET STRING: unsupported entity reference copied verbatim");
                     *buf++ = ch;
                     continue;
                 }
                 if(p[2] != 0x74) {
                     /* Unsupported entity reference */
+                    ASN_DEBUG("XER OCTET STRING: unsupported entity reference copied verbatim");
                     *buf++ = ch;
                     continue;
                 }
@@ -501,6 +674,7 @@ OCTET_STRING__convert_entrefs(void *sptr, const void *chunk_buf,
                 continue;
             }
             /* Unsupported entity reference */
+            ASN_DEBUG("XER OCTET STRING: unsupported entity reference copied verbatim");
             *buf++ = ch;
         }
 
@@ -524,6 +698,380 @@ OCTET_STRING__convert_entrefs(void *sptr, const void *chunk_buf,
     st->buf[st->size] = 0;  /* Courtesy termination */
 
     return chunk_size;  /* Converted in full */
+}
+
+/*
+ * Base64 encoding table
+ */
+static const char base64_encode_table[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/*
+ * Encode OCTET STRING to Base64 format for XER
+ */
+asn_enc_rval_t
+OCTET_STRING_encode_xer_base64(const asn_TYPE_descriptor_t *td, const void *sptr,
+                               int ilevel, enum xer_encoder_flags_e flags,
+                               asn_app_consume_bytes_f *cb, void *app_key) {
+    const OCTET_STRING_t *st = (const OCTET_STRING_t *)sptr;
+    asn_enc_rval_t er = { 0, 0, 0 };
+    char scratch[80];  /* 76 chars per line + newline is typical for Base64 */
+    char *p = scratch;
+    const uint8_t *buf;
+    const uint8_t *end;
+    size_t i;
+    int chars_on_line = 0;
+    const int max_chars_per_line = 76;
+
+    (void)td;
+
+    if(!st || (!st->buf && st->size))
+        ASN__ENCODE_FAILED;
+
+    er.encoded = 0;
+    buf = st->buf;
+    end = buf + st->size;
+
+    /*
+     * Encode buffer in Base64.
+     * Process 3 bytes at a time into 4 Base64 characters.
+     */
+    while(buf < end) {
+        uint32_t value = 0;
+        int bytes_left = end - buf;
+        int bytes_to_encode = (bytes_left >= 3) ? 3 : bytes_left;
+        
+        /* Build a 24-bit value from up to 3 bytes */
+        for(i = 0; i < bytes_to_encode; i++) {
+            value = (value << 8) | buf[i];
+        }
+        
+        /* Shift to align if we have fewer than 3 bytes */
+        if(bytes_to_encode < 3) {
+            value <<= 8 * (3 - bytes_to_encode);
+        }
+        
+        buf += bytes_to_encode;
+        
+        /* Extract 4 6-bit values and encode them */
+        for(i = 0; i < 4; i++) {
+            if(p >= scratch + sizeof(scratch) - 2) {
+                /* Flush buffer */
+                ASN__CALLBACK(scratch, p - scratch);
+                p = scratch;
+                chars_on_line = 0;
+            }
+            
+            if(!(flags & XER_F_CANONICAL) && chars_on_line >= max_chars_per_line) {
+                /* Add line break for readability (not in canonical mode) */
+                ASN__CALLBACK(scratch, p - scratch);
+                p = scratch;
+                ASN__TEXT_INDENT(1, ilevel);
+                chars_on_line = 0;
+            }
+            
+            if(i < bytes_to_encode + 1) {
+                /* Valid data character */
+                int idx = (value >> (18 - i * 6)) & 0x3F;
+                *p++ = base64_encode_table[idx];
+                chars_on_line++;
+            } else {
+                /* Padding */
+                *p++ = '=';
+                chars_on_line++;
+            }
+        }
+    }
+
+    /* Flush any remaining data */
+    if(p > scratch) {
+        ASN__CALLBACK(scratch, p - scratch);
+    }
+
+    ASN__ENCODED_OK(er);
+cb_failed:
+    ASN__ENCODE_FAILED;
+}
+
+/*
+ * Base64 decoding table (inverse of encode table)
+ * Returns -1 for invalid characters, -2 for padding '='
+ */
+static int
+base64_decode_char(char c) {
+    if(c >= 'A' && c <= 'Z') return c - 'A';
+    if(c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if(c >= '0' && c <= '9') return c - '0' + 52;
+    if(c == '+') return 62;
+    if(c == '/') return 63;
+    if(c == '=') return -2;  /* Padding */
+    return -1;  /* Invalid character */
+}
+
+/*
+ * Convert from Base64 format
+ */
+static ssize_t
+OCTET_STRING__convert_base64(void *sptr, const void *chunk_buf,
+                             size_t chunk_size, int have_more) {
+    OCTET_STRING_t *st = (OCTET_STRING_t *)sptr;
+    const char *p = (const char *)chunk_buf;
+    const char *pend = p + chunk_size;
+    uint8_t *buf;
+    uint32_t value;
+    int bits_collected;
+    int padding_seen;
+
+    /* Initialize decoder state on first call */
+    if(!st->_xer_decode_state.decoder_initialized) {
+        st->_xer_decode_state.accumulated_value = 0;
+        st->_xer_decode_state.bits_collected = 0;
+        st->_xer_decode_state.padding_seen = 0;
+        st->_xer_decode_state.decoder_initialized = 1;
+    }
+
+    /* Load state from structure */
+    value = st->_xer_decode_state.accumulated_value;
+    bits_collected = st->_xer_decode_state.bits_collected;
+    padding_seen = st->_xer_decode_state.padding_seen;
+
+    /* Reallocate buffer - Base64 decodes to approximately 3/4 of input size */
+    size_t new_size = st->size + (chunk_size * 3 / 4) + 3;
+    void *nptr = REALLOC(st->buf, new_size + 1);
+    if(!nptr) return -1;
+    st->buf = (uint8_t *)nptr;
+    buf = st->buf + st->size;
+
+    /*
+     * Decode Base64 data
+     */
+    for(; p < pend; p++) {
+        int ch = *(const unsigned char *)p;
+        int decoded;
+        
+        /* Skip whitespace */
+        switch(ch) {
+        case 0x09: case 0x0a: case 0x0c: case 0x0d: case 0x20:
+            continue;
+        default:
+            break;
+        }
+        
+        decoded = base64_decode_char(ch);
+        
+        if(decoded == -1) {
+            /* Invalid character - error */
+            st->size = buf - st->buf;
+            st->buf[st->size] = 0;  /* Ensure null termination */
+            return -1;
+        }
+        
+        if(decoded == -2) {
+            /* Padding character */
+            padding_seen = 1;
+            continue;
+        }
+        
+        if(padding_seen) {
+            /* Data after padding is invalid */
+            st->size = buf - st->buf;
+            st->buf[st->size] = 0;  /* Ensure null termination */
+            return -1;
+        }
+        
+        /* Accumulate 6 bits */
+        value = (value << 6) | decoded;
+        bits_collected += 6;
+        
+        /* When we have 8 or more bits, extract a byte */
+        if(bits_collected >= 8) {
+            bits_collected -= 8;
+            *buf++ = (value >> bits_collected) & 0xFF;
+        }
+    }
+
+    /* Update size */
+    st->size = buf - st->buf;
+    
+    /* Save state back to structure for next call */
+    st->_xer_decode_state.accumulated_value = value;
+    st->_xer_decode_state.bits_collected = bits_collected;
+    st->_xer_decode_state.padding_seen = padding_seen;
+    
+    /* Always write null terminator to prevent buffer overflow in callers */
+    if(st->size <= new_size) {
+        st->buf[st->size] = 0;  /* Courtesy termination */
+    } else {
+        /* Buffer overflow - write null at last valid position */
+        st->buf[new_size] = 0;
+        st->size = new_size;  /* Truncate to valid size */
+        return -1;
+    }
+
+    /* Return amount of input consumed (all of it)
+     * Note: pend = chunk_buf + chunk_size, so this is always >= 0 */
+    return pend - (const char *)chunk_buf;
+}
+
+/*
+ * Format classification result returned by OCTET_STRING__classify().
+ */
+typedef enum {
+    OCTET_STRING_FMT_HEX,           /* Unambiguously hex */
+    OCTET_STRING_FMT_BASE64,        /* Unambiguously Base64 */
+    OCTET_STRING_FMT_AMBIGUOUS_HEX, /* Valid in both; prefer hex (standard default) */
+    OCTET_STRING_FMT_ERROR          /* Cannot be decoded unambiguously */
+} OCTET_STRING__fmt_e;
+
+/*
+ * Classify an OCTET STRING XER text body as hex or Base64.
+ *
+ * Rules (X.680 §22.3 / X.693):
+ *  - HEX        : only [0-9A-Fa-f] plus XML whitespace, even non-ws digit
+ *                 count.  Lower-case a-f and internal whitespace are accepted
+ *                 (liberal decoding per X.693 §7.3) and logged via ASN_DEBUG.
+ *  - BASE64     : contains any character in [G-Zg-z+/=] — impossible in hex.
+ *  - AMBIGUOUS  : all characters in [0-9A-Fa-f] plus whitespace AND even
+ *                 non-ws count.  Standard default is hex; callers treat this
+ *                 identically to HEX.
+ *  - ERROR      : characters outside both alphabets.
+ *
+ * NOTE: The old "0x"/"0X" prefix heuristic is intentionally absent.
+ *       "0x6B" is valid Base64 for 0xD3 0x1E 0x81 — treating it as a hex
+ *       prefix caused incorrect decodes (issue #538).
+ */
+static OCTET_STRING__fmt_e
+OCTET_STRING__classify(const void *chunk_buf, size_t chunk_size) {
+    const unsigned char *p   = (const unsigned char *)chunk_buf;
+    const unsigned char *end = p + chunk_size;
+    int non_ws_count = 0;
+    int lowercase_seen = 0;
+    int ws_inside = 0;
+
+    for(; p < end; p++) {
+        unsigned char ch = *p;
+
+        /* XML whitespace: always accepted in both formats */
+        if(ch == 0x09 || ch == 0x0a || ch == 0x0c || ch == 0x0d || ch == 0x20) {
+            if(non_ws_count > 0)
+                ws_inside = 1;
+            continue;
+        }
+
+        /* Characters only possible in Base64 (not valid hex) */
+        if((ch >= 'G' && ch <= 'Z') ||
+           (ch >= 'g' && ch <= 'z') ||
+           ch == '+' || ch == '/' || ch == '=') {
+            return OCTET_STRING_FMT_BASE64;
+        }
+
+        /* Hex alphabet: [0-9A-Fa-f] */
+        if((ch >= '0' && ch <= '9') ||
+           (ch >= 'A' && ch <= 'F') ||
+           (ch >= 'a' && ch <= 'f')) {
+            if(ch >= 'a' && ch <= 'f')
+                lowercase_seen = 1;
+            non_ws_count++;
+            continue;
+        }
+
+        /* Character not valid in either format */
+        return OCTET_STRING_FMT_ERROR;
+    }
+
+    if(non_ws_count == 0)
+        return OCTET_STRING_FMT_ERROR;  /* Empty / whitespace-only body */
+
+    if(lowercase_seen)
+        ASN_DEBUG("XER OCTET STRING: lower-case hex digit(s) accepted (liberal)");
+    if(ws_inside)
+        ASN_DEBUG("XER OCTET STRING: whitespace inside value accepted (liberal)");
+
+    if(non_ws_count & 1)
+        ASN_DEBUG("XER OCTET STRING: odd hex digit count accepted (liberal)");
+
+    /*
+     * Even count, only hex-alphabet characters: value is simultaneously
+     * valid hex and valid Base64.  Per X.680 §22.3 the standard encoding
+     * is hex (xmlhstring), so we prefer hex.
+     */
+    return OCTET_STRING_FMT_AMBIGUOUS_HEX;
+}
+
+/*
+ * Auto-detect and convert from either hexadecimal or Base64 format.
+ * Supports the nonstandard explicit H'...' / h'...' prefix for hexadecimal.
+ *
+ * Format detection (OCTET_STRING__classify) runs on the first chunk that
+ * contains non-whitespace content and is pinned in _xer_decode_state so
+ * that all subsequent chunks of the same value use the same converter.
+ * This prevents a split input from being decoded with inconsistent formats.
+ */
+static ssize_t
+OCTET_STRING__convert_auto(void *sptr, const void *chunk_buf,
+                           size_t chunk_size, int have_more) {
+    OCTET_STRING_t *st = (OCTET_STRING_t *)sptr;
+    const unsigned char *buf_start = (const unsigned char *)chunk_buf;
+    const unsigned char *p = buf_start;
+    const unsigned char *pend = p + chunk_size;
+
+    /* Skip leading whitespace */
+    while(p < pend && (*p == 0x09 || *p == 0x0a || *p == 0x0c ||
+                       *p == 0x0d || *p == 0x20)) {
+        p++;
+    }
+
+    /* Nothing but whitespace in this chunk — nothing to convert yet.
+     * Both hex and Base64 converters already skip XML whitespace, so there
+     * is no need to delegate: consuming now avoids an unnecessary realloc
+     * inside the Base64 converter when the chunk carries no actual data. */
+    if(p >= pend)
+        return (ssize_t)chunk_size;
+
+    /* Check for explicit H' / h' prefix (nonstandard; X.693 does not define
+     * this for OCTET STRING, but we accept it liberally). */
+    if((p + 1) < pend && (*p == 'H' || *p == 'h') && p[1] == '\'') {
+        const unsigned char *content_start = p + 2;
+        const unsigned char *content_end = content_start;
+        ssize_t result;
+
+        ASN_DEBUG("XER OCTET STRING: nonstandard H'' prefix accepted");
+
+        /* Find the closing quote */
+        while(content_end < pend && *content_end != '\'') {
+            content_end++;
+        }
+        if(content_end >= pend || *content_end != '\'')
+            return -1;  /* Unterminated string */
+
+        result = OCTET_STRING__convert_hexadecimal(
+            sptr, content_start, (size_t)(content_end - content_start), 0);
+        if(result < 0) return result;
+
+        return (ssize_t)((content_end - buf_start) + 1);  /* include closing ' */
+    }
+
+    /* Determine format on the first non-whitespace chunk, then pin it. */
+    if(st->_xer_decode_state.format_decided == 0) {
+        OCTET_STRING__fmt_e fmt = OCTET_STRING__classify(chunk_buf, chunk_size);
+        switch(fmt) {
+        case OCTET_STRING_FMT_HEX:
+        case OCTET_STRING_FMT_AMBIGUOUS_HEX:
+            st->_xer_decode_state.format_decided = 1;  /* hex */
+            break;
+        case OCTET_STRING_FMT_BASE64:
+            st->_xer_decode_state.format_decided = 2;  /* base64 */
+            break;
+        case OCTET_STRING_FMT_ERROR:
+        default:
+            return -1;  /* Undecodable content */
+        }
+    }
+
+    if(st->_xer_decode_state.format_decided == 1)
+        return OCTET_STRING__convert_hexadecimal(sptr, chunk_buf, chunk_size, have_more);
+    else
+        return OCTET_STRING__convert_base64(sptr, chunk_buf, chunk_size, have_more);
 }
 
 /*
@@ -613,6 +1161,20 @@ OCTET_STRING_decode_xer_binary(const asn_codec_ctx_t *opt_codec_ctx,
 }
 
 /*
+ * Decode BIT STRING with auto-detection of binary or hexadecimal format.
+ * This allows XER input to use either binary (0/1) or hexadecimal format.
+ */
+asn_dec_rval_t
+BIT_STRING_decode_xer_binary_or_hex(const asn_codec_ctx_t *opt_codec_ctx,
+                                    const asn_TYPE_descriptor_t *td, void **sptr,
+                                    const char *opt_mname, const void *buf_ptr,
+                                    size_t size) {
+    return OCTET_STRING__decode_xer(opt_codec_ctx, td, sptr, opt_mname,
+                                    buf_ptr, size, 0,
+                                    BIT_STRING__convert_binary_or_hex);
+}
+
+/*
  * Decode OCTET STRING from the string (ASCII/UTF-8) data.
  */
 asn_dec_rval_t
@@ -624,4 +1186,31 @@ OCTET_STRING_decode_xer_utf8(const asn_codec_ctx_t *opt_codec_ctx,
                                     buf_ptr, size,
                                     OCTET_STRING__handle_control_chars,
                                     OCTET_STRING__convert_entrefs);
+}
+
+/*
+ * Decode OCTET STRING from Base64-encoded data.
+ */
+asn_dec_rval_t
+OCTET_STRING_decode_xer_base64(const asn_codec_ctx_t *opt_codec_ctx,
+                               const asn_TYPE_descriptor_t *td, void **sptr,
+                               const char *opt_mname, const void *buf_ptr,
+                               size_t size) {
+    return OCTET_STRING__decode_xer(opt_codec_ctx, td, sptr, opt_mname,
+                                    buf_ptr, size, 0,
+                                    OCTET_STRING__convert_base64);
+}
+
+/*
+ * Decode OCTET STRING with auto-detection of hexadecimal or Base64 format.
+ * This allows XER input to use either format seamlessly.
+ */
+asn_dec_rval_t
+OCTET_STRING_decode_xer_auto(const asn_codec_ctx_t *opt_codec_ctx,
+                             const asn_TYPE_descriptor_t *td, void **sptr,
+                             const char *opt_mname, const void *buf_ptr,
+                             size_t size) {
+    return OCTET_STRING__decode_xer(opt_codec_ctx, td, sptr, opt_mname,
+                                    buf_ptr, size, 0,
+                                    OCTET_STRING__convert_auto);
 }

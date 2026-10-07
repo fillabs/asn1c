@@ -1,0 +1,26 @@
+-- Test case for duplicate member names in different parent types
+-- This reproduces the issue where ServingCellConfigCommon and ServingCellConfigCommonSIB
+-- both have a member named ssb-PositionsInBurst but with different types
+
+DuplicateMemberNamesTest DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+-- Parent type 1: has ssb-PositionsInBurst as CHOICE
+ServingCellConfigCommon ::= SEQUENCE {
+    physCellId                          INTEGER (0..1007)           OPTIONAL,
+    ssb-PositionsInBurst                CHOICE {
+        shortBitmap                         BIT STRING (SIZE (4)),
+        mediumBitmap                        BIT STRING (SIZE (8)),
+        longBitmap                          BIT STRING (SIZE (64))
+    }                                                               OPTIONAL
+}
+
+-- Parent type 2: has ssb-PositionsInBurst as SEQUENCE
+ServingCellConfigCommonSIB ::= SEQUENCE {
+    physCellId                          INTEGER (0..1007)           OPTIONAL,
+    ssb-PositionsInBurst                SEQUENCE {
+        inOneGroup                          BIT STRING (SIZE (8)),
+        groupPresence                       BIT STRING (SIZE (8))   OPTIONAL
+    }                                                               OPTIONAL
+}
+
+END

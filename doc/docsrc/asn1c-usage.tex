@@ -1,4 +1,4 @@
-\batchmode
+%\batchmode
 \documentclass[english,oneside,12pt]{book}
 \usepackage[no-math]{fontspec}
 \usepackage{MnSymbol}
@@ -10,7 +10,7 @@
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{PT Sans}
 \setsansfont{PT Sans}
-\setmonofont{Consolas}
+\setmonofont{Courier New}
 
 \usepackage{fancyhdr}
 \usepackage{fancyref}
@@ -29,10 +29,15 @@
 \setstretch{1.1}
 
 % Courier 10 Pitch
-\def\courierFont{Courier10 BT WGL4}
+%\def\courierFont{Courier10 BT WGL4}
+\def\courierFont{Menlo}
 %\def\courierFont{Consolas}
-\setmonofont[Scale=1.05]{\courierFont}
-\setmathfont[Scale=1.05]{Cambria Math}
+%\newfontfamily\courierFont[Scale=1]{Courier New}
+%\newcommand{\courierFont}{\fontspec{Courier New}\fontsize{10pt}{12pt}\selectfont}
+%\def\courierFont{Courier New}[Scale=1]
+\setmonofont[Scale=0.95]{\courierFont}
+%\setmathfont[Scale=1.05]{Cambria Math}
+\setmathfont[Scale=1]{Monaco}
 
 \makeatletter
 
@@ -110,7 +115,9 @@
 \title{Using the Open Source ASN.1 Compiler\\
 \vspace*{0.4cm}
 \Large Documentation for asn1c version \asnver{}}
-\author{Lev Walkin <\href{mailto:vlm@lionet.info?Subject=asn1c}{vlm@lionet.info}>}
+\author{Lev Walkin <\href{mailto:vlm@lionet.info?Subject=asn1c}
+{vlm@lionet.info}>\\ 
+Mouse <5923577+mouse07410@users.noreply.github.com>}
 
 \pagestyle{fancy}
 \fancyhead[L]{\leftmark}
@@ -136,6 +143,9 @@ Rectangle ::= SEQUENCE {
     height  INTEGER,
     width   INTEGER
 }
+
+-- ENCODING-CONTROL directives can be added to customize XER encoding.
+-- See \fref{sec:ENCODING-CONTROL} for details.
 
 END
 \end{asn}
@@ -407,6 +417,13 @@ ASN.1 types. The compiler also creates the code which allows automatic
 serialization and deserialization of these structures using several
 standardized encoding rules (BER, DER, OER, PER, XER).
 
+The compiler includes advanced features for handling complex specifications:
+\begin{itemize}
+\item \textbf{ENCODING-CONTROL directives} for customizing XER encoding (see \fref{sec:ENCODING-CONTROL})
+\item \textbf{Circular dependency detection and resolution} for complex type graphs (see \fref{sec:Circular-Dependencies})
+\item \textbf{Information Object Class support} for protocol specifications like F1AP (see \fref{sec:IOC-Support})
+\end{itemize}
+
 Let's take the following ASN.1 example%
 \footnote{\Fref{chap:Abstract-Syntax-Notation} provides a quick reference
 on the ASN.1 notation.}:
@@ -538,7 +555,7 @@ This is a violation of an ASN.1 standard and compiler may fail to produce the me
 name clashes in case the module reuses the same identifiers in multiple
 contexts.}\\
 {\ttfamily -findirect-choice} & {\small When generating code for a CHOICE type, compile the CHOICE
-members as indirect pointers instead of declaring them inline. Consider
+members as indirect pointers instead of declaring them inline. Also affects Information Object Class OPEN\_TYPE pointer generation. Consider
 using this option together with \texttt{-fno-include-deps}
 to prevent circular references.}\\
 {\ttfamily -fincludes-quoted} & {\small Generate \#include lines in "double" instead of <angle> quotes.}\\
@@ -549,20 +566,25 @@ manually. }\\
 {\ttfamily -fno-constraints} & {\small Do not generate the ASN.1 subtype constraint checking code. This
 may produce a shorter executable.}\\
 {\ttfamily -fno-include-deps} & {\small Do not generate the courtesy \#include lines for non-critical dependencies.}\\
+{\ttfamily -fprefix=\emph{<prefix>}} & {\small Add the specified prefix to all generated type names and filenames. This helps avoid naming conflicts in several scenarios: (1) \textbf{System header conflicts}: On case-insensitive filesystems (macOS HFS+, Windows), ASN.1 types like \texttt{Time} may collide with system header \texttt{<time.h>}. asn1c now automatically disambiguates these generated filenames (for example, \texttt{Time.h} becomes \texttt{asn1c\_time.h} when no explicit prefix is set). Using \texttt{-fprefix=ASN1\_} still generates \texttt{ASN1\_Time.h} when a project-specific namespace is desired. (2) \textbf{Multiple ASN.1 modules}: When generating code for multiple ASN.1 syntaxes with type name clashes, a prefix prevents symbol collisions. (3) \textbf{Integration with existing code}: Prefixes help avoid conflicts with existing types in your codebase. When used with \texttt{-pdu} options, the prefix is automatically applied to PDU definitions in \texttt{converter-example.mk}. For example, \texttt{-fprefix=ASN1\_ -pdu=Certificate} generates \texttt{-DPDU=ASN1\_Certificate}. With \texttt{-pdu=all} or \texttt{-pdu=auto}, the generated \texttt{converter-example.mk} includes instructions for selecting specific prefixed PDU types.}\\
 {\ttfamily -funnamed-unions} & {\small Enable  unnamed  unions in the definitions of target language's structures.}\\
-{\ttfamily -fwide-types} & {\small Use the wide integer types (INTEGER\_t, REAL\_t) instead of machine's native data types (long, double). }\\\\
+{\ttfamily -fwide-types} & {\small Use the unbounded data types (INTEGER\_t, ENUMERATED\_t, REAL\_t) by default, instead of machine's native data types (long, double).}\\
+{\ttfamily -flong-size=\emph{<bits>}} & {\small Select the target C \texttt{long} model used by the default native INTEGER storage policy. Values are \texttt{32} and \texttt{64}; the default is the historical portable 32-bit model. Use this option when generated code is produced on one platform for a target with a different \texttt{long} size.}\\
+{\ttfamily -finteger-native-type=\emph{<mode>}} & {\small Select the fixed-width native C storage policy for constrained ASN.1 INTEGER types. Modes are \texttt{auto}, \texttt{int32}, \texttt{uint32}, \texttt{int64}, and \texttt{uint64}; the default is \texttt{auto}. The \texttt{auto} mode preserves the traditional \texttt{long}/\texttt{unsigned long}/INTEGER\_t selection. The explicit modes permit \texttt{int32\_t}, \texttt{uint32\_t}, \texttt{int64\_t}, or \texttt{uint64\_t} storage only when the INTEGER constraint fits that type. Larger or incompatible ranges are generated as INTEGER\_t, while their constraint bounds are still preserved, including unsigned 64-bit and arbitrary-precision bounds.}\\\\
 \textbf{Codecs Generation Options} & \textbf{Description}\\
 \midrule
 {\ttfamily -no-gen-BER} & {\small Do not generate the Basic Encoding Rules (BER, X.690) support code.}\\
 {\ttfamily -no-gen-XER} & {\small Do not generate the XML Encoding Rules (XER, X.693) support code.}\\
 {\ttfamily -no-gen-OER} & {\small Do not generate the Octet Encoding Rules (OER, X.696) support code.}\\
+{\ttfamily -no-gen-CBOR} & {\small Do not generate the Concise Binary Object Representation (CBOR, RFC~8949) support code. By default, CBOR support code is generated.}\\
 {\ttfamily -no-gen-UPER} & {\small Do not generate the Unaligned Packed Encoding Rules (PER, X.691) support code.}\\
 {\ttfamily -no-gen-APER} & {\small Do not generate the Aligned Packed Encoding Rules (PER, X.691) support code.}\\
 {\ttfamily -no-gen-print} & {\small Do not generate the print code.}\\
 {\ttfamily -no-gen-random-fill} & {\small Do not generate the random fill code.}\\
 {\ttfamily -no-gen-example} & {\small Do not generate the ASN.1 format converter example.}\\
 {\ttfamily -pdu=\{\textbf{all}|\textbf{auto}|\emph{Type}\}} & {\small Create a PDU table for specified types, or discover the Protocol Data Units automatically.
-In case of \texttt{-pdu=\textbf{all}}, all ASN.1 types defined in all modules will form a PDU table. In case of \texttt{-pdu=\textbf{auto}}, all types not referenced by any other type will form a PDU table. If \texttt{\emph{Type}} is an ASN.1 type identifier, it is added to a PDU table. The last form may be specified multiple times.}\\ \\
+In case of \texttt{-pdu=\textbf{all}}, all ASN.1 types defined in all modules will form a PDU table. In case of \texttt{-pdu=\textbf{auto}}, all types not referenced by any other type will form a PDU table. If \texttt{\emph{Type}} is an ASN.1 type identifier, it is added to a PDU table. The last form may be specified multiple times.}\\
+{\ttfamily -fgen-only-pdu-deps} & {\small Generate code only for types that are dependencies of \texttt{-pdu} types. This includes types referenced in Information Object Class tables, parameterized types, and constraint-based IOC references. Useful for large specifications like F1AP where only a subset of types is needed. See \fref{sec:IOC-Support}.}\\ \\
 \textbf{Output Options} & \textbf{Description}\\
 \midrule
 {\ttfamily -print-class-matrix} & {\small When \texttt{-EF} options are given, this option instructs the compiler to print out the collected Information Object Class matrix.}\\
@@ -1505,6 +1527,193 @@ xer_fprint(stdout, &asn_DEF_Rectangle, rect);
 \subsection*{See also}
 \seealso{sec:asn_fprint}{asn_fprint()}.
 
+\chapter{CBOR API usage examples}
+
+\apisection{sec:cbor_decode}{cbor\_decode()}
+
+\subsection*{Synopsis}
+\begin{signature}
+asn_dec_rval_t cbor_decode(
+    const asn_codec_ctx_t *opt_codec_ctx,   /* Optional codec context */
+    const asn_TYPE_descriptor_t *type_descriptor,
+    void **struct_ptr,  /* Pointer to a target structure's pointer */
+    const void *buffer, /* Data to be decoded */
+    size_t size         /* Size of data buffer */
+);
+\end{signature}
+
+\subsection*{Description}
+
+The \code{cbor_decode()} function decodes a CBOR-encoded (Concise Binary
+Object Representation, RFC~8949) data stream into the target ASN.1 structure.
+
+CBOR provides a compact, self-describing binary encoding format.
+The decoder follows canonical CBOR rules: only definite-length items are
+accepted. Integer values are decoded from CBOR major type 0 (unsigned) and
+major type 1 (negative), with bignum tags (2 and 3) used for values that
+exceed the 64-bit range. SEQUENCE and SET types are decoded from CBOR maps,
+SEQUENCE~OF and SET~OF from CBOR arrays, and CHOICE from a single-entry
+CBOR map.
+
+The decoder is \emph{tag-transparent}: any number of leading CBOR tag headers
+(major type~6, RFC~8949 \S3.4) are silently skipped before the underlying
+value is decoded. This means that tagged CBOR data items produced by other
+implementations---such as self-described CBOR (tag~55799), epoch-based
+timestamps (tag~1), or URI-annotated byte strings (tag~32)---are accepted
+without changes to the application code.
+
+\subsection*{Return values}
+
+\begin{tabular}[h!]{rl}
+RC\_OK & Structure decoded successfully \\
+RC\_WMORE & More data needed to decode \\
+RC\_FAIL & Decoding failed
+\end{tabular}
+
+\apisection{sec:cbor_encode}{cbor\_encode()}
+
+\subsection*{Synopsis}
+\begin{signature}
+asn_enc_rval_t cbor_encode(
+    const asn_TYPE_descriptor_t *type_descriptor,
+    const void *struct_ptr,             /* Structure to be encoded */
+    asn_app_consume_bytes_f *consume_bytes_cb, /* Callback */
+    void *app_key                       /* Arbitrary callback argument */
+);
+\end{signature}
+
+\subsection*{Description}
+
+The \code{cbor_encode()} function serializes the given structure into a
+canonical CBOR (Concise Binary Object Representation, RFC~8949) byte stream.
+
+The encoder produces canonical (DER-like) output: integers use the shortest
+possible CBOR encoding, all lengths are definite, and SEQUENCE fields are
+encoded in definition order. Absent optional and default-valued fields are
+skipped so that the CBOR map header count always matches the number of encoded
+key/value pairs.
+
+\subsection*{Return values}
+
+\begin{tabular}[h!]{rl}
+er.encoded $\geq 0$ & Number of bytes produced \\
+er.encoded $= -1$ & Encoding failed; \code{er.failed\_type} identifies the culprit
+\end{tabular}
+
+\apisection{sec:cbor_tags}{CBOR Tags}
+
+\subsection*{Overview}
+
+CBOR tags (RFC~8949 \S3.4, major type~6) are optional semantic annotations
+that precede a data item.  A tag consists of a tag number---an unsigned
+integer identifying the semantic type---followed by exactly one tagged
+data item.  Tags do not alter the binary representation of the wrapped
+value; they add out-of-band meaning for applications and interchange.
+
+The complete list of registered tag numbers is maintained by IANA:
+\begin{center}
+\url{https://www.iana.org/assignments/cbor-tags/}
+\end{center}
+
+\subsection*{Encoding with tags}
+
+The \code{cbor\_support.h} header defines symbolic constants for frequently
+used tags:
+
+\begin{tabular}[h!]{lrl}
+\textbf{Constant} & \textbf{Tag\#} & \textbf{Semantics (RFC~8949 / IANA)} \\
+\hline
+\code{CBOR\_TAG\_DATETIME\_STRING}  & 0     & Standard date/time text string \\
+\code{CBOR\_TAG\_EPOCH\_DATETIME}   & 1     & Epoch-based date/time number \\
+\code{CBOR\_TAG\_POSINT\_BIGNUM}    & 2     & Positive bignum (used internally) \\
+\code{CBOR\_TAG\_NEGINT\_BIGNUM}    & 3     & Negative bignum (used internally) \\
+\code{CBOR\_TAG\_DECIMAL\_FRACTION} & 4     & Decimal fraction \\
+\code{CBOR\_TAG\_BIGFLOAT}          & 5     & Bigfloat \\
+\code{CBOR\_TAG\_BASE64URL}         & 21    & Expected base64url encoding hint \\
+\code{CBOR\_TAG\_BASE64}            & 22    & Expected base64 encoding hint \\
+\code{CBOR\_TAG\_BASE16}            & 23    & Expected base16 encoding hint \\
+\code{CBOR\_TAG\_ENCODED\_CBOR}     & 24    & Encoded CBOR data item \\
+\code{CBOR\_TAG\_URI}               & 32    & URI text string \\
+\code{CBOR\_TAG\_REGEX}             & 35    & Regular expression text string \\
+\code{CBOR\_TAG\_UUID}              & 37    & Binary UUID (16 bytes) \\
+\code{CBOR\_TAG\_NETWORK\_ADDR}     & 260   & IPv4/IPv6/MAC network address \\
+\code{CBOR\_TAG\_SELF\_DESCRIBED}   & 55799 & Self-described CBOR marker \\
+\end{tabular}
+
+To prepend a CBOR tag to any encoded value, call \code{cbor\_encode\_tag()}
+before encoding the value.  The following example emits the self-described
+CBOR marker (tag~55799) followed by an INTEGER value:
+
+\begin{codesample}
+#include <cbor_support.h>
+#include <cbor_encoder.h>
+#include <INTEGER.h>
+
+static int my_write(const void *data, size_t size, void *key) {
+    /* write data to output stream */
+    return fwrite(data, 1, size, (FILE *)key) == size ? 0 : -1;
+}
+
+void encode_tagged_integer(INTEGER_t *val, FILE *out) {
+    /* Emit self-described CBOR tag (55799) first */
+    cbor_encode_tag(CBOR_TAG_SELF_DESCRIBED, my_write, out);
+    /* Then encode the INTEGER value */
+    cbor_encode(&asn_DEF_INTEGER, val, my_write, out);
+}
+\end{codesample}
+
+Arbitrary tag numbers not listed above can be passed directly to
+\code{cbor\_encode\_tag()} as a \code{uint64\_t}.
+
+\subsection*{Decoding tagged data}
+
+All asn1c CBOR decoders are \emph{tag-transparent}: any number of leading
+tag headers are automatically consumed before the underlying value is decoded.
+No special handling is needed in application code; tagged and untagged data
+items are decoded identically.
+
+The helper function \code{cbor\_skip\_tags()} (declared in
+\code{cbor\_support.h}) is also available for applications that inspect raw
+CBOR buffers directly:
+
+\begin{codesample}
+#include <cbor_support.h>
+
+/*
+ * Returns the number of bytes occupied by leading tag headers,
+ * or -1 on error.  After the call, buf + n points to the
+ * first non-tag byte.
+ */
+ssize_t cbor_skip_tags(const uint8_t *buf, size_t size);
+\end{codesample}
+
+Applications that need to skip a complete raw CBOR item can call
+\code{cbor\_skip\_item()}.  Code that runs as part of a decoder and has an
+\code{asn\_codec\_ctx\_t} should call \code{cbor\_skip\_item\_with\_ctx()}
+instead, so recursive arrays, maps, and tags are bounded by the same stack
+limit as normal ASN.1 decoding:
+
+\begin{codesample}
+#include <cbor_support.h>
+
+/*
+ * Returns the number of bytes occupied by a complete CBOR item,
+ * or -1 on error, truncation, or decoder stack limit.
+ */
+ssize_t cbor_skip_item_with_ctx(const asn_codec_ctx_t *opt_codec_ctx,
+                                const uint8_t *buf, size_t size);
+ssize_t cbor_skip_item(const uint8_t *buf, size_t size);
+\end{codesample}
+
+\subsection*{Bignum tags}
+
+CBOR tags~2 and~3 are treated specially by the INTEGER decoder.
+They encode arbitrarily large positive (tag~2) and negative (tag~3)
+integers as byte strings, allowing ASN.1 INTEGER values that exceed the
+64-bit signed range to be represented in CBOR.  These tags are emitted
+automatically by the INTEGER encoder when the value requires more than
+64 bits.
+
 \chapter{API usage examples}
 
 Let's start with including the necessary header files into your
@@ -1890,6 +2099,587 @@ ASN_STRUCT_FREE(asn_DEF_Rectangle, rect);
 It is safe to invoke both macros with the target structure pointer
 set to 0 (NULL). In this case, the function will do nothing.
 
+\chapter{Advanced Features}
+
+\section{\label{sec:Unknown-Extension-Decoding}Unknown extension decoding}
+
+\textbf{Upgrade warning.} Decoding behavior for unknown extensions has changed
+from ``fail'' to ``skip/relay''. Evaluate the impact on your application before
+upgrading. To restore the previous strict behavior, use the build definition
+shown below.
+
+The forward-compatible default applies when an older schema decodes a value
+produced using a newer version of an extensible ASN.1 type:
+
+\begin{itemize}
+\item An unknown UPER or OER \code{CHOICE} extension alternative is consumed
+and skipped. The decoder returns \code{RC\_OK}, with no local alternative
+selected.
+\item An unknown UPER \code{ENUMERATED} extension addition is represented in
+the reserved \code{LONG\_MAX - extension\_index} range. Re-encoding that value
+with UPER relays the original extension index.
+\end{itemize}
+
+The change does not make truncated or structurally malformed encodings valid.
+It does mean that an unknown, structurally valid extension no longer produces
+\code{RC\_FAIL}. Applications that used that failure as an implicit input-
+validation gate, or whose state machines treat every decode failure as a
+protocol error, should review their behavior before upgrading.
+
+To retain strict rejection, compile the decoder skeleton sources with:
+
+\begin{bash}
+cc -DASN_REJECT_UNKNOWN_EXTENSIONS ...
+\end{bash}
+
+Apply the definition consistently to all generated/runtime skeleton objects and
+perform a clean rebuild. Defining the macro only in application code does not
+change decoder objects in an already-built runtime library. Enabling strict
+rejection forfeits forward compatibility for these extension additions.
+
+\section{\label{sec:ENCODING-CONTROL}ENCODING-CONTROL Directives}
+
+The ENCODING-CONTROL directive allows you to customize how specific types are encoded 
+and decoded in XML Encoding Rules (XER). This feature is particularly useful when you 
+need to control the representation of binary data in XML documents.
+
+\subsection*{Syntax}
+
+The ENCODING-CONTROL directive is specified within an ASN.1 module using the following syntax:
+
+\begin{asn}
+ENCODING-CONTROL <encoding-reference>
+    <type-name> <type-constraint> ::= <encoding-format>
+    ...
+END
+\end{asn}
+
+Where:
+\begin{itemize}
+\item \textbf{encoding-reference}: The encoding rules to which the directive applies (e.g., \texttt{XER})
+\item \textbf{type-name}: The name of the type being controlled
+\item \textbf{type-constraint}: The ASN.1 type (e.g., \texttt{OCTET STRING})
+\item \textbf{encoding-format}: The desired encoding format (see below)
+\end{itemize}
+
+\subsection*{Supported Encoding Formats}
+
+The following encoding formats are currently supported for OCTET STRING types:
+
+\begin{itemize}
+\item \textbf{hexadecimal}: Encodes binary data as hexadecimal digits (0-9, A-F)
+\item \textbf{base64}: Encodes binary data using Base64 encoding (default behavior)
+\item \textbf{utf8}: Treats the OCTET STRING as UTF-8 text and encodes it directly
+\end{itemize}
+
+\subsection*{Example}
+
+Consider a PKI application that needs to encode certificate extensions:
+
+\begin{asn}
+CertificateModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+Extension ::= SEQUENCE {
+    extnID      OBJECT IDENTIFIER,
+    critical    BOOLEAN DEFAULT FALSE,
+    extnValue   ExtensionValue
+}
+
+ExtensionValue ::= OCTET STRING
+
+ENCODING-CONTROL XER
+    ExtensionValue OCTET STRING ::= hexadecimal
+END
+
+END
+\end{asn}
+
+With this directive, when encoding an Extension to XER format, the \texttt{extnValue} 
+field will be represented as hexadecimal:
+
+\begin{example}
+<Extension>
+    <extnID>2.5.29.19</extnID>
+    <critical>true</critical>
+    <extnValue>30030101FF</extnValue>
+</Extension>
+\end{example}
+
+Without the ENCODING-CONTROL directive, the same data would be Base64-encoded by default.
+
+\subsection*{Compilation}
+
+When compiling ASN.1 modules containing ENCODING-CONTROL directives, the compiler 
+generates custom XER encoder and decoder functions for the affected types:
+
+\begin{bash}
+asn1c -no-gen-example CertificateModule.asn1
+\end{bash}
+
+The compiler will output a note indicating which encoding controls were applied:
+
+\begin{bash}
+NOTE: ENCODING-CONTROL XER at CertificateModule.asn1:15 with 1 directive(s)
+NOTE: Applied 1 encoding control directive(s) in module CertificateModule
+\end{bash}
+
+\subsection*{Runtime Behavior}
+
+At runtime, types with ENCODING-CONTROL directives use custom encoder and decoder functions:
+
+\begin{itemize}
+\item \textbf{hexadecimal}: Binary data \texttt{\{0xDE, 0xAD, 0xBE, 0xEF\}} encodes as \texttt{DEADBEEF}
+\item \textbf{utf8}: Text data "Hello World" encodes directly without Base64 wrapping
+\item \textbf{base64}: Standard Base64 encoding (unchanged from default behavior)
+\end{itemize}
+
+\subsection*{XER Decoding Support}
+
+The XER decoder has been enhanced to support X.693 hexadecimal string notation using 
+the \texttt{H'...'} syntax:
+
+\begin{example}
+<Extension>
+    <extnValue>H'30030101FF'</extnValue>
+</Extension>
+\end{example}
+
+This notation is automatically recognized and decoded by the \code{OCTET\_STRING\_decode\_xer()} 
+function through the enhanced \code{OCTET\_STRING\_\_convert\_auto()} converter.
+
+\subsection*{Empty OPTIONAL Fields in XER}
+
+By default, the XER decoder treats empty XML tags (e.g., \texttt{<field></field>} or 
+\texttt{<field/>}) for OPTIONAL fields as invalid, causing decoding failures. This differs 
+from BER/DER and PER encodings, which simply omit absent optional fields.
+
+To enable lenient handling of empty OPTIONAL fields in XER, compile the generated code 
+with the \texttt{XER\_ALLOW\_EMPTY\_OPTIONALS} preprocessor flag:
+
+\begin{bash}
+gcc -DXER_ALLOW_EMPTY_OPTIONALS -c *.c
+\end{bash}
+
+When this flag is enabled, empty tags for OPTIONAL fields are treated as absent rather 
+than invalid. For example:
+
+\begin{example}
+<TestSequence>
+    <mandatoryInt>42</mandatoryInt>
+    <optionalInt></optionalInt>    <!-- Treated as absent -->
+    <optionalString/>              <!-- Treated as absent -->
+</TestSequence>
+\end{example}
+
+In the above example, both \texttt{optionalInt} and \texttt{optionalString} will be 
+decoded as absent (NULL pointers), not as present with invalid/empty values.
+
+\textbf{Important notes:}
+\begin{itemize}
+\item Empty tags for mandatory fields still cause decoding failures, preserving data integrity
+\item This feature only affects XER decoding; other encoding rules are unaffected
+\item The feature is disabled by default to maintain strict XML validation
+\item Both self-closing tags (\texttt{<field/>}) and separate empty tags 
+(\texttt{<field></field>}) are supported
+\end{itemize}
+
+\subsection*{See also}
+
+For implementation details, see:
+\begin{itemize}
+\item \texttt{libasn1compiler/asn1c\_encoding.c} -- Encoding control application logic
+\item \texttt{skeletons/OCTET\_STRING\_xer.c} -- Runtime XER encoding/decoding functions
+\item \texttt{skeletons/constr\_SEQUENCE\_xer.c} -- Empty optional field detection
+\item \texttt{skeletons/asn\_internal.h} -- XER\_ALLOW\_EMPTY\_OPTIONALS flag definition
+\item \texttt{ENCODING\_CONTROL\_STATUS.md} -- Complete implementation status
+\end{itemize}
+
+\section{\label{sec:Circular-Dependencies}Circular Dependency Handling}
+
+Circular dependencies occur when two or more ASN.1 types reference each other, 
+directly or indirectly, creating a cycle in the type dependency graph. The asn1c 
+compiler includes sophisticated mechanisms to detect and resolve these dependencies.
+
+\subsection*{Detection}
+
+The compiler analyzes the type dependency graph to identify circular references. 
+For example:
+
+\begin{asn}
+Node ::= SEQUENCE {
+    value   INTEGER,
+    next    Node OPTIONAL     -- References itself
+}
+
+TypeA ::= SEQUENCE {
+    field-b TypeB OPTIONAL
+}
+
+TypeB ::= SEQUENCE {
+    field-a TypeA OPTIONAL
+}
+\end{asn}
+
+In the first example, \texttt{Node} has a self-reference. In the second, \texttt{TypeA} 
+and \texttt{TypeB} reference each other, creating a circular dependency.
+
+\subsection*{Resolution Strategies}
+
+The compiler employs several strategies to break circular dependencies:
+
+\subsubsection*{1. Automatic Pointer Indirection}
+
+When a circular dependency is detected, the compiler automatically converts certain 
+type members to pointers. This is the most common resolution mechanism.
+
+\subsubsection*{2. The \texttt{-findirect-choice} Flag}
+
+This flag forces CHOICE type members to be compiled as indirect pointers:
+
+\begin{bash}
+asn1c -findirect-choice module.asn1
+\end{bash}
+
+This is particularly useful for:
+\begin{itemize}
+\item Complex specifications with many CHOICE types (e.g., F1AP, NGAP)
+\item Information Object Class OPEN\_TYPE fields
+\item Breaking circular dependencies involving CHOICE constructs
+\end{itemize}
+
+\subsection*{Example: F1AP Compilation}
+
+The F1AP specification is a complex 3GPP protocol with extensive circular dependencies. 
+To successfully compile F1AP:
+
+\begin{bash}
+asn1c -findirect-choice F1AP-PDU-Descriptions.asn1 \textbackslash
+      F1AP-IEs.asn1 F1AP-Containers.asn1 F1AP-Constants.asn1
+\end{bash}
+
+This approach:
+\begin{enumerate}
+\item Forces CHOICE members to be indirect pointers
+\item Breaks circular dependencies involving CHOICE types
+\item Handles Information Object Class tables correctly
+\end{enumerate}
+
+\subsection*{Generated Code}
+
+For a type with circular dependencies, the compiler converts members to pointers:
+
+\begin{example}
+/* Original ASN.1:
+ * Node ::= SEQUENCE {
+ *     value   INTEGER,
+ *     next    Node OPTIONAL
+ * }
+ */
+
+/* Generated C: */
+typedef struct Node {
+    long      value;
+    struct Node  *next;  /* OPTIONAL, pointer to break cycle */
+} Node_t;
+\end{example}
+
+Without proper handling, the compiler might fail with "circular dependency" errors, or 
+generate code that causes C compiler errors.
+
+\subsection*{Backward Compatibility}
+
+The circular dependency detection maintains backward compatibility:
+\begin{itemize}
+\item Default behavior: only actual cycles trigger pointer indirection
+\item The \texttt{-findirect-choice} flag must be explicitly enabled for CHOICE indirection
+\item Existing ASN.1 modules compile without modification
+\item Generated code remains compatible with existing applications
+\end{itemize}
+
+\subsection*{See also}
+
+For implementation details:
+\begin{itemize}
+\item \texttt{libasn1compiler/asn1c\_constraint.c} -- Circular dependency detection
+\item \texttt{libasn1fix/asn1fix\_crange.c} -- Constraint range fixing with cycle detection
+\end{itemize}
+
+\section{\label{sec:IOC-Support}Information Object Class Support}
+
+Information Object Classes (IOCs) are an advanced ASN.1 feature used for defining 
+protocol data structures with type-value relationships. The asn1c compiler provides 
+comprehensive support for IOC tables and their use in type definitions.
+
+\subsection*{What are Information Object Classes?}
+
+Information Object Classes define relationships between identifiers (like OBJECT IDENTIFIERs 
+or INTEGERs) and associated types. They are commonly used in telecommunications protocols 
+to define extensible message structures.
+
+\begin{asn}
+PROTOCOL-IE ::= CLASS {
+    &id                 ProtocolIE-ID UNIQUE,
+    &criticality        Criticality,
+    &Value,
+    &presence           Presence
+}
+WITH SYNTAX {
+    ID                  &id
+    CRITICALITY         &criticality
+    TYPE                &Value
+    PRESENCE            &presence
+}
+
+ProtocolIE-Container { PROTOCOL-IE : IEsSetParam } ::= 
+    SEQUENCE (SIZE (0..maxProtocolIEs)) OF
+        ProtocolIE-Field { {IEsSetParam} }
+
+ProtocolIE-Field { PROTOCOL-IE : IEsSetParam } ::= SEQUENCE {
+    id                  PROTOCOL-IE.&id          ({IEsSetParam}),
+    criticality         PROTOCOL-IE.&criticality ({IEsSetParam}{@id}),
+    value               PROTOCOL-IE.&Value       ({IEsSetParam}{@id})
+}
+\end{asn}
+
+\subsection*{Code Generation with \texttt{-fgen-only-pdu-deps}}
+
+The \texttt{-fgen-only-pdu-deps} flag generates code only for types that are dependencies 
+of PDU types. This is particularly useful for large specifications:
+
+\begin{bash}
+asn1c -pdu=F1AP-PDU -fgen-only-pdu-deps F1AP-*.asn1
+\end{bash}
+
+The compiler performs sophisticated analysis to include all necessary types:
+
+\begin{enumerate}
+\item \textbf{Direct dependencies}: Types directly referenced by PDU types
+\item \textbf{IOC table references}: Types referenced in Information Object Class tables
+\item \textbf{Parameterized types}: Specializations of parameterized types
+\item \textbf{Constraint-based IOC references}: Types referenced through IOC constraints
+\item \textbf{Transitive dependencies}: All dependencies of included types
+\end{enumerate}
+
+\subsection*{IOC Table Traversal}
+
+The compiler traverses IOC tables to identify all referenced types:
+
+\begin{itemize}
+\item Examines each Information Object in the table
+\item Extracts type references from object fields
+\item Follows parameterized type instantiations
+\item Resolves constraint-based type selections
+\item Marks all discovered types for code generation
+\end{itemize}
+
+\subsection*{Example: F1AP Protocol}
+
+F1AP uses extensive IOC tables for protocol IEs (Information Elements):
+
+\begin{bash}
+asn1c -pdu=F1AP-PDU -fgen-only-pdu-deps -findirect-choice \textbackslash
+      F1AP-PDU-Descriptions.asn1 F1AP-IEs.asn1 F1AP-Containers.asn1
+\end{bash}
+
+This generates code for:
+\begin{itemize}
+\item The \texttt{F1AP-PDU} type itself
+\item All IEs referenced in F1AP protocol message definitions
+\item Container types (ProtocolIE-Container, etc.)
+\item All types referenced in IOC tables for these IEs
+\item Parameterized type specializations
+\end{itemize}
+
+Without IOC table traversal, many required types would be omitted, resulting in 
+incomplete or non-compilable generated code.
+
+\subsection*{Parameterized Types}
+
+IOC-based definitions often use parameterized types:
+
+\begin{asn}
+Container { TYPE-CLASS : TypeSet } ::= SEQUENCE (SIZE(1..100)) OF
+    Element { {TypeSet} }
+
+Element { TYPE-CLASS : TypeSet } ::= SEQUENCE {
+    id      TYPE-CLASS.&id      ({TypeSet}),
+    value   TYPE-CLASS.&Value   ({TypeSet}{@id})
+}
+\end{asn}
+
+The compiler:
+\begin{enumerate}
+\item Identifies parameterized type instantiations
+\item Generates specialized versions for each instantiation
+\item Includes all types referenced in the specializations
+\item Maintains correct type relationships
+\end{enumerate}
+
+\subsection*{OPEN TYPE Handling}
+
+When combined with \texttt{-findirect-choice}, IOC OPEN\_TYPE fields are generated 
+as indirect pointers:
+
+\begin{example}
+/* ASN.1 OPEN TYPE field:
+ * value   PROTOCOL-IE.&Value  ({IEsSetParam}{@id})
+ */
+
+/* Generated C structure: */
+typedef struct ProtocolIE_Field {
+    long                     id;
+    long                     criticality;
+    struct value_OpenType   *value;  /* Indirect pointer */
+} ProtocolIE_Field_t;
+\end{example}
+
+This prevents circular dependencies and improves code organization for complex protocols.
+
+\subsection*{Benefits}
+
+Using \texttt{-fgen-only-pdu-deps} with IOC support:
+\begin{itemize}
+\item Reduces generated code size (only needed types)
+\item Faster compilation of large specifications
+\item Smaller executable binaries
+\item Easier code review and maintenance
+\item Complete and correct dependency resolution
+\end{itemize}
+
+\subsection*{Limitations}
+
+Current limitations:
+\begin{itemize}
+\item IOC table analysis is best-effort; complex constraint expressions may be incomplete
+\item Some rare IOC usage patterns may not be fully analyzed
+\item Generated code should be tested to verify all required types are present
+\end{itemize}
+
+\subsection*{See also}
+
+Implementation details:
+\begin{itemize}
+\item \texttt{libasn1compiler/asn1c\_ioc.c} -- IOC table handling
+\item \texttt{libasn1compiler/asn1c\_C.c} -- Code generation with IOC support
+\item \texttt{libasn1fix/asn1fix\_param.c} -- Parameterized type handling
+\end{itemize}
+
+\section{\label{sec:Using-fprefix}Using the \texttt{-fprefix} Option}
+
+The \texttt{-fprefix} option adds a prefix to all generated type names and filenames, 
+helping to avoid naming conflicts in various scenarios.
+
+\subsection*{System Header Conflicts on Case-Insensitive Filesystems}
+
+On case-insensitive filesystems (macOS HFS+, Windows), ASN.1 types can generate 
+files that conflict with system headers. For example, an ASN.1 type named \texttt{Time} 
+generates \texttt{Time.h}, which can shadow the system header \texttt{<time.h>} when 
+compiling with \texttt{-I.}.
+
+\textbf{Problem:}
+\begin{bash}
+asn1c rfc3280.asn1
+cc -I. -o myprogram *.c
+\end{bash}
+
+On macOS or Windows, this may produce errors like:
+\begin{verbatim}
+warning: non-portable path to file '<Time.h>'
+\end{verbatim}
+
+\textbf{Default behavior:}
+\begin{bash}
+asn1c rfc3280.asn1
+\end{bash}
+The generated conflicting filename is automatically disambiguated (for example,
+\texttt{asn1c\_time.h} instead of \texttt{Time.h}).
+
+\textbf{Optional custom namespace:}
+\begin{bash}
+asn1c -fprefix=ASN1_ rfc3280.asn1
+cc -I. -o myprogram *.c
+\end{bash}
+
+This generates \texttt{ASN1\_Time.h} instead of \texttt{Time.h}, avoiding the conflict.
+
+\subsection*{Using \texttt{-fprefix} with PDU Options}
+
+When using \texttt{-fprefix} with \texttt{-pdu} options, the prefix is automatically 
+applied to PDU definitions in \texttt{converter-example.mk}.
+
+\subsubsection*{Specific PDU Type}
+
+\begin{bash}
+asn1c -fprefix=ASN1_ -pdu=Certificate rfc3280.asn1
+\end{bash}
+
+The generated \texttt{converter-example.mk} automatically contains:
+\begin{verbatim}
+CFLAGS += $(ASN_MODULE_CFLAGS) -DPDU=ASN1_Certificate -I.
+\end{verbatim}
+
+No manual editing required -- the prefix is applied automatically to the PDU definition.
+
+\subsubsection*{Multiple PDUs with \texttt{-pdu=all}}
+
+\begin{bash}
+asn1c -fprefix=ASN1_ -pdu=all myschema.asn1
+\end{bash}
+
+When using \texttt{-pdu=all} or \texttt{-pdu=auto}, the compiler:
+\begin{enumerate}
+\item Generates \texttt{pdu\_collection.c} with all available PDU types
+\item Adds helpful comments in \texttt{converter-example.mk} explaining how to select a specific PDU
+\item Prints an informative message to stderr with usage instructions
+\end{enumerate}
+
+Example output:
+\begin{verbatim}
+Generated pdu_collection.c
+NOTE: Multiple PDU types available. The converter-example 
+      uses the first PDU by default.
+      To decode a specific PDU type, add -DPDU=ASN1_YourTypeName 
+      to CFLAGS in converter-example.mk
+      See pdu_collection.c for the complete list of PDU types.
+\end{verbatim}
+
+The generated \texttt{converter-example.mk} includes:
+\begin{verbatim}
+# PDU COLLECTION MODE: Multiple PDU types are available.
+# The converter-example will default to the first PDU in 
+# pdu_collection.c
+#
+# To use a specific PDU type, add -DPDU=<TypeName> to CFLAGS.
+# NOTE: With -fprefix=ASN1_, type names are prefixed.
+# Example: -DPDU=ASN1_YourTypeName
+#
+# See pdu_collection.c for the list of available PDU types.
+\end{verbatim}
+
+\subsection*{Multiple ASN.1 Modules with Name Clashes}
+
+When generating code for multiple ASN.1 specifications that have type name clashes:
+
+\begin{bash}
+asn1c -fprefix=PKIX_ rfc3280.asn1
+asn1c -fprefix=CMS_ rfc3852.asn1
+\end{bash}
+
+This prevents symbol collisions in the global C namespace by ensuring types from 
+different modules have different prefixes.
+
+\subsection*{Integration with Existing Code}
+
+If your existing codebase has types that might conflict with generated ASN.1 types, 
+use \texttt{-fprefix} to namespace the generated code:
+
+\begin{bash}
+asn1c -fprefix=ASN_ myprotocol.asn1
+\end{bash}
+
+All generated types will have the \texttt{ASN\_} prefix, avoiding conflicts with your 
+existing type definitions.
+
 \chapter{\label{chap:Abstract-Syntax-Notation}Abstract Syntax Notation: ASN.1}
 
 \emph{This chapter defines some basic ASN.1 concepts and describes
@@ -1979,6 +2769,41 @@ SmallPositiveInt ::= INTEGER (0..127)
 -- Integer, negative
 NegativeInt ::= INTEGER (MIN..0)
 \end{asn}
+
+INTEGER constraints may use values that are larger than the traditional
+32-bit or signed \code{long} range. The compiler preserves these bounds when
+generating constraint checking code, including unsigned 64-bit limits and
+values beyond 64 bits.
+\begin{asn}
+-- Fits uint32\_t when generated with -finteger-native-type=uint32
+Unsigned32 ::= INTEGER (0..4294967295)
+
+-- Fits uint64\_t when generated with -finteger-native-type=uint64
+Unsigned64 ::= INTEGER (0..18446744073709551615)
+
+-- Larger than uint64\_t; generated as INTEGER\_t, with the
+-- arbitrary-precision bound still used for constraint checks.
+Beyond64 ::= INTEGER (0..18446744073709551616)
+\end{asn}
+
+By default, \cmd{asn1c} keeps the historical portable choice: constrained
+INTEGER values use \code{long} or \code{unsigned long} only when the range fits
+the conservative target \code{long} model, and otherwise use \code{INTEGER\_t}.
+Use \cmd{-flong-size=64} when the generated code is meant for a 64-bit
+\code{long} target and you want that default policy to use the wider native
+range.
+
+For APIs that require fixed-width integer members, use the
+\cmd{-finteger-native-type} option. Its \emph{mode} may be \cmd{int32},
+\cmd{uint32}, \cmd{int64}, \cmd{uint64}, or \cmd{auto}. The selected
+fixed-width type is used only when the ASN.1 range fits it exactly;
+otherwise \code{INTEGER\_t} is generated. For example, compiling the ASN.1
+above with \cmd{-finteger-native-type=uint64} generates native
+\code{uint64\_t} storage for \code{Unsigned64}, while \code{Beyond64} remains
+\code{INTEGER\_t} because its upper bound is larger than \code{UINT64\_MAX}.
+Unsigned modes are used only for bounded ranges whose lower bound is known to
+be non-negative; open or negative-capable ranges fall back to
+\code{INTEGER\_t}.
 
 \subsection{The ENUMERATED type}
 

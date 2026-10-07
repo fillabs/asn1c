@@ -26,7 +26,7 @@ typedef struct asn_INTEGER_enum_map_s {
 
 /* This type describes an enumeration for INTEGER and ENUMERATED types */
 typedef struct asn_INTEGER_specifics_s {
-	const asn_INTEGER_enum_map_t *value2enum;	/* N -> "tag"; sorted by N */
+	const asn_INTEGER_enum_map_t *value2enum;	/* N -> "tag"; two segments (root, then extension additions), each sorted by N */
 	const unsigned int *enum2value;		/* "tag" => N; sorted by tag */
 	int map_count;				/* Elements in either map */
 	int extension;				/* This map is extensible */
@@ -58,7 +58,9 @@ der_type_encoder_f INTEGER_encode_der;
 
 #if !defined(ASN_DISABLE_XER_SUPPORT)
 xer_type_decoder_f INTEGER_decode_xer;
+xer_type_decoder_f INTEGER_decode_xer_text;
 xer_type_encoder_f INTEGER_encode_xer;
+xer_type_encoder_f INTEGER_encode_xer_text;
 #endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
 
 #if !defined(ASN_DISABLE_JER_SUPPORT)
@@ -70,6 +72,10 @@ jer_type_encoder_f INTEGER_encode_jer;
 oer_type_decoder_f INTEGER_decode_oer;
 oer_type_encoder_f INTEGER_encode_oer;
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+cbor_type_decoder_f INTEGER_decode_cbor;
+cbor_type_encoder_f INTEGER_encode_cbor;
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 
 #if !defined(ASN_DISABLE_UPER_SUPPORT)
 per_type_decoder_f INTEGER_decode_uper;

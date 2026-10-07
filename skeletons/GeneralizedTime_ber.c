@@ -7,12 +7,6 @@
 #include <GeneralizedTime.h>
 #include <errno.h>
 
-#ifdef __CYGWIN__
-#include "/usr/include/time.h"
-#else
-#include <time.h>
-#endif  /* __CYGWIN__ */
-
 asn_enc_rval_t
 GeneralizedTime_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
                            int tag_mode, ber_tlv_tag_t tag,

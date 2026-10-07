@@ -1,0 +1,13 @@
+*.o
+*.c
+*.h
+*.mk
+asn_constant.h
+converter-example
+Makefile
+Makefile.in
+Makefile.am.libasncodec
+.deps/
+.libs/
+*.log
+*.trs

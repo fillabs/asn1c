@@ -17,6 +17,8 @@ extern "C" {
  */
 typedef struct asn_jer_constraints_s {
     ssize_t size;    /* -1 (no constraint) or >= 0 */
+    const char *wire_name; /* Optional JER NAME override for members */
+    unsigned int flags;    /* Reserved for instruction-specific flags */
 } asn_jer_constraints_t;
 
 /*

@@ -14,7 +14,9 @@ GeneralString.h GeneralString.c OCTET_STRING.h
 GeneralizedTime.h GeneralizedTime.c OCTET_STRING.h
 GraphicString.h GraphicString.c OCTET_STRING.h
 IA5String.h IA5String.c OCTET_STRING.h
-INTEGER.h INTEGER.c
+INTEGER.h INTEGER.c asn_constraint_value.h asn_constraint_value.c
+UInteger.h INTEGER.h INTEGER.c
+asn_constraint_value.h asn_constraint_value.c INTEGER.h
 ISO646String.h ISO646String.c OCTET_STRING.h
 NULL.h NULL.c
 NativeEnumerated.h NativeEnumerated.c NativeInteger.h ENUMERATED.h
@@ -70,6 +72,7 @@ GeneralizedTime.h GeneralizedTime_ber.c
 INTEGER.h INTEGER_ber.c
 NULL.h NULL_ber.c
 NativeInteger.h NativeInteger_ber.c
+NativeEnumerated.h NativeEnumerated_ber.c
 NativeReal.h NativeReal_ber.c
 OCTET_STRING.h OCTET_STRING_ber.c
 OPEN_TYPE.h OPEN_TYPE_ber.c
@@ -92,8 +95,8 @@ BIT_STRING.h BIT_STRING_xer.c
 BMPString.h BMPString_xer.c
 BOOLEAN.h BOOLEAN_xer.c
 GeneralizedTime.h GeneralizedTime_xer.c
-INTEGER.h INTEGER_xer.c
-NULL.h NULL_xer.c
+INTEGER.h INTEGER_xer.c asn_codecs_prim_xer.c
+NULL.h NULL_xer.c asn_codecs_prim_xer.c
 NativeEnumerated.h NativeEnumerated_xer.c
 NativeInteger.h NativeInteger_xer.c
 NativeReal.h NativeReal_xer.c
@@ -166,6 +169,7 @@ constr_CHOICE.h constr_CHOICE_uper.c
 constr_SEQUENCE_OF.h constr_SEQUENCE_OF_uper.c
 constr_SEQUENCE.h constr_SEQUENCE_uper.c
 constr_SET_OF.h constr_SET_OF_uper.c
+constr_SET.h constr_SET_uper.c
 
 CODEC-APER:			# THIS IS A SPECIAL SECTION
 per_decoder.h
@@ -211,6 +215,7 @@ NativeInteger.h NativeInteger_print.c
 NativeReal.h NativeReal_print.c
 OBJECT_IDENTIFIER.h OBJECT_IDENTIFIER_print.c
 OCTET_STRING.h OCTET_STRING_print.c
+OPEN_TYPE.h OPEN_TYPE_print.c
 REAL.h REAL_print.c
 RELATIVE-OID.h RELATIVE-OID_print.c
 UTCTime.h UTCTime_print.c
@@ -273,3 +278,29 @@ constr_SEQUENCE_OF.h constr_SEQUENCE_OF_jer.c
 constr_SEQUENCE.h constr_SEQUENCE_jer.c
 constr_SET_OF.h constr_SET_OF_jer.c
 constr_SET.h constr_SET_jer.c
+
+CODEC-CBOR:# THIS IS A SPECIAL SECTION
+cbor_support.h
+cbor_decoder.h
+cbor_encoder.h
+cbor_support.h cbor_support.c# CBOR support primitives
+cbor_decoder.h cbor_decoder.c# CBOR decoding support
+cbor_encoder.h cbor_encoder.c# CBOR encoding support
+BIT_STRING.h BIT_STRING_cbor.c
+BOOLEAN.h BOOLEAN_cbor.c
+ENUMERATED.h ENUMERATED_cbor.c
+INTEGER.h INTEGER_cbor.c
+NULL.h NULL_cbor.c
+NativeEnumerated.h NativeEnumerated_cbor.c
+NativeInteger.h NativeInteger_cbor.c
+NativeReal.h NativeReal_cbor.c
+OBJECT_IDENTIFIER.h OCTET_STRING_cbor.c
+OCTET_STRING.h OCTET_STRING_cbor.c
+REAL.h REAL_cbor.c
+asn_codecs_prim.h asn_codecs_prim_cbor.c
+constr_CHOICE.h constr_CHOICE_cbor.c
+constr_SEQUENCE_OF.h constr_SEQUENCE_OF_cbor.c
+constr_SEQUENCE.h constr_SEQUENCE_cbor.c
+constr_SET_OF.h constr_SET_OF_cbor.c
+constr_SET.h constr_SET_cbor.c
+OPEN_TYPE.h OPEN_TYPE_cbor.c

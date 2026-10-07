@@ -1,0 +1,1625 @@
+
+/*** <<< INCLUDES [Flag] >>> ***/
+
+#include <BOOLEAN.h>
+
+/*** <<< TYPE-DECLS [Flag] >>> ***/
+
+typedef BOOLEAN_t	 Flag_t;
+
+/*** <<< FUNC-DECLS [Flag] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Flag;
+asn_struct_free_f Flag_free;
+asn_struct_print_f Flag_print;
+asn_constr_check_f Flag_constraint;
+ber_type_decoder_f Flag_decode_ber;
+der_type_encoder_f Flag_encode_der;
+jer_type_encoder_f Flag_encode_jer;
+cbor_type_decoder_f Flag_decode_cbor;
+cbor_type_encoder_f Flag_encode_cbor;
+
+/*** <<< CODE [Flag] >>> ***/
+
+/*
+ * This type is implemented using BOOLEAN,
+ * so here we adjust the DEF accordingly.
+ */
+
+/*** <<< STAT-DEFS [Flag] >>> ***/
+
+static const ber_tlv_tag_t asn_DEF_Flag_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (1 << 2))
+};
+
+/* Custom XER encoder per ENCODING-CONTROL directive */
+static asn_enc_rval_t
+Flag_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
+	int ilevel, enum xer_encoder_flags_e flags,
+	asn_app_consume_bytes_f *cb, void *app_key) {
+	/* Text encoding per ENCODING-CONTROL */
+	return BOOLEAN_encode_xer_text(td, sptr, ilevel, flags, cb, app_key);
+}
+
+
+/* Custom XER decoder per ENCODING-CONTROL directive */
+static asn_dec_rval_t
+Flag_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
+	const asn_TYPE_descriptor_t *td, void **sptr,
+	const char *opt_mname, const void *buf_ptr, size_t size) {
+	/* Text decoding per ENCODING-CONTROL */
+	return BOOLEAN_decode_xer(opt_codec_ctx, td, sptr,
+		opt_mname, buf_ptr, size);
+}
+
+/*
+ * Custom operation structure per ENCODING-CONTROL directive:
+ * Format: text
+ * Reference: XER
+ */
+asn_TYPE_operation_t asn_OP_Flag = {
+	.kind = ASN_KIND_PRIMITIVE,
+	BOOLEAN_free,
+#if !defined(ASN_DISABLE_PRINT_SUPPORT)
+	BOOLEAN_print,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
+	BOOLEAN_compare,
+	BOOLEAN_copy,
+#if !defined(ASN_DISABLE_BER_SUPPORT)
+	BOOLEAN_decode_ber,
+	BOOLEAN_encode_der,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
+#if !defined(ASN_DISABLE_XER_SUPPORT)
+	Flag_decode_xer,  /* Custom per ENCODING-CONTROL */
+	Flag_encode_xer,  /* Custom per ENCODING-CONTROL */
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+	BOOLEAN_decode_jer,
+	BOOLEAN_encode_jer,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) */
+#if !defined(ASN_DISABLE_APER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_RFILL_SUPPORT)
+	BOOLEAN_random_fill,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
+	0,	/* No outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+	BOOLEAN_decode_cbor,
+	BOOLEAN_encode_cbor,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
+};
+
+asn_TYPE_descriptor_t asn_DEF_Flag = {
+	"Flag",
+	"Flag",
+	&asn_OP_Flag,  /* Custom operations per ENCODING-CONTROL */
+	asn_DEF_Flag_tags_1,
+	sizeof(asn_DEF_Flag_tags_1)
+		/sizeof(asn_DEF_Flag_tags_1[0]), /* 1 */
+	asn_DEF_Flag_tags_1,	/* Same as above */
+	sizeof(asn_DEF_Flag_tags_1)
+		/sizeof(asn_DEF_Flag_tags_1[0]), /* 1 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		BOOLEAN_constraint
+	},
+	0, 0,	/* No members */
+	0	/* No specifics */
+};
+
+
+/*** <<< INCLUDES [Mode] >>> ***/
+
+#include <NativeEnumerated.h>
+
+/*** <<< DEPS [Mode] >>> ***/
+
+typedef enum Mode {
+	Mode_idle	= 0,
+	Mode_busy	= 1
+} e_Mode;
+
+/*** <<< TYPE-DECLS [Mode] >>> ***/
+
+typedef long	 Mode_t;
+
+/*** <<< FUNC-DECLS [Mode] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Mode;
+extern const asn_INTEGER_specifics_t asn_SPC_Mode_specs_1;
+asn_struct_free_f Mode_free;
+asn_struct_print_f Mode_print;
+asn_constr_check_f Mode_constraint;
+ber_type_decoder_f Mode_decode_ber;
+der_type_encoder_f Mode_encode_der;
+jer_type_encoder_f Mode_encode_jer;
+cbor_type_decoder_f Mode_decode_cbor;
+cbor_type_encoder_f Mode_encode_cbor;
+
+/*** <<< CODE [Mode] >>> ***/
+
+/*
+ * This type is implemented using NativeEnumerated,
+ * so here we adjust the DEF accordingly.
+ */
+
+/*** <<< STAT-DEFS [Mode] >>> ***/
+
+static const asn_INTEGER_enum_map_t asn_MAP_Mode_value2enum_1[] = {
+	{ 0,	4,	"idle" },
+	{ 1,	8,	"occupied" }
+};
+static int asn_validate_Mode_1(const asn_TYPE_descriptor_t *td,
+                       const void *sptr,
+                       asn_app_constraint_failed_f *ctfailcb,
+                       void* app_key) {
+    if(! sptr) { return -1; }
+    e_Mode value = *(e_Mode*)sptr;
+    switch(value) {
+    case Mode_idle:
+    case Mode_busy:
+        return 0;
+    }
+    return -1;
+}
+static const unsigned int asn_MAP_Mode_enum2value_1[] = {
+	0,	/* idle(0) */
+	1	/* occupied(1) */
+};
+const asn_INTEGER_specifics_t asn_SPC_Mode_specs_1 = {
+	asn_MAP_Mode_value2enum_1,	/* "tag" => N; sorted by tag */
+	asn_MAP_Mode_enum2value_1,	/* N => "tag"; sorted by N */
+	2,	/* Number of elements in the maps */
+	0,	/* Enumeration is not extensible */
+	1,	/* Strict enumeration */
+	0,	/* Native long size */
+	0
+};
+static const ber_tlv_tag_t asn_DEF_Mode_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (10 << 2))
+};
+
+/* Custom XER encoder per ENCODING-CONTROL directive */
+static asn_enc_rval_t
+Mode_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
+	int ilevel, enum xer_encoder_flags_e flags,
+	asn_app_consume_bytes_f *cb, void *app_key) {
+	/* Text encoding per ENCODING-CONTROL */
+	return NativeEnumerated_encode_xer_text(td, sptr, ilevel, flags, cb, app_key);
+}
+
+
+/* Custom XER decoder per ENCODING-CONTROL directive */
+static asn_dec_rval_t
+Mode_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
+	const asn_TYPE_descriptor_t *td, void **sptr,
+	const char *opt_mname, const void *buf_ptr, size_t size) {
+	/* Text decoding per ENCODING-CONTROL */
+	return NativeEnumerated_decode_xer_text(opt_codec_ctx, td, sptr,
+		opt_mname, buf_ptr, size);
+}
+
+/*
+ * Custom operation structure per ENCODING-CONTROL directive:
+ * Format: text
+ * Reference: XER
+ */
+asn_TYPE_operation_t asn_OP_Mode = {
+	.kind = ASN_KIND_PRIMITIVE,
+	NativeEnumerated_free,
+#if !defined(ASN_DISABLE_PRINT_SUPPORT)
+	NativeEnumerated_print,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
+	NativeEnumerated_compare,
+	NativeEnumerated_copy,
+#if !defined(ASN_DISABLE_BER_SUPPORT)
+	NativeEnumerated_decode_ber,
+	NativeEnumerated_encode_der,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
+#if !defined(ASN_DISABLE_XER_SUPPORT)
+	Mode_decode_xer,  /* Custom per ENCODING-CONTROL */
+	Mode_encode_xer,  /* Custom per ENCODING-CONTROL */
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+	NativeEnumerated_decode_jer,
+	NativeEnumerated_encode_jer,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) */
+#if !defined(ASN_DISABLE_APER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_RFILL_SUPPORT)
+	NativeEnumerated_random_fill,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
+	0,	/* No outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+	NativeEnumerated_decode_cbor,
+	NativeEnumerated_encode_cbor,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
+};
+
+asn_TYPE_descriptor_t asn_DEF_Mode = {
+	"Mode",
+	"Mode",
+	&asn_OP_Mode,  /* Custom operations per ENCODING-CONTROL */
+	asn_DEF_Mode_tags_1,
+	sizeof(asn_DEF_Mode_tags_1)
+		/sizeof(asn_DEF_Mode_tags_1[0]), /* 1 */
+	asn_DEF_Mode_tags_1,	/* Same as above */
+	sizeof(asn_DEF_Mode_tags_1)
+		/sizeof(asn_DEF_Mode_tags_1[0]), /* 1 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		asn_validate_Mode_1
+	},
+	0, 0,	/* Defined elsewhere */
+	&asn_SPC_Mode_specs_1	/* Additional specs */
+};
+
+
+/*** <<< INCLUDES [Count] >>> ***/
+
+#include <NativeInteger.h>
+
+/*** <<< DEPS [Count] >>> ***/
+
+typedef enum Count {
+	Count_one	= 1,
+	Count_two	= 2
+} e_Count;
+
+/*** <<< TYPE-DECLS [Count] >>> ***/
+
+typedef long	 Count_t;
+
+/*** <<< FUNC-DECLS [Count] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Count;
+extern const asn_INTEGER_specifics_t asn_SPC_Count_specs_1;
+asn_struct_free_f Count_free;
+asn_struct_print_f Count_print;
+asn_constr_check_f Count_constraint;
+ber_type_decoder_f Count_decode_ber;
+der_type_encoder_f Count_encode_der;
+jer_type_encoder_f Count_encode_jer;
+cbor_type_decoder_f Count_decode_cbor;
+cbor_type_encoder_f Count_encode_cbor;
+
+/*** <<< CODE [Count] >>> ***/
+
+/*
+ * This type is implemented using NativeInteger,
+ * so here we adjust the DEF accordingly.
+ */
+
+/*** <<< STAT-DEFS [Count] >>> ***/
+
+static const asn_INTEGER_enum_map_t asn_MAP_Count_value2enum_1[] = {
+	{ 1,	3,	"uno" },
+	{ 2,	3,	"two" }
+};
+static const unsigned int asn_MAP_Count_enum2value_1[] = {
+	1,	/* two(2) */
+	0	/* uno(1) */
+};
+const asn_INTEGER_specifics_t asn_SPC_Count_specs_1 = {
+	asn_MAP_Count_value2enum_1,	/* "tag" => N; sorted by tag */
+	asn_MAP_Count_enum2value_1,	/* N => "tag"; sorted by N */
+	2,	/* Number of elements in the maps */
+	0,	/* Enumeration is not extensible */
+	0,
+	0,	/* Native integer width in octets */
+	0	/* Signed representation */
+};
+static const ber_tlv_tag_t asn_DEF_Count_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (2 << 2))
+};
+
+/* Custom XER encoder per ENCODING-CONTROL directive */
+static asn_enc_rval_t
+Count_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
+	int ilevel, enum xer_encoder_flags_e flags,
+	asn_app_consume_bytes_f *cb, void *app_key) {
+	/* Text encoding per ENCODING-CONTROL */
+	return NativeInteger_encode_xer_text(td, sptr, ilevel, flags, cb, app_key);
+}
+
+
+/* Custom XER decoder per ENCODING-CONTROL directive */
+static asn_dec_rval_t
+Count_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
+	const asn_TYPE_descriptor_t *td, void **sptr,
+	const char *opt_mname, const void *buf_ptr, size_t size) {
+	/* Text decoding per ENCODING-CONTROL */
+	return NativeInteger_decode_xer_text(opt_codec_ctx, td, sptr,
+		opt_mname, buf_ptr, size);
+}
+
+/*
+ * Custom operation structure per ENCODING-CONTROL directive:
+ * Format: text
+ * Reference: XER
+ */
+asn_TYPE_operation_t asn_OP_Count = {
+	.kind = ASN_KIND_PRIMITIVE,
+	NativeInteger_free,
+#if !defined(ASN_DISABLE_PRINT_SUPPORT)
+	NativeInteger_print,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
+	NativeInteger_compare,
+	NativeInteger_copy,
+#if !defined(ASN_DISABLE_BER_SUPPORT)
+	NativeInteger_decode_ber,
+	NativeInteger_encode_der,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
+#if !defined(ASN_DISABLE_XER_SUPPORT)
+	Count_decode_xer,  /* Custom per ENCODING-CONTROL */
+	Count_encode_xer,  /* Custom per ENCODING-CONTROL */
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+	NativeInteger_decode_jer,
+	NativeInteger_encode_jer,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) */
+#if !defined(ASN_DISABLE_APER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_RFILL_SUPPORT)
+	NativeInteger_random_fill,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
+	0,	/* No outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+	NativeInteger_decode_cbor,
+	NativeInteger_encode_cbor,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
+};
+
+asn_TYPE_descriptor_t asn_DEF_Count = {
+	"Count",
+	"Count",
+	&asn_OP_Count,  /* Custom operations per ENCODING-CONTROL */
+	asn_DEF_Count_tags_1,
+	sizeof(asn_DEF_Count_tags_1)
+		/sizeof(asn_DEF_Count_tags_1[0]), /* 1 */
+	asn_DEF_Count_tags_1,	/* Same as above */
+	sizeof(asn_DEF_Count_tags_1)
+		/sizeof(asn_DEF_Count_tags_1[0]), /* 1 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		NativeInteger_constraint
+	},
+	0, 0,	/* Defined elsewhere */
+	&asn_SPC_Count_specs_1	/* Additional specs */
+};
+
+
+/*** <<< INCLUDES [Bits] >>> ***/
+
+#include <BIT_STRING.h>
+#include <asn_codecs_prim.h>
+
+/*** <<< DEPS [Bits] >>> ***/
+
+typedef enum Bits {
+	Bits_alpha	= 0,
+	Bits_beta	= 1
+} e_Bits;
+
+/*** <<< TYPE-DECLS [Bits] >>> ***/
+
+typedef BIT_STRING_t	 Bits_t;
+
+/*** <<< FUNC-DECLS [Bits] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Bits;
+asn_struct_free_f Bits_free;
+asn_struct_print_f Bits_print;
+asn_constr_check_f Bits_constraint;
+ber_type_decoder_f Bits_decode_ber;
+der_type_encoder_f Bits_encode_der;
+jer_type_encoder_f Bits_encode_jer;
+cbor_type_decoder_f Bits_decode_cbor;
+cbor_type_encoder_f Bits_encode_cbor;
+
+/*** <<< CODE [Bits] >>> ***/
+
+/*
+ * This type is implemented using BIT_STRING,
+ * so here we adjust the DEF accordingly.
+ */
+
+/*** <<< CTDEFS [Bits] >>> ***/
+
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+static asn_jer_constraints_t asn_JER_type_Bits_constr_1 CC_NOTUSED = {
+	-1,
+	0,
+	0};
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+
+/*** <<< STAT-DEFS [Bits] >>> ***/
+
+static const asn_OCTET_STRING_specifics_t asn_SPC_Bits_specs_1 = {
+	sizeof(BIT_STRING_t),
+	offsetof(BIT_STRING_t, _asn_ctx),
+	ASN_OSUBV_BIT,
+	1	/* Has NamedBitList: trailing 0 bits are insignificant */
+};
+static const ber_tlv_tag_t asn_DEF_Bits_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (3 << 2))
+};
+
+/* Custom XER encoder per ENCODING-CONTROL directive */
+static asn_enc_rval_t
+Bits_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
+	int ilevel, enum xer_encoder_flags_e flags,
+	asn_app_consume_bytes_f *cb, void *app_key) {
+	const BIT_STRING_t *st = (const BIT_STRING_t *)sptr;
+	asn_enc_rval_t er = {0, 0, 0};
+	int first = 1;
+	(void)td;
+	(void)ilevel;
+	(void)flags;
+	if(!st || !st->buf) ASN__ENCODE_FAILED;
+	if(st->size > 0 && (st->buf[0] & 0x80)) {
+		if(!first) ASN__CALLBACK(" ", 1);
+		ASN__CALLBACK("alpha", 5);
+		er.encoded += 5 + (first ? 0 : 1);
+		first = 0;
+	}
+	if(st->size > 0 && (st->buf[0] & 0x40)) {
+		if(!first) ASN__CALLBACK(" ", 1);
+		ASN__CALLBACK("beta", 4);
+		er.encoded += 4 + (first ? 0 : 1);
+		first = 0;
+	}
+	ASN__ENCODED_OK(er);
+	cb_failed:
+		ASN__ENCODE_FAILED;
+}
+
+
+/* Custom XER decoder per ENCODING-CONTROL directive */
+static enum xer_pbd_rval
+Bits_xer_text_body_decode(const asn_TYPE_descriptor_t *td,
+	void *sptr, const void *chunk_buf, size_t chunk_size) {
+	BIT_STRING_t *st = (BIT_STRING_t *)sptr;
+	const char *p = (const char *)chunk_buf;
+	const char *end = p + chunk_size;
+	size_t max_bit = 0;
+	int any = 0;
+	(void)td;
+	if(max_bit < 0) max_bit = 0;
+	if(max_bit < 1) max_bit = 1;
+	if(OCTET_STRING_fromBuf((OCTET_STRING_t *)st, 0,
+		(int)((max_bit / 8) + 1))) return XPBD_SYSTEM_FAILURE;
+	memset(st->buf, 0, st->size);
+	st->bits_unused = (int)((8 - ((max_bit + 1) % 8)) % 8);
+	while(p < end) {
+		const char *start;
+		int matched = 0;
+		while(p < end && (*p == 9 || *p == 10 || *p == 13 || *p == 32)) p++;
+		if(p == end) break;
+		start = p;
+		while(p < end && *p != 9 && *p != 10 && *p != 13 && *p != 32) p++;
+		if(!matched && (size_t)(p - start) == 5
+			&& memcmp(start, "alpha", 5) == 0) {
+			st->buf[0] |= 0x80;
+			matched = 1;
+		}
+		if(!matched && (size_t)(p - start) == 4
+			&& memcmp(start, "beta", 4) == 0) {
+			st->buf[0] |= 0x40;
+			matched = 1;
+		}
+		if(!matched) return XPBD_BROKEN_ENCODING;
+		any = 1;
+	}
+	return any ? XPBD_BODY_CONSUMED : XPBD_NOT_BODY_IGNORE;
+}
+
+static asn_dec_rval_t
+Bits_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
+	const asn_TYPE_descriptor_t *td, void **sptr,
+	const char *opt_mname, const void *buf_ptr, size_t size) {
+	return xer_decode_primitive(opt_codec_ctx, td,
+		sptr, sizeof(BIT_STRING_t), opt_mname,
+		buf_ptr, size, Bits_xer_text_body_decode);
+}
+
+/*
+ * Custom operation structure per ENCODING-CONTROL directive:
+ * Format: text
+ * Reference: XER
+ */
+asn_TYPE_operation_t asn_OP_Bits = {
+	.kind = ASN_KIND_PRIMITIVE,
+	BIT_STRING_free,
+#if !defined(ASN_DISABLE_PRINT_SUPPORT)
+	BIT_STRING_print,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
+	BIT_STRING_compare,
+	BIT_STRING_copy,
+#if !defined(ASN_DISABLE_BER_SUPPORT)
+	BIT_STRING_decode_ber,
+	BIT_STRING_encode_der,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
+#if !defined(ASN_DISABLE_XER_SUPPORT)
+	Bits_decode_xer,  /* Custom per ENCODING-CONTROL */
+	Bits_encode_xer,  /* Custom per ENCODING-CONTROL */
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+	BIT_STRING_decode_jer,
+	BIT_STRING_encode_jer,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) */
+#if !defined(ASN_DISABLE_APER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_RFILL_SUPPORT)
+	BIT_STRING_random_fill,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
+	0,	/* No outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+	BIT_STRING_decode_cbor,
+	BIT_STRING_encode_cbor,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
+};
+
+asn_TYPE_descriptor_t asn_DEF_Bits = {
+	"Bits",
+	"Bits",
+	&asn_OP_Bits,  /* Custom operations per ENCODING-CONTROL */
+	asn_DEF_Bits_tags_1,
+	sizeof(asn_DEF_Bits_tags_1)
+		/sizeof(asn_DEF_Bits_tags_1[0]), /* 1 */
+	asn_DEF_Bits_tags_1,	/* Same as above */
+	sizeof(asn_DEF_Bits_tags_1)
+		/sizeof(asn_DEF_Bits_tags_1[0]), /* 1 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		&asn_JER_type_Bits_constr_1,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		BIT_STRING_constraint
+	},
+	0, 0,	/* Defined elsewhere */
+	&asn_SPC_Bits_specs_1	/* Additional specs */
+};
+
+
+/*** <<< INCLUDES [Blob] >>> ***/
+
+#include <OCTET_STRING.h>
+
+/*** <<< TYPE-DECLS [Blob] >>> ***/
+
+typedef OCTET_STRING_t	 Blob_t;
+
+/*** <<< FUNC-DECLS [Blob] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Blob;
+asn_struct_free_f Blob_free;
+asn_struct_print_f Blob_print;
+asn_constr_check_f Blob_constraint;
+ber_type_decoder_f Blob_decode_ber;
+der_type_encoder_f Blob_encode_der;
+xer_type_decoder_f Blob_decode_xer;
+xer_type_encoder_f Blob_encode_xer;
+cbor_type_decoder_f Blob_decode_cbor;
+cbor_type_encoder_f Blob_encode_cbor;
+
+/*** <<< CODE [Blob] >>> ***/
+
+/*
+ * This type is implemented using OCTET_STRING,
+ * so here we adjust the DEF accordingly.
+ */
+
+/*** <<< STAT-DEFS [Blob] >>> ***/
+
+static const ber_tlv_tag_t asn_DEF_Blob_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (4 << 2))
+};
+
+/* Custom JER encoder per ENCODING-CONTROL directive */
+static asn_enc_rval_t
+Blob_encode_jer(const asn_TYPE_descriptor_t *td,
+	const asn_jer_constraints_t *constraints, const void *sptr,
+	int ilevel, enum jer_encoder_flags_e flags,
+	asn_app_consume_bytes_f *cb, void *app_key) {
+	(void)constraints;
+	return OCTET_STRING_encode_jer_base64(td, 0, sptr, ilevel, flags, cb, app_key);
+}
+
+/* Custom JER decoder per ENCODING-CONTROL directive */
+static asn_dec_rval_t
+Blob_decode_jer(const asn_codec_ctx_t *opt_codec_ctx,
+	const asn_TYPE_descriptor_t *td,
+	const asn_jer_constraints_t *constraints, void **sptr,
+	const void *buf_ptr, size_t size) {
+	(void)constraints;
+	return OCTET_STRING_decode_jer_base64(opt_codec_ctx, td, 0, sptr, buf_ptr, size);
+}
+
+/*
+ * Custom operation structure per ENCODING-CONTROL directive:
+ * Format: jer-base64
+ * Reference: JER
+ */
+asn_TYPE_operation_t asn_OP_Blob = {
+	.kind = ASN_KIND_PRIMITIVE,
+	OCTET_STRING_free,
+#if !defined(ASN_DISABLE_PRINT_SUPPORT)
+	OCTET_STRING_print,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
+	OCTET_STRING_compare,
+	OCTET_STRING_copy,
+#if !defined(ASN_DISABLE_BER_SUPPORT)
+	OCTET_STRING_decode_ber,
+	OCTET_STRING_encode_der,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
+#if !defined(ASN_DISABLE_XER_SUPPORT)
+	OCTET_STRING_decode_xer_hex,
+	OCTET_STRING_encode_xer,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+	Blob_decode_jer,  /* Custom per ENCODING-CONTROL */
+	Blob_encode_jer,  /* Custom per ENCODING-CONTROL */
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) */
+#if !defined(ASN_DISABLE_APER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_RFILL_SUPPORT)
+	OCTET_STRING_random_fill,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
+	0,	/* No outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+	OCTET_STRING_decode_cbor,
+	OCTET_STRING_encode_cbor,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
+};
+
+asn_TYPE_descriptor_t asn_DEF_Blob = {
+	"Blob",
+	"Blob",
+	&asn_OP_Blob,  /* Custom operations per ENCODING-CONTROL */
+	asn_DEF_Blob_tags_1,
+	sizeof(asn_DEF_Blob_tags_1)
+		/sizeof(asn_DEF_Blob_tags_1[0]), /* 1 */
+	asn_DEF_Blob_tags_1,	/* Same as above */
+	sizeof(asn_DEF_Blob_tags_1)
+		/sizeof(asn_DEF_Blob_tags_1[0]), /* 1 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		OCTET_STRING_constraint
+	},
+	0, 0,	/* No members */
+	&asn_SPC_OCTET_STRING_specs	/* Additional specs */
+};
+
+
+/*** <<< INCLUDES [Ratio] >>> ***/
+
+#include <NativeReal.h>
+
+/*** <<< TYPE-DECLS [Ratio] >>> ***/
+
+typedef double	 Ratio_t;
+
+/*** <<< FUNC-DECLS [Ratio] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Ratio;
+asn_struct_free_f Ratio_free;
+asn_struct_print_f Ratio_print;
+asn_constr_check_f Ratio_constraint;
+ber_type_decoder_f Ratio_decode_ber;
+der_type_encoder_f Ratio_encode_der;
+jer_type_encoder_f Ratio_encode_jer;
+cbor_type_decoder_f Ratio_decode_cbor;
+cbor_type_encoder_f Ratio_encode_cbor;
+
+/*** <<< CODE [Ratio] >>> ***/
+
+/*
+ * This type is implemented using NativeReal,
+ * so here we adjust the DEF accordingly.
+ */
+
+/*** <<< STAT-DEFS [Ratio] >>> ***/
+
+static const ber_tlv_tag_t asn_DEF_Ratio_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (9 << 2))
+};
+
+/* Custom XER encoder per ENCODING-CONTROL directive */
+static asn_enc_rval_t
+Ratio_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
+	int ilevel, enum xer_encoder_flags_e flags,
+	asn_app_consume_bytes_f *cb, void *app_key) {
+	/* Decimal REAL encoding per ENCODING-CONTROL */
+	return NativeReal_encode_xer_decimal(td, sptr, ilevel, flags, cb, app_key);
+}
+
+
+/* Custom XER decoder per ENCODING-CONTROL directive */
+static asn_dec_rval_t
+Ratio_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
+	const asn_TYPE_descriptor_t *td, void **sptr,
+	const char *opt_mname, const void *buf_ptr, size_t size) {
+	/* Decimal REAL decoding per ENCODING-CONTROL */
+	return NativeReal_decode_xer_decimal(opt_codec_ctx, td, sptr, opt_mname, buf_ptr, size);
+}
+
+/*
+ * Custom operation structure per ENCODING-CONTROL directive:
+ * Format: decimal
+ * Reference: XER
+ */
+asn_TYPE_operation_t asn_OP_Ratio = {
+	.kind = ASN_KIND_PRIMITIVE,
+	NativeReal_free,
+#if !defined(ASN_DISABLE_PRINT_SUPPORT)
+	NativeReal_print,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
+	NativeReal_compare,
+	NativeReal_copy,
+#if !defined(ASN_DISABLE_BER_SUPPORT)
+	NativeReal_decode_ber,
+	NativeReal_encode_der,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
+#if !defined(ASN_DISABLE_XER_SUPPORT)
+	Ratio_decode_xer,  /* Custom per ENCODING-CONTROL */
+	Ratio_encode_xer,  /* Custom per ENCODING-CONTROL */
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+	NativeReal_decode_jer,
+	NativeReal_encode_jer,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) */
+#if !defined(ASN_DISABLE_APER_SUPPORT)
+	0,
+	0,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_RFILL_SUPPORT)
+	NativeReal_random_fill,
+#else
+	0,
+#endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
+	0,	/* No outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+	NativeReal_decode_cbor,
+	NativeReal_encode_cbor,
+#else
+	0,
+	0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
+};
+
+asn_TYPE_descriptor_t asn_DEF_Ratio = {
+	"Ratio",
+	"Ratio",
+	&asn_OP_Ratio,  /* Custom operations per ENCODING-CONTROL */
+	asn_DEF_Ratio_tags_1,
+	sizeof(asn_DEF_Ratio_tags_1)
+		/sizeof(asn_DEF_Ratio_tags_1[0]), /* 1 */
+	asn_DEF_Ratio_tags_1,	/* Same as above */
+	sizeof(asn_DEF_Ratio_tags_1)
+		/sizeof(asn_DEF_Ratio_tags_1[0]), /* 1 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		NativeReal_constraint
+	},
+	0, 0,	/* No members */
+	0	/* No specifics */
+};
+
+
+/*** <<< INCLUDES [Packet] >>> ***/
+
+#include "Blob.h"
+#include "Mode.h"
+#include "Count.h"
+#include <constr_SEQUENCE.h>
+
+/*** <<< TYPE-DECLS [Packet] >>> ***/
+
+typedef struct Packet {
+	Blob_t	 payload;
+	Mode_t	 state;
+	Count_t	 count;
+	
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
+} Packet_t;
+
+/*** <<< FUNC-DECLS [Packet] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Packet;
+
+/*** <<< CTDEFS [Packet] >>> ***/
+
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+static asn_jer_constraints_t asn_JER_memb_payload_constr_2 CC_NOTUSED = {
+	-1,
+	"payload64",
+	0};
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+
+/*** <<< STAT-DEFS [Packet] >>> ***/
+
+static asn_TYPE_member_t asn_MBR_Packet_1[] = {
+	{ ATF_NOFLAGS, 0, offsetof(struct Packet, payload),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_Blob,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = &asn_JER_memb_payload_constr_2,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "payload"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct Packet, state),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (1 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_Mode,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "state"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct Packet, count),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (2 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_Count,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "count"
+		},
+};
+static const ber_tlv_tag_t asn_DEF_Packet_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
+};
+static const asn_TYPE_tag2member_t asn_MAP_Packet_tag2el_1[] = {
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* payload */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* state */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 } /* count */
+};
+static asn_SEQUENCE_specifics_t asn_SPC_Packet_specs_1 = {
+	sizeof(struct Packet),
+	offsetof(struct Packet, _asn_ctx),
+	.tag2el = asn_MAP_Packet_tag2el_1,
+	.tag2el_count = 3,	/* Count of tags in the map */
+	0, 0, 0,	/* Optional elements (not needed) */
+	-1,	/* First extension addition */
+};
+asn_TYPE_descriptor_t asn_DEF_Packet = {
+	"Packet",
+	"Packet",
+	&asn_OP_SEQUENCE,
+	asn_DEF_Packet_tags_1,
+	sizeof(asn_DEF_Packet_tags_1)
+		/sizeof(asn_DEF_Packet_tags_1[0]), /* 1 */
+	asn_DEF_Packet_tags_1,	/* Same as above */
+	sizeof(asn_DEF_Packet_tags_1)
+		/sizeof(asn_DEF_Packet_tags_1[0]), /* 1 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		SEQUENCE_constraint
+	},
+	asn_MBR_Packet_1,
+	3,	/* Elements count */
+	&asn_SPC_Packet_specs_1	/* Additional specs */
+};
+
+
+/*** <<< INCLUDES [Switch] >>> ***/
+
+#include "Blob.h"
+#include "Mode.h"
+#include <constr_CHOICE.h>
+
+/*** <<< DEPS [Switch] >>> ***/
+
+typedef enum Switch_PR {
+	Switch_PR_NOTHING,	/* No components present */
+	Switch_PR_payload,
+	Switch_PR_state
+} Switch_PR;
+
+/*** <<< TYPE-DECLS [Switch] >>> ***/
+
+typedef struct Switch {
+	Switch_PR present;
+	union Switch_u {
+		Blob_t	 payload;
+		Mode_t	 state;
+	} choice;
+	
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
+} Switch_t;
+
+/*** <<< FUNC-DECLS [Switch] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_Switch;
+
+/*** <<< CTDEFS [Switch] >>> ***/
+
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+static asn_jer_constraints_t asn_JER_memb_payload_constr_2 CC_NOTUSED = {
+	-1,
+	"payload64",
+	0};
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+
+/*** <<< STAT-DEFS [Switch] >>> ***/
+
+static asn_TYPE_member_t asn_MBR_Switch_1[] = {
+	{ ATF_NOFLAGS, 0, offsetof(struct Switch, choice.payload),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_Blob,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = &asn_JER_memb_payload_constr_2,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "payload"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct Switch, choice.state),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (1 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_Mode,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "state"
+		},
+};
+static const asn_TYPE_tag2member_t asn_MAP_Switch_tag2el_1[] = {
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* payload */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* state */
+};
+static asn_CHOICE_specifics_t asn_SPC_Switch_specs_1 = {
+	sizeof(struct Switch),
+	offsetof(struct Switch, _asn_ctx),
+	offsetof(struct Switch, present),
+	sizeof(((struct Switch *)0)->present),
+	.tag2el = asn_MAP_Switch_tag2el_1,
+	.tag2el_count = 2,	/* Count of tags in the map */
+	0, 0,
+	.first_extension = -1	/* Extensions start */
+};
+asn_TYPE_descriptor_t asn_DEF_Switch = {
+	"Switch",
+	"Switch",
+	&asn_OP_CHOICE,
+	0,	/* No effective tags (pointer) */
+	0,	/* No effective tags (count) */
+	0,	/* No tags (pointer) */
+	0,	/* No tags (count) */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		CHOICE_constraint
+	},
+	asn_MBR_Switch_1,
+	2,	/* Elements count */
+	&asn_SPC_Switch_specs_1	/* Additional specs */
+};
+
+
+/*** <<< INCLUDES [EXTERNAL] >>> ***/
+
+#include <OBJECT_IDENTIFIER.h>
+#include <NativeInteger.h>
+#include <ObjectDescriptor.h>
+#include <ANY.h>
+#include <OCTET_STRING.h>
+#include <BIT_STRING.h>
+#include <constr_CHOICE.h>
+#include <constr_SEQUENCE.h>
+
+/*** <<< DEPS [EXTERNAL] >>> ***/
+
+typedef enum encoding_PR {
+	encoding_PR_NOTHING,	/* No components present */
+	encoding_PR_single_ASN1_type,
+	encoding_PR_octet_aligned,
+	encoding_PR_arbitrary
+} encoding_PR;
+
+/*** <<< TYPE-DECLS [EXTERNAL] >>> ***/
+
+typedef struct EXTERNAL {
+	OBJECT_IDENTIFIER_t	*direct_reference;	/* OPTIONAL */
+	long	*indirect_reference;	/* OPTIONAL */
+	ObjectDescriptor_t	*data_value_descriptor;	/* OPTIONAL */
+	struct encoding {
+		encoding_PR present;
+		union EXTERNAL__encoding_u {
+			ANY_t	 single_ASN1_type;
+			OCTET_STRING_t	 octet_aligned;
+			BIT_STRING_t	 arbitrary;
+		} choice;
+		
+		/* Context for parsing across buffer boundaries */
+		asn_struct_ctx_t _asn_ctx;
+	} encoding;
+	
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
+} EXTERNAL_t;
+
+/*** <<< FUNC-DECLS [EXTERNAL] >>> ***/
+
+extern asn_TYPE_descriptor_t asn_DEF_EXTERNAL;
+
+/*** <<< CODE [EXTERNAL] >>> ***/
+
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_encoding __attribute__((weak, alias("asn_DEF_encoding_5")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_encoding_5;
+static asn_TYPE_descriptor_t asn_DEF_encoding;
+__attribute__((constructor)) static void asn_DEF_encoding_5_alias_init(void) {
+	asn_DEF_encoding = asn_DEF_encoding_5;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
+
+/*** <<< CTDEFS [EXTERNAL] >>> ***/
+
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+static asn_jer_constraints_t asn_JER_memb_arbitrary_constr_8 CC_NOTUSED = {
+	-1,
+	0,
+	0};
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+
+/*** <<< STAT-DEFS [EXTERNAL] >>> ***/
+
+static asn_TYPE_member_t asn_MBR_EXTERNAL__encoding_5[] = {
+	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.single_ASN1_type),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
+		.tag_mode = +1,	/* EXPLICIT tag at current level */
+		.type = &asn_DEF_ANY,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "single-ASN1-type"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.octet_aligned),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (1 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_OCTET_STRING,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "octet-aligned"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.arbitrary),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (2 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_BIT_STRING,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "arbitrary"
+		},
+};
+static const asn_TYPE_tag2member_t asn_MAP_encoding_tag2el_5[] = {
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* single-ASN1-type */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* octet-aligned */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 } /* arbitrary */
+};
+static asn_CHOICE_specifics_t asn_SPC_encoding_specs_5 = {
+	sizeof(struct encoding),
+	offsetof(struct encoding, _asn_ctx),
+	offsetof(struct encoding, present),
+	sizeof(((struct encoding *)0)->present),
+	.tag2el = asn_MAP_encoding_tag2el_5,
+	.tag2el_count = 3,	/* Count of tags in the map */
+	0, 0,
+	.first_extension = -1	/* Extensions start */
+};
+static /* Use -fall-defs-global to expose */
+asn_TYPE_descriptor_t asn_DEF_encoding_5 = {
+	"encoding",
+	"encoding",
+	&asn_OP_CHOICE,
+	0,	/* No effective tags (pointer) */
+	0,	/* No effective tags (count) */
+	0,	/* No tags (pointer) */
+	0,	/* No tags (count) */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		CHOICE_constraint
+	},
+	asn_MBR_EXTERNAL__encoding_5,
+	3,	/* Elements count */
+	&asn_SPC_encoding_specs_5	/* Additional specs */
+};
+
+static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
+	{ ATF_POINTER, 3, offsetof(struct EXTERNAL, direct_reference),
+		.tag = (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)),
+		.tag_mode = 0,
+		.type = &asn_DEF_OBJECT_IDENTIFIER,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "direct-reference"
+		},
+	{ ATF_POINTER, 2, offsetof(struct EXTERNAL, indirect_reference),
+		.tag = (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)),
+		.tag_mode = 0,
+		.type = &asn_DEF_NativeInteger,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "indirect-reference"
+		},
+	{ ATF_POINTER, 1, offsetof(struct EXTERNAL, data_value_descriptor),
+		.tag = (ASN_TAG_CLASS_UNIVERSAL | (7 << 2)),
+		.tag_mode = 0,
+		.type = &asn_DEF_ObjectDescriptor,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "data-value-descriptor"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct EXTERNAL, encoding),
+		.tag = -1 /* Ambiguous tag (CHOICE?) */,
+		.tag_mode = 0,
+		.type = &asn_DEF_encoding_5,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = 0
+		},
+		0, 0, /* No default value */
+		.name = "encoding"
+		},
+};
+static const int asn_MAP_EXTERNAL_oms_1[] = { 0, 1, 2 };
+static const ber_tlv_tag_t asn_DEF_EXTERNAL_tags_1[] = {
+	(ASN_TAG_CLASS_UNIVERSAL | (8 << 2)),
+	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
+};
+static const asn_TYPE_tag2member_t asn_MAP_EXTERNAL_tag2el_1[] = {
+    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 1, 0, 0 }, /* indirect-reference */
+    { (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)), 0, 0, 0 }, /* direct-reference */
+    { (ASN_TAG_CLASS_UNIVERSAL | (7 << 2)), 2, 0, 0 }, /* data-value-descriptor */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 3, 0, 0 }, /* single-ASN1-type */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 3, 0, 0 }, /* octet-aligned */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 3, 0, 0 } /* arbitrary */
+};
+static asn_SEQUENCE_specifics_t asn_SPC_EXTERNAL_specs_1 = {
+	sizeof(struct EXTERNAL),
+	offsetof(struct EXTERNAL, _asn_ctx),
+	.tag2el = asn_MAP_EXTERNAL_tag2el_1,
+	.tag2el_count = 6,	/* Count of tags in the map */
+	asn_MAP_EXTERNAL_oms_1,	/* Optional members */
+	3, 0,	/* Root/Additions */
+	-1,	/* First extension addition */
+};
+asn_TYPE_descriptor_t asn_DEF_EXTERNAL = {
+	"EXTERNAL",
+	"EXTERNAL",
+	&asn_OP_SEQUENCE,
+	asn_DEF_EXTERNAL_tags_1,
+	sizeof(asn_DEF_EXTERNAL_tags_1)
+		/sizeof(asn_DEF_EXTERNAL_tags_1[0]) - 1, /* 1 */
+	asn_DEF_EXTERNAL_tags_1,	/* Same as above */
+	sizeof(asn_DEF_EXTERNAL_tags_1)
+		/sizeof(asn_DEF_EXTERNAL_tags_1[0]), /* 2 */
+	{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+		0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+		SEQUENCE_constraint
+	},
+	asn_MBR_EXTERNAL_1,
+	4,	/* Elements count */
+	&asn_SPC_EXTERNAL_specs_1	/* Additional specs */
+};
+

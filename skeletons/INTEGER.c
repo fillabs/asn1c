@@ -7,7 +7,6 @@
 #include <INTEGER.h>
 #include <errno.h>
 #include <inttypes.h>
-
 /*
  * INTEGER basic type description.
  */
@@ -15,6 +14,7 @@ static const ber_tlv_tag_t asn_DEF_INTEGER_tags[] = {
     (ASN_TAG_CLASS_UNIVERSAL | (2 << 2))
 };
 asn_TYPE_operation_t asn_OP_INTEGER = {
+    .kind = ASN_KIND_PRIMITIVE,
     INTEGER_free,
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     INTEGER_print,
@@ -70,7 +70,14 @@ asn_TYPE_operation_t asn_OP_INTEGER = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-0  /* Use generic outmost tag fetcher */
+0,  /* Use generic outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    INTEGER_decode_cbor,
+    INTEGER_encode_cbor,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 asn_TYPE_descriptor_t asn_DEF_INTEGER = {
     "INTEGER",
@@ -100,7 +107,7 @@ asn_TYPE_descriptor_t asn_DEF_INTEGER = {
  * INTEGER specific human-readable output.
  */
 ssize_t
-INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_consume_bytes_f *cb, void *app_key, int plainOrXER) {
+INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_consume_bytes_f *cb, void *app_key, int plainOrXEROrJER) {
     const asn_INTEGER_specifics_t *specs =
         (const asn_INTEGER_specifics_t *)td->specifics;
 	char scratch[32];
@@ -122,13 +129,16 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
 		el = (value >= 0 || !specs || !specs->field_unsigned)
 			? INTEGER_map_value2enum(specs, value) : 0;
 		if(el) {
-			if(plainOrXER == 0)
+			if(plainOrXEROrJER == 0)
 				return asn__format_to_callback(cb, app_key,
 					"%" ASN_PRIdMAX " (%s)", value, el->enum_name);
-			else
+			else if (plainOrXEROrJER == 1)
 				return asn__format_to_callback(cb, app_key,
 					"<%s/>", el->enum_name);
-		} else if(plainOrXER && specs && specs->strict_enumeration) {
+			else if (plainOrXEROrJER == 2)
+				return asn__format_to_callback(cb, app_key,
+					"\"%s\"", el->enum_name);
+		} else if(plainOrXEROrJER && specs && specs->strict_enumeration) {
 			ASN_DEBUG("ASN.1 forbids dealing with "
 				"unknown value of ENUMERATED type");
 			errno = EPERM;
@@ -140,7 +150,7 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
                                                : "%" ASN_PRIdMAX,
                                            value);
         }
-	} else if(plainOrXER && specs && specs->strict_enumeration) {
+	} else if(plainOrXEROrJER && specs && specs->strict_enumeration) {
 		/*
 		 * Here and earlier, we cannot encode the ENUMERATED values
 		 * if there is no corresponding identifier.
@@ -153,6 +163,13 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
 
 	/* Output in the long xx:yy:zz... format */
 	/* TODO: replace with generic algorithm (Knuth TAOCP Vol 2, 4.3.1) */
+	
+	/* For JER (JSON), large integers should be quoted as strings */
+	if(plainOrXEROrJER == 2) {
+		if(cb("\"", 1, app_key) < 0) return -1;
+		wrote += 1;
+	}
+	
 	for(p = scratch; buf < buf_end; buf++) {
 		const char * const h2c = "0123456789ABCDEF";
 		if((p - scratch) >= (ssize_t)(sizeof(scratch) - 4)) {
@@ -170,7 +187,15 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
 		p--;	/* Remove the last ":" */
 
 	wrote += p - scratch;
-	return (cb(scratch, p - scratch, app_key) < 0) ? -1 : wrote;
+	if((cb(scratch, p - scratch, app_key) < 0)) return -1;
+	
+	/* Close quote for JER (JSON) */
+	if(plainOrXEROrJER == 2) {
+		if(cb("\"", 1, app_key) < 0) return -1;
+		wrote += 1;
+	}
+	
+	return wrote;
 }
 
 static int
@@ -187,6 +212,24 @@ const asn_INTEGER_enum_map_t *
 INTEGER_map_value2enum(const asn_INTEGER_specifics_t *specs, long value) {
 	int count = specs ? specs->map_count : 0;
 	if(!count) return 0;
+	if(specs->extension) {
+		/*
+		 * As in NativeEnumerated_encode_uper(): value2enum is two
+		 * independently value-sorted segments (root, then extension
+		 * additions), so a single whole-array bsearch() is only
+		 * valid when the array is globally monotonic. Search each
+		 * segment in turn.
+		 */
+		int root_count = specs->extension - 1;
+		const asn_INTEGER_enum_map_t *el = (const asn_INTEGER_enum_map_t *)
+			bsearch(&value, specs->value2enum, root_count,
+				sizeof(specs->value2enum[0]),
+				INTEGER__compar_value2enum);
+		if(el) return el;
+		return (asn_INTEGER_enum_map_t *)bsearch(&value,
+			specs->value2enum + root_count, count - root_count,
+			sizeof(specs->value2enum[0]), INTEGER__compar_value2enum);
+	}
 	return (asn_INTEGER_enum_map_t *)bsearch(&value, specs->value2enum,
 		count, sizeof(specs->value2enum[0]),
 		INTEGER__compar_value2enum);
@@ -414,7 +457,13 @@ asn_long2INTEGER(INTEGER_t *st, long value) {
 
 int
 asn_ulong2INTEGER(INTEGER_t *st, unsigned long value) {
-    return asn_imax2INTEGER(st, value);
+    /*
+     * Route through the unsigned conversion helper so that values above
+     * the signed maximum stay positive (a leading zero content octet is
+     * prepended when the high bit would otherwise imply a negative value).
+     * Using the signed helper here would misencode e.g. ULONG_MAX as -1.
+     */
+    return asn_umax2INTEGER(st, (uintmax_t)value);
 }
 
 int asn_INTEGER2int64(const INTEGER_t *st, int64_t *value) {

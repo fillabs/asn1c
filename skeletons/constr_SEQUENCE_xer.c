@@ -72,6 +72,10 @@ SEQUENCE_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
      */
     ctx = (asn_struct_ctx_t *)((char *)st + specs->ctx_offset);
 
+    /* Check recursion depth to prevent stack overflow */
+    if(ASN__STACK_OVERFLOW_CHECK(opt_codec_ctx))
+        RETURN(RC_FAIL);
+
 
     /*
      * Phases of XER/XML processing:
@@ -107,6 +111,16 @@ SEQUENCE_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
 
             if(elm->flags & ATF_OPEN_TYPE) {
                 tmprval = OPEN_TYPE_xer_get(opt_codec_ctx, td, st, elm, ptr, size);
+                /* Debug: Check if CHOICE present field was set (only in CHOICE wrapper mode) */
+                if(tmprval.code == RC_OK && elm->type->elements_count > 0) {
+	                void *choice_ptr = (elm->flags & ATF_POINTER) 
+		                ? *(void**)((char*)st + elm->memb_offset)
+		                : (void*)((char*)st + elm->memb_offset);
+	                if(choice_ptr) {
+		                unsigned int *present __attribute__((unused)) = (unsigned int*)choice_ptr;
+		                ASN_DEBUG("OPEN_TYPE decoded: present=%u", *present);
+	                }
+                }
             } else {
                 /* Invoke the inner type decoder, m.b. multiple times */
                 tmprval = elm->type->op->xer_decoder(opt_codec_ctx,
@@ -199,6 +213,19 @@ SEQUENCE_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
 
             ASN_DEBUG("XER/SEQUENCE: tcv=%d, ph=%d, edx=%" ASN_PRI_SIZE "",
                       tcv, ctx->phase, edx);
+            
+            /* In phase 0, check if this is the generic <SEQUENCE> tag */
+            if(ctx->phase == 0) {
+                xer_check_tag_e seq_tcv = xer_check_tag(ptr, ch_size, "SEQUENCE");
+                if(seq_tcv == XCT_OPENING || seq_tcv == XCT_BOTH) {
+                    ASN_DEBUG("XER/SEQUENCE: Accepting generic <SEQUENCE> tag in phase 0");
+                    XER_ADVANCE(ch_size);
+                    ctx->phase = 1;  /* Processing body phase */
+                    continue;
+                }
+                break;  /* Really unexpected */
+            }
+            
             if(ctx->phase != 1) {
                 break;  /* Really unexpected */
             }
@@ -214,9 +241,88 @@ SEQUENCE_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
                 for(n = edx; n < edx_end; n++) {
                     elm = &td->elements[n];
                     tcv = xer_check_tag(ptr, ch_size, elm->name);
+                    
+                    ASN_DEBUG("XER/SEQUENCE: Checking member n=%zu, name='%s', tcv=%d, tag='%.*s'",
+                              n, elm->name ? elm->name : "(null)", tcv, 
+                              (int)(ch_size < 50 ? ch_size : 50), (const char*)ptr);
+                        
                     switch(tcv) {
                     case XCT_BOTH:
+#if XER_EMPTY_OPTIONALS_ENABLED
+                        /*
+                         * Empty tag detected (e.g., <field/>).
+                         * If this field is OPTIONAL, treat it as absent.
+                         */
+                        if(elm->optional) {
+                            ASN_DEBUG("XER/SEQUENCE: Empty optional field '%s', treating as absent",
+                                      elm->name ? elm->name : "(null)");
+                            XER_ADVANCE(ch_size);
+                            ctx->step = edx = n + 1;
+                            break;  /* Exit inner loop to get next token */
+                        }
+#endif
+                        /* Fall through for non-optional or when feature disabled */
                     case XCT_OPENING:
+#if XER_EMPTY_OPTIONALS_ENABLED
+                        /*
+                         * Check if this is an empty optional field with separate
+                         * opening/closing tags (e.g., <field></field>).
+                         */
+                        if(elm->optional) {
+                            const char *peek_ptr = (const char *)ptr + ch_size;
+                            size_t peek_size = size - ch_size;
+                            int peek_ctx = 0;
+                            pxer_chunk_type_e peek_type;
+                            ssize_t peek_ch_size;
+                            ssize_t closing_tag_size = 0;
+                            
+                            /* Skip whitespace and comments to find next token */
+                            while(peek_size > 0) {
+                                peek_ch_size = xer_next_token(&peek_ctx, peek_ptr, peek_size, &peek_type);
+                                if(peek_ch_size <= 0) break;
+                                
+                                if(peek_type == PXER_COMMENT || peek_type == PXER_TEXT) {
+                                    /* Skip whitespace/comments */
+                                    size_t ws_span = xer_whitespace_span(peek_ptr, peek_ch_size);
+                                    if(ws_span == (size_t)peek_ch_size) {
+                                        /* Pure whitespace, skip it */
+                                        peek_ptr += peek_ch_size;
+                                        peek_size -= peek_ch_size;
+                                        peek_ctx = 0;
+                                        continue;
+                                    } else if(peek_type == PXER_COMMENT) {
+                                        /* Comment, skip it */
+                                        peek_ptr += peek_ch_size;
+                                        peek_size -= peek_ch_size;
+                                        peek_ctx = 0;
+                                        continue;
+                                    }
+                                }
+                                
+                                /* Found a non-whitespace token */
+                                if(peek_type == PXER_TAG) {
+                                    xer_check_tag_e peek_tcv = xer_check_tag(peek_ptr, peek_ch_size, elm->name);
+                                    if(peek_tcv == XCT_CLOSING) {
+                                        /* This is an empty optional field! */
+                                        ASN_DEBUG("XER/SEQUENCE: Empty optional field '%s' (separate tags), treating as absent",
+                                                  elm->name ? elm->name : "(null)");
+                                        /* Capture closing tag size before using it */
+                                        closing_tag_size = peek_ch_size;
+                                        /* Skip both opening and closing tags */
+                                        XER_ADVANCE((peek_ptr - (const char *)ptr) + closing_tag_size);
+                                        ctx->step = edx = n + 1;
+                                        break;  /* Exit inner loop to get next token */
+                                    }
+                                }
+                                break;  /* Not an empty tag, proceed normally */
+                            }
+                            
+                            /* If we found and handled an empty optional, skip normal processing */
+                            if(closing_tag_size > 0) {
+                                break;  /* Exit switch to skip normal member processing */
+                            }
+                        }
+#endif
                         /*
                          * Process this member.
                          */
@@ -260,6 +366,61 @@ SEQUENCE_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
                 continue;
             }
 
+            /* Check if this is a type wrapper tag (e.g., <Reset> when opt_mname="value") */
+            if(ctx->phase == 1 && td->xml_tag && opt_mname && 
+               strcmp(td->xml_tag, opt_mname) != 0) {
+                tcv = xer_check_tag(ptr, ch_size, td->xml_tag);
+                if(tcv == XCT_OPENING || tcv == XCT_BOTH) {
+                    ASN_DEBUG("XER/SEQUENCE: Skipping type wrapper tag <%s>", td->xml_tag);
+                    XER_ADVANCE(ch_size);
+                    /* Stay in phase 1 to process the actual content */
+                    continue;
+                }
+            }
+            
+            /* Fall through */
+        case XCT_UNKNOWN_CL:
+            /* Check if this is a type wrapper closing tag (e.g., </Reset> when opt_mname="value") */
+            if(ctx->phase == 1 && td->xml_tag && opt_mname && 
+               strcmp(td->xml_tag, opt_mname) != 0) {
+                xer_check_tag_e wrapper_tcv = xer_check_tag(ptr, ch_size, td->xml_tag);
+                if(wrapper_tcv == XCT_CLOSING) {
+                    ASN_DEBUG("XER/SEQUENCE: Closing type wrapper tag </%s>", td->xml_tag);
+                    XER_ADVANCE(ch_size);
+                    /* Stay in phase 1, expecting the element closing tag */
+                    continue;
+                }
+            }
+            
+            /* Check if this is the closing generic </SEQUENCE> tag */
+            if(ctx->phase == 1) {
+                xer_check_tag_e seq_tcv = xer_check_tag(ptr, ch_size, "SEQUENCE");
+                if(seq_tcv == XCT_CLOSING) {
+                    ASN_DEBUG("XER/SEQUENCE: Accepting generic </SEQUENCE> tag in phase 1");
+                    /* Check if we're done with all mandatory elements */
+                    if(edx >= td->elements_count ||
+                       (edx + elements[edx].optional == td->elements_count) ||
+                       IN_EXTENSION_GROUP(specs, edx)) {
+                        XER_ADVANCE(ch_size);
+                        ctx->phase = 0;  /* Reset for next use */
+                        /* Check if there's an outer element tag to consume */
+                        if(opt_mname && td->xml_tag && strcmp(opt_mname, td->xml_tag) != 0) {
+                            /* Element name differs from type name, so expect outer </opt_mname> tag.
+                             * Continue looping to consume it in the next iteration. */
+                            ASN_DEBUG("XER/SEQUENCE: Expecting outer closing tag </%s>", opt_mname);
+                            continue;
+                        } else {
+                            /* This was the only wrapper, we're done */
+                            ctx->phase = 4;
+                            RETURN(RC_OK);
+                        }
+                    } else {
+                        ASN_DEBUG("Missing mandatory elements after </SEQUENCE>");
+                        break;  /* Missing mandatory elements */
+                    }
+                }
+            }
+
             /* Fall through */
         default:
             break;
@@ -291,6 +452,9 @@ SEQUENCE_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
 
     if(!sptr) ASN__ENCODE_FAILED;
 
+    /* Check recursion depth to prevent stack overflow */
+    XER_ENCODER_RECURSION_DEPTH_INC();
+
     er.encoded = 0;
 
     for(edx = 0; edx < td->elements_count; edx++) {
@@ -307,6 +471,7 @@ SEQUENCE_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
                 assert(tmp_def_val == 0);
                 if(elm->default_value_set) {
                     if(elm->default_value_set(&tmp_def_val)) {
+                        XER_ENCODER_RECURSION_DEPTH_DEC();
                         ASN__ENCODE_FAILED;
                     } else {
                         memb_ptr = tmp_def_val;
@@ -316,6 +481,7 @@ SEQUENCE_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
                     continue;
                 } else {
                     /* Mandatory element is missing */
+                    XER_ENCODER_RECURSION_DEPTH_DEC();
                     ASN__ENCODE_FAILED;
                 }
             }
@@ -323,26 +489,53 @@ SEQUENCE_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
             memb_ptr = (const void *)((const char *)sptr + elm->memb_offset);
         }
 
-        if(!xcan) ASN__TEXT_INDENT(1, ilevel);
+        if(!xcan) {
+            if(edx == 0 || er.encoded == 0) {
+                /* First member: output newline + indent */
+                ASN__TEXT_INDENT(1, ilevel);
+            } else {
+                /* Subsequent members: output only indent (newline comes from previous closing tag) */
+                int tmp_i;
+                for(tmp_i = 0; tmp_i < ilevel; tmp_i++) ASN__CALLBACK("    ", 4);
+            }
+        }
         ASN__CALLBACK3("<", 1, mname, mlen, ">", 1);
 
         /* Print the member itself */
-        tmper = elm->type->op->xer_encoder(elm->type, memb_ptr, ilevel + 1,
-                                           flags, cb, app_key);
+        if(elm->flags & ATF_OPEN_TYPE) {
+            tmper = OPEN_TYPE_xer_put(td, sptr, elm, ilevel + 1, flags, cb, app_key);
+        } else {
+            tmper = elm->type->op->xer_encoder(elm->type, memb_ptr, ilevel + 1,
+                                               flags, cb, app_key);
+        }
         if(tmp_def_val) {
             ASN_STRUCT_FREE(*tmp_def_val_td, tmp_def_val);
             tmp_def_val = 0;
         }
-        if(tmper.encoded == -1) return tmper;
+        if(tmper.encoded == -1) {
+            XER_ENCODER_RECURSION_DEPTH_DEC();
+            return tmper;
+        }
         er.encoded += tmper.encoded;
 
-        ASN__CALLBACK3("</", 2, mname, mlen, ">", 1);
+        if(!xcan) {
+            /* Add indentation before closing tag only if element is a structured type
+             * that outputs newlines in its content (SEQUENCE, SET, CHOICE, etc.)
+             * Primitive types like INTEGER output inline content, so no indent needed. */
+            if(tmper.encoded > 0 && 
+               (ASN__IS_STRUCTURED_TYPE(elm) || elm->flags & ATF_OPEN_TYPE)) {
+                ASN__TEXT_INDENT(0, ilevel);
+            }
+            ASN__CALLBACK3("</", 2, mname, mlen, ">\n", 2);
+        } else {
+            ASN__CALLBACK3("</", 2, mname, mlen, ">", 1);
+        }
     }
 
-    if(!xcan) ASN__TEXT_INDENT(1, ilevel - 1);
-
+    XER_ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODED_OK(er);
 cb_failed:
     if(tmp_def_val) ASN_STRUCT_FREE(*tmp_def_val_td, tmp_def_val);
+    XER_ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODE_FAILED;
 }

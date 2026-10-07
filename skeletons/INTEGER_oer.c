@@ -53,6 +53,11 @@ INTEGER_decode_oer(const asn_codec_ctx_t *opt_codec_ctx,
         ASN__DECODE_STARVED;
     }
 
+    /* An INTEGER must have at least 1 byte of content (X.696 10.2) */
+    if(req_bytes == 0) {
+        ASN__DECODE_FAILED;
+    }
+
     if(ct.positive) {
         /* X.969 08/2015 10.2(a) */
         unsigned msb;   /* Most significant bit */

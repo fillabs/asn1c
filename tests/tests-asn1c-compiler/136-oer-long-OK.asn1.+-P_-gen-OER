@@ -4,6 +4,7 @@
 #include <NativeInteger.h>
 #include <INTEGER.h>
 #include <constr_SEQUENCE.h>
+#include <asn_constraint_value.h>
 
 /*** <<< TYPE-DECLS [T] >>> ***/
 
@@ -13,7 +14,6 @@ typedef struct T {
 	long	 unsigned16stack;
 	long	 unsigned16stack_ext;
 	INTEGER_t	 unsigned33;
-	long	*minmax;	/* OPTIONAL */
 	/*
 	 * This type is extensible,
 	 * possible extensions are below.
@@ -24,6 +24,7 @@ typedef struct T {
 	long	*signed16stack_ext;
 	long	*signed32;
 	INTEGER_t	*signed33ext;
+	long	*minmax;	/* OPTIONAL */
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
@@ -138,8 +139,9 @@ memb_unsigned16stack_ext_constraint_1(const asn_TYPE_descriptor_t *td, const voi
 static int
 memb_unsigned33_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 			asn_app_constraint_failed_f *ctfailcb, void *app_key) {
+	static const asn_cval_t asn_CVAL_unsigned33_6_lb = { ACV_UINT, { .u = UINTMAX_C(0) } };
+	static const asn_cval_t asn_CVAL_unsigned33_6_ub = { ACV_UINT, { .u = UINTMAX_C(5000000000) } };
 	const INTEGER_t *st = (const INTEGER_t *)sptr;
-	long value;
 	
 	if(!sptr) {
 		ASN__CTFAIL(app_key, td, sptr,
@@ -148,14 +150,7 @@ memb_unsigned33_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 		return -1;
 	}
 	
-	if(asn_INTEGER2long(st, &value)) {
-		ASN__CTFAIL(app_key, td, sptr,
-			"%s: value too large (%s:%d)",
-			td->name, __FILE__, __LINE__);
-		return -1;
-	}
-	
-	if((value >= 0L && value <= 5000000000L)) {
+	if(asn_check_INTEGER_range(st, &asn_CVAL_unsigned33_6_lb, &asn_CVAL_unsigned33_6_ub, 0) == 0) {
 		/* Constraint check succeeded */
 		return 0;
 	} else {
@@ -164,25 +159,6 @@ memb_unsigned33_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 			td->name, __FILE__, __LINE__);
 		return -1;
 	}
-}
-
-static int
-memb_minmax_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
-			asn_app_constraint_failed_f *ctfailcb, void *app_key) {
-	
-	if(!sptr) {
-		ASN__CTFAIL(app_key, td, sptr,
-			"%s: value not given (%s:%d)",
-			td->name, __FILE__, __LINE__);
-		return -1;
-	}
-	
-	
-	if(1 /* No applicable constraints whatsoever */) {
-		/* Nothing is here. See below */
-	}
-	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
 }
 
 static int
@@ -313,8 +289,9 @@ memb_signed32_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 static int
 memb_signed33ext_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 			asn_app_constraint_failed_f *ctfailcb, void *app_key) {
+	static const asn_cval_t asn_CVAL_signed33ext_13_lb = { ACV_SINT, { .s = INTMAX_C(-4000000000) } };
+	static const asn_cval_t asn_CVAL_signed33ext_13_ub = { ACV_UINT, { .u = UINTMAX_C(4000000000) } };
 	const INTEGER_t *st = (const INTEGER_t *)sptr;
-	long value;
 	
 	if(!sptr) {
 		ASN__CTFAIL(app_key, td, sptr,
@@ -323,14 +300,7 @@ memb_signed33ext_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 		return -1;
 	}
 	
-	if(asn_INTEGER2long(st, &value)) {
-		ASN__CTFAIL(app_key, td, sptr,
-			"%s: value too large (%s:%d)",
-			td->name, __FILE__, __LINE__);
-		return -1;
-	}
-	
-	if((value >= -4000000000L && value <= 4000000000L)) {
+	if(asn_check_INTEGER_range(st, &asn_CVAL_signed33ext_13_lb, &asn_CVAL_signed33ext_13_ub, 0) == 0) {
 		/* Constraint check succeeded */
 		return 0;
 	} else {
@@ -339,6 +309,25 @@ memb_signed33ext_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 			td->name, __FILE__, __LINE__);
 		return -1;
 	}
+}
+
+static int
+memb_minmax_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
+			asn_app_constraint_failed_f *ctfailcb, void *app_key) {
+	
+	if(!sptr) {
+		ASN__CTFAIL(app_key, td, sptr,
+			"%s: value not given (%s:%d)",
+			td->name, __FILE__, __LINE__);
+		return -1;
+	}
+	
+	
+	if(1 /* No applicable constraints whatsoever */) {
+		/* Nothing is here. See below */
+	}
+	
+	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
 }
 
 
@@ -370,44 +359,44 @@ static asn_oer_constraints_t asn_OER_memb_unsigned33_constr_6 CC_NOTUSED = {
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_memb_minmax_constr_7 CC_NOTUSED = {
-	{ 0, 0 },
-	-1};
-#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
-#if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_memb_signed8_constr_9 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_signed8_constr_8 CC_NOTUSED = {
 	{ 1, 0 }	/* (-128..127) */,
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_memb_signed16_constr_10 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_signed16_constr_9 CC_NOTUSED = {
 	{ 2, 0 }	/* (-32768..32767) */,
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_memb_signed16stack_constr_11 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_signed16stack_constr_10 CC_NOTUSED = {
 	{ 1, 0 }	/* (-128..127) */,
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_memb_signed16stack_ext_constr_12 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_signed16stack_ext_constr_11 CC_NOTUSED = {
 	{ 2, 0 }	/* (-32768..32767) */,
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_memb_signed32_constr_13 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_signed32_constr_12 CC_NOTUSED = {
 	{ 4, 0 }	/* (-2000000000..2000000000) */,
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-static asn_oer_constraints_t asn_OER_memb_signed33ext_constr_14 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_signed33ext_constr_13 CC_NOTUSED = {
+	{ 0, 0 },
+	-1};
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+static asn_oer_constraints_t asn_OER_memb_minmax_constr_14 CC_NOTUSED = {
 	{ 0, 0 },
 	-1};
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 
 /*** <<< STAT-DEFS [T] >>> ***/
 
-static int asn_DFL_9_cmp_3(const void *sptr) {
+static int asn_DFL_8_cmp_3(const void *sptr) {
 	const long *st = sptr;
 	
 	if(!st) {
@@ -417,7 +406,7 @@ static int asn_DFL_9_cmp_3(const void *sptr) {
 	/* Test default value 3 */
 	return (*st != 3);
 }
-static int asn_DFL_9_set_3(void **sptr) {
+static int asn_DFL_8_set_3(void **sptr) {
 	long *st = *sptr;
 	
 	if(!st) {
@@ -443,7 +432,7 @@ static asn_TYPE_member_t asn_MBR_T_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_unsigned8_constraint_1
 		},
@@ -463,7 +452,7 @@ static asn_TYPE_member_t asn_MBR_T_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_unsigned16_constraint_1
 		},
@@ -483,7 +472,7 @@ static asn_TYPE_member_t asn_MBR_T_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_unsigned16stack_constraint_1
 		},
@@ -503,7 +492,7 @@ static asn_TYPE_member_t asn_MBR_T_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_unsigned16stack_ext_constraint_1
 		},
@@ -523,153 +512,153 @@ static asn_TYPE_member_t asn_MBR_T_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_unsigned33_constraint_1
 		},
 		0, 0, /* No default value */
 		.name = "unsigned33"
 		},
-	{ ATF_POINTER, 7, offsetof(struct T, minmax),
-		.tag = (ASN_TAG_CLASS_CONTEXT | (6 << 2)),
-		.tag_mode = -1,	/* IMPLICIT tag at current level */
-		.type = &asn_DEF_NativeInteger,
-		.type_selector = 0,
-		{
-#if !defined(ASN_DISABLE_OER_SUPPORT)
-			.oer_constraints = &asn_OER_memb_minmax_constr_7,
-#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
-#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
-			.per_constraints = 0,
-#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
-#if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
-#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
-			.general_constraints = memb_minmax_constraint_1
-		},
-		0, 0, /* No default value */
-		.name = "minmax"
-		},
-	{ ATF_POINTER, 6, offsetof(struct T, signed8),
+	{ ATF_POINTER, 7, offsetof(struct T, signed8),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (10 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NativeInteger,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-			.oer_constraints = &asn_OER_memb_signed8_constr_9,
+			.oer_constraints = &asn_OER_memb_signed8_constr_8,
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_signed8_constraint_1
 		},
-		.default_value_cmp = &asn_DFL_9_cmp_3,	/* Compare DEFAULT 3 */
-		.default_value_set = &asn_DFL_9_set_3,	/* Set DEFAULT 3 */
+		.default_value_cmp = &asn_DFL_8_cmp_3,	/* Compare DEFAULT 3 */
+		.default_value_set = &asn_DFL_8_set_3,	/* Set DEFAULT 3 */
 		.name = "signed8"
 		},
-	{ ATF_POINTER, 5, offsetof(struct T, signed16),
+	{ ATF_POINTER, 6, offsetof(struct T, signed16),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (11 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NativeInteger,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-			.oer_constraints = &asn_OER_memb_signed16_constr_10,
+			.oer_constraints = &asn_OER_memb_signed16_constr_9,
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_signed16_constraint_1
 		},
 		0, 0, /* No default value */
 		.name = "signed16"
 		},
-	{ ATF_POINTER, 4, offsetof(struct T, signed16stack),
+	{ ATF_POINTER, 5, offsetof(struct T, signed16stack),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (12 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NativeInteger,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-			.oer_constraints = &asn_OER_memb_signed16stack_constr_11,
+			.oer_constraints = &asn_OER_memb_signed16stack_constr_10,
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_signed16stack_constraint_1
 		},
 		0, 0, /* No default value */
 		.name = "signed16stack"
 		},
-	{ ATF_POINTER, 3, offsetof(struct T, signed16stack_ext),
+	{ ATF_POINTER, 4, offsetof(struct T, signed16stack_ext),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (5 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NativeInteger,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-			.oer_constraints = &asn_OER_memb_signed16stack_ext_constr_12,
+			.oer_constraints = &asn_OER_memb_signed16stack_ext_constr_11,
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_signed16stack_ext_constraint_1
 		},
 		0, 0, /* No default value */
 		.name = "signed16stack-ext"
 		},
-	{ ATF_POINTER, 2, offsetof(struct T, signed32),
+	{ ATF_POINTER, 3, offsetof(struct T, signed32),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (7 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NativeInteger,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-			.oer_constraints = &asn_OER_memb_signed32_constr_13,
+			.oer_constraints = &asn_OER_memb_signed32_constr_12,
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_signed32_constraint_1
 		},
 		0, 0, /* No default value */
 		.name = "signed32"
 		},
-	{ ATF_POINTER, 1, offsetof(struct T, signed33ext),
+	{ ATF_POINTER, 2, offsetof(struct T, signed33ext),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (8 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_INTEGER,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
-			.oer_constraints = &asn_OER_memb_signed33ext_constr_14,
+			.oer_constraints = &asn_OER_memb_signed33ext_constr_13,
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = memb_signed33ext_constraint_1
 		},
 		0, 0, /* No default value */
 		.name = "signed33ext"
+		},
+	{ ATF_POINTER, 1, offsetof(struct T, minmax),
+		.tag = (ASN_TAG_CLASS_CONTEXT | (6 << 2)),
+		.tag_mode = -1,	/* IMPLICIT tag at current level */
+		.type = &asn_DEF_NativeInteger,
+		.type_selector = 0,
+		{
+#if !defined(ASN_DISABLE_OER_SUPPORT)
+			.oer_constraints = &asn_OER_memb_minmax_constr_14,
+#endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
+			.per_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+#if !defined(ASN_DISABLE_JER_SUPPORT)
+			.jer_constraints = 0,
+#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+			.general_constraints = memb_minmax_constraint_1
+		},
+		0, 0, /* No default value */
+		.name = "minmax"
 		},
 };
 static const int asn_MAP_T_oms_1[] = { 5, 6, 7, 8, 9, 10, 11 };
@@ -681,13 +670,13 @@ static const asn_TYPE_tag2member_t asn_MAP_T_tag2el_1[] = {
     { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* unsigned16 */
     { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* unsigned16stack */
     { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 4, 0, 0 }, /* unsigned33 */
-    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 9, 0, 0 }, /* signed16stack-ext */
-    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 5, 0, 0 }, /* minmax */
-    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 10, 0, 0 }, /* signed32 */
-    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 11, 0, 0 }, /* signed33ext */
-    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 6, 0, 0 }, /* signed8 */
-    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 7, 0, 0 }, /* signed16 */
-    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 8, 0, 0 }, /* signed16stack */
+    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 8, 0, 0 }, /* signed16stack-ext */
+    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 11, 0, 0 }, /* minmax */
+    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 9, 0, 0 }, /* signed32 */
+    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 10, 0, 0 }, /* signed33ext */
+    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 5, 0, 0 }, /* signed8 */
+    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 6, 0, 0 }, /* signed16 */
+    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 7, 0, 0 }, /* signed16stack */
     { (ASN_TAG_CLASS_CONTEXT | (15 << 2)), 3, 0, 0 } /* unsigned16stack-ext */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_T_specs_1 = {
@@ -696,8 +685,8 @@ static asn_SEQUENCE_specifics_t asn_SPC_T_specs_1 = {
 	.tag2el = asn_MAP_T_tag2el_1,
 	.tag2el_count = 12,	/* Count of tags in the map */
 	asn_MAP_T_oms_1,	/* Optional members */
-	1, 6,	/* Root/Additions */
-	6,	/* First extension addition */
+	0, 7,	/* Root/Additions */
+	5,	/* First extension addition */
 };
 asn_TYPE_descriptor_t asn_DEF_T = {
 	"T",
@@ -717,7 +706,7 @@ asn_TYPE_descriptor_t asn_DEF_T = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},
@@ -773,6 +762,20 @@ typedef struct EXTERNAL {
 
 extern asn_TYPE_descriptor_t asn_DEF_EXTERNAL;
 
+/*** <<< CODE [EXTERNAL] >>> ***/
+
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_encoding __attribute__((weak, alias("asn_DEF_encoding_5")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_encoding_5;
+static asn_TYPE_descriptor_t asn_DEF_encoding;
+__attribute__((constructor)) static void asn_DEF_encoding_5_alias_init(void) {
+	asn_DEF_encoding = asn_DEF_encoding_5;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
+
 /*** <<< CTDEFS [EXTERNAL] >>> ***/
 
 #if !defined(ASN_DISABLE_OER_SUPPORT)
@@ -783,7 +786,7 @@ static asn_oer_constraints_t asn_OER_type_encoding_constr_5 CC_NOTUSED = {
 
 /*** <<< STAT-DEFS [EXTERNAL] >>> ***/
 
-static asn_TYPE_member_t asn_MBR_encoding_5[] = {
+static asn_TYPE_member_t asn_MBR_EXTERNAL__encoding_5[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.single_ASN1_type),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		.tag_mode = +1,	/* EXPLICIT tag at current level */
@@ -797,7 +800,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -817,7 +820,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -837,7 +840,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -877,11 +880,11 @@ asn_TYPE_descriptor_t asn_DEF_encoding_5 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		CHOICE_constraint
 	},
-	asn_MBR_encoding_5,
+	asn_MBR_EXTERNAL__encoding_5,
 	3,	/* Elements count */
 	&asn_SPC_encoding_specs_5	/* Additional specs */
 };
@@ -900,7 +903,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -920,7 +923,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -940,7 +943,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -960,7 +963,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1008,7 +1011,7 @@ asn_TYPE_descriptor_t asn_DEF_EXTERNAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},

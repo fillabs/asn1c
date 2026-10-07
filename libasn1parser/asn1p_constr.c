@@ -22,6 +22,23 @@ asn1p_constraint_set_source(asn1p_constraint_t *ct,
     }
 }
 
+/*
+ * Safely extract the reference an ACT_EL_TYPE constraint points to, e.g. the
+ * VALUESET reference in (VALUE-SET-A). Other constraint shapes are treated as
+ * not comparable here instead of dereferencing through optional fields.
+ */
+static const asn1p_ref_t *
+constraint_ref(const asn1p_constraint_t *ct) {
+    const asn1p_value_t *cs = ct->containedSubtype;
+
+    if(cs && cs->type == ATV_REFERENCED)
+        return cs->value.reference;
+    if(cs && cs->type == ATV_TYPE && cs->value.v_type)
+        return cs->value.v_type->reference;
+
+    return 0;
+}
+
 int asn1p_constraint_compare(const asn1p_constraint_t *a,
                              const asn1p_constraint_t *b) {
     assert((a && b));
@@ -29,10 +46,25 @@ int asn1p_constraint_compare(const asn1p_constraint_t *a,
     if(a->type != b->type)
         return -1;
 
-    /* Currently we only check VALUESET as a reference */
+    /*
+     * Currently we only distinguish VALUESET constraints expressed as
+     * references to contained subtypes. This keeps parameterizations that differ
+     * only by their VALUESET references from being deduplicated, while avoiding
+     * NULL dereferences for other ACT_EL_TYPE shapes.
+     */
     if(a->type == ACT_EL_TYPE) {
-        return strcmp(a->containedSubtype->value.v_type->reference->components[0].name,
-                      b->containedSubtype->value.v_type->reference->components[0].name);
+        const asn1p_ref_t *ra = constraint_ref(a);
+        const asn1p_ref_t *rb = constraint_ref(b);
+
+        if(ra && rb) {
+            if(ra->comp_count == 0 || rb->comp_count == 0
+               || !ra->components[0].name || !rb->components[0].name)
+                return 0;
+            return strcmp(ra->components[0].name, rb->components[0].name);
+        }
+        if(ra || rb)
+            return -1;
+        return 0;
     }
 
     return 0;
@@ -237,4 +269,3 @@ asn1p_get_component_relation_constraint(asn1p_constraint_t *ct) {
     }
     return NULL;
 }
-

@@ -115,9 +115,13 @@ compare(T_t *tp, uint8_t *cmp_buf, ssize_t cmp_buf_size) {
 int
 main(int ac, char **av) {
 	T_t t;
+	uint8_t buf1_extra[sizeof(buf1) + 10];
 
 	(void)ac;	/* Unused argument */
 	(void)av;	/* Unused argument */
+
+	memcpy(buf1_extra, buf1, sizeof(buf1));
+	memset(buf1_extra + sizeof(buf1), 0, sizeof(buf1_extra) - sizeof(buf1));
 
 	/* Check exact buf1 */
 	check(&t, buf1, sizeof(buf1), sizeof(buf1));
@@ -126,7 +130,7 @@ main(int ac, char **av) {
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_T, &t);
 
 	/* Check slightly more than buf1 */
-	check(&t, buf1, sizeof(buf1) + 10, sizeof(buf1));
+	check(&t, buf1_extra, sizeof(buf1_extra), sizeof(buf1));
 	compare(&t, buf1_reconstr, sizeof(buf1_reconstr));
 	asn_fprint(stderr, &asn_DEF_T, &t);
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_T, &t);

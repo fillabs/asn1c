@@ -43,7 +43,6 @@ OCTET_STRING_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
         OS__BPC_U32 = 4
     } bpc;  /* Bytes per character */
     unsigned int unit_bits;
-    unsigned int canonical_unit_bits;
 
     (void)opt_codec_ctx;
 
@@ -63,19 +62,19 @@ OCTET_STRING_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
         RETURN(RC_FAIL);
         break;
     case ASN_OSUBV_STR:
-        canonical_unit_bits = unit_bits = 8;
+        unit_bits = 8;
         if(cval->flags & APC_CONSTRAINED)
             unit_bits = cval->range_bits;
         bpc = OS__BPC_CHAR;
         break;
     case ASN_OSUBV_U16:
-        canonical_unit_bits = unit_bits = 16;
+        unit_bits = 16;
         if(cval->flags & APC_CONSTRAINED)
             unit_bits = cval->range_bits;
         bpc = OS__BPC_U16;
         break;
     case ASN_OSUBV_U32:
-        canonical_unit_bits = unit_bits = 32;
+        unit_bits = 32;
         if(cval->flags & APC_CONSTRAINED)
             unit_bits = cval->range_bits;
         bpc = OS__BPC_U32;
@@ -98,8 +97,12 @@ OCTET_STRING_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
         int inext = per_get_few_bits(pd, 1);
         if(inext < 0) RETURN(RC_WMORE);
         if(inext) {
+            /*
+             * X.691:2021 30.4 removes only the effective size constraint
+             * in the extension region.  The effective permitted alphabet,
+             * and therefore the 30.5.2 character width, remains in force.
+             */
             csiz = &asn_DEF_OCTET_STRING_constraints.size;
-            unit_bits = canonical_unit_bits;
         }
     }
 
@@ -144,7 +147,7 @@ OCTET_STRING_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
     st->size = 0;
     do {
         ssize_t raw_len;
-        ssize_t len_bytes;
+        size_t len_bytes;
         void *p;
         int ret;
 
@@ -157,7 +160,14 @@ OCTET_STRING_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
         ASN_DEBUG("Got PER length eb %ld, len %ld, %s (%s)",
                   (long)csiz->effective_bits, (long)raw_len,
                   repeat ? "repeat" : "once", td->name);
-        len_bytes = raw_len * bpc;
+        /*
+         * The general length determinant is attacker-controlled.  Check
+         * both multiplication and accumulation before reallocating so a
+         * fragmented value cannot wrap into an undersized allocation.
+         */
+        if((size_t)raw_len > (SIZE_MAX - 1) / bpc) RETURN(RC_FAIL);
+        len_bytes = (size_t)raw_len * bpc;
+        if(len_bytes > SIZE_MAX - 1 - st->size) RETURN(RC_FAIL);
         p = REALLOC(st->buf, st->size + len_bytes + 1);
         if(!p) RETURN(RC_FAIL);
         st->buf = (uint8_t *)p;
@@ -190,7 +200,6 @@ OCTET_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
     asn_enc_rval_t er = { 0, 0, 0 };
     int inext = 0;  /* Lies not within extension root */
     unsigned int unit_bits;
-    unsigned int canonical_unit_bits;
     size_t size_in_units;
     const uint8_t *buf;
     int ret;
@@ -203,6 +212,19 @@ OCTET_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
 
     if(!st || (!st->buf && st->size))
         ASN__ENCODE_FAILED;
+
+    /* 
+     * Sanity check for st->size: if it appears to contain a pointer value
+     * rather than a reasonable size, this indicates a struct layout mismatch
+     * or memory corruption. This can happen when the type descriptor specifics
+     * don't match the actual structure being passed.
+     */
+    if(st->size > 0x7FFFFFFFUL) {  /* More than ~2GB is suspicious */
+        ASN_DEBUG("OCTET_STRING size %zu (0x%zx) is suspiciously large, "
+                  "possible pointer value or memory corruption. Check type descriptor specifics.",
+                  st->size, st->size);
+        ASN__ENCODE_FAILED;
+    }
 
     if(pc) {
         cval = &pc->value;
@@ -219,14 +241,14 @@ OCTET_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
     case ASN_OSUBV_BIT:
         ASN__ENCODE_FAILED;
     case ASN_OSUBV_STR:
-        canonical_unit_bits = unit_bits = 8;
+        unit_bits = 8;
         if(cval->flags & APC_CONSTRAINED)
             unit_bits = cval->range_bits;
         bpc = OS__BPC_CHAR;
         size_in_units = st->size;
         break;
     case ASN_OSUBV_U16:
-        canonical_unit_bits = unit_bits = 16;
+        unit_bits = 16;
         if(cval->flags & APC_CONSTRAINED)
             unit_bits = cval->range_bits;
         bpc = OS__BPC_U16;
@@ -237,7 +259,7 @@ OCTET_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
         }
         break;
     case ASN_OSUBV_U32:
-        canonical_unit_bits = unit_bits = 32;
+        unit_bits = 32;
         if(cval->flags & APC_CONSTRAINED)
             unit_bits = cval->range_bits;
         bpc = OS__BPC_U32;
@@ -261,8 +283,12 @@ OCTET_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
         if((ssize_t)size_in_units < csiz->lower_bound
            || (ssize_t)size_in_units > csiz->upper_bound) {
             if(ct_extensible) {
+                /*
+                 * X.691:2021 30.4 removes only the effective size
+                 * constraint; the permitted alphabet and its 30.5.2
+                 * character width remain effective in the extension.
+                 */
                 csiz = &asn_DEF_OCTET_STRING_constraints.size;
-                unit_bits = canonical_unit_bits;
                 inext = 1;
             } else {
                 ASN__ENCODE_FAILED;
@@ -308,7 +334,8 @@ OCTET_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
                                               cval->upper_bound, pc);
         if(ret) ASN__ENCODE_FAILED;
 
-        buf += may_save * bpc;
+        /* Avoid undefined arithmetic on a NULL empty-string buffer. */
+        if(may_save) buf += may_save * bpc;
         size_in_units -= may_save;
         assert(!(may_save & 0x07) || !size_in_units);
         if(need_eom && uper_put_length(po, 0, 0))

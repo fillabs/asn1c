@@ -47,6 +47,8 @@ typedef struct asn_bit_outp_s asn_per_outp_t;
 #define per_put_many_bits(out, src, nbits) asn_put_many_bits(out, src, nbits)
 #define per_put_aligned_flush(out) asn_put_aligned_flush(out)
 
+#define ASN_UPER_NSNNWN_MAX 65535L
+
 #ifdef __cplusplus
 }
 #endif

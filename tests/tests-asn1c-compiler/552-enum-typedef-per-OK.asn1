@@ -1,0 +1,11 @@
+
+-- OK: Regression for issue #552, reported by @zhouvlia.
+-- An ENUMERATED typedef must inherit its terminal PER constraint table.
+
+AliasEnum552 DEFINITIONS ::= BEGIN
+
+	MyEnum ::= ENUMERATED { e0, e1, e2, e3 }
+	MyEnumAlias ::= MyEnum
+	Container ::= SEQUENCE { value MyEnumAlias OPTIONAL }
+
+END

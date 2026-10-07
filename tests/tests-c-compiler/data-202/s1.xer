@@ -1,0 +1,54 @@
+<Certificate>
+  <tbsCertificate>
+    <version>2</version>
+    <serialNumber>1</serialNumber>
+    <signature>
+      <algorithm>1.2.840.10045.4.3.2</algorithm>
+    </signature>
+
+    <issuer>
+      <DistinguishedName>
+        <CommonName>
+          <type>2.5.4.3</type>
+          <value>XIOT Root CA</value>
+        </CommonName>
+      </DistinguishedName>
+    </issuer>
+
+    <validity>
+      <notBefore>251101000000Z</notBefore>
+      <notAfter>351101000000Z</notAfter>
+    </validity>
+
+    <subject>
+      <DistinguishedName>
+        <CommonName>
+          <type>2.5.4.3</type>
+          <value>XIOT Root CA</value>
+        </CommonName>
+      </DistinguishedName>
+    </subject>
+
+    <subjectPublicKeyInfo>
+      <algorithm>
+        <algorithm>1.2.840.10045.2.1</algorithm>
+        <parameters>1.2.840.10045.3.1.7</parameters>
+      </algorithm>
+      <subjectPublicKey>04AABBCCDDEEFF00112233445566778899AABBCCDDEEFF001122334455667788</subjectPublicKey>
+    </subjectPublicKeyInfo>
+
+    <extensions>
+      <Extension>
+        <extnId>2.5.29.19</extnId>
+        <critical>true</critical>
+        <extnValue>30030101FF</extnValue>
+      </Extension>
+    </extensions>
+  </tbsCertificate>
+
+  <signatureAlgorithm>
+    <algorithm>1.2.840.10045.4.3.2</algorithm>
+  </signatureAlgorithm>
+
+  <signature>3045022100A1B2C3D4E5F60718293A4B5C6D7E8F90112233445566778899AABBCCDDEEFF02206172696F7465737469676E6174757265AABBCCDDEEFF001122334455667788</signature>
+</Certificate>

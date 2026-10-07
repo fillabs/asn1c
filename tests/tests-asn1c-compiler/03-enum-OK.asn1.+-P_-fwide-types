@@ -9,7 +9,7 @@ typedef enum Enum1 {
 	Enum1_red	= 0,
 	Enum1_green	= 1,
 	Enum1_blue	= 4,
-	Enum1_alpha	= 5
+	Enum1_alpha	= 2
 	/*
 	 * Enumeration is extensible
 	 */
@@ -29,6 +29,8 @@ ber_type_decoder_f Enum1_decode_ber;
 der_type_encoder_f Enum1_encode_der;
 xer_type_decoder_f Enum1_decode_xer;
 xer_type_encoder_f Enum1_encode_xer;
+cbor_type_decoder_f Enum1_decode_cbor;
+cbor_type_encoder_f Enum1_encode_cbor;
 
 /*** <<< CODE [Enum1] >>> ***/
 
@@ -42,13 +44,13 @@ xer_type_encoder_f Enum1_encode_xer;
 static const asn_INTEGER_enum_map_t asn_MAP_Enum1_value2enum_1[] = {
 	{ 0,	3,	"red" },
 	{ 1,	5,	"green" },
-	{ 4,	4,	"blue" },
-	{ 5,	5,	"alpha" }
+	{ 2,	5,	"alpha" },
+	{ 4,	4,	"blue" }
 	/* This list is extensible */
 };
 static const unsigned int asn_MAP_Enum1_enum2value_1[] = {
-	3,	/* alpha(5) */
-	2,	/* blue(4) */
+	2,	/* alpha(2) */
+	3,	/* blue(4) */
 	1,	/* green(1) */
 	0	/* red(0) */
 	/* This list is extensible */
@@ -83,7 +85,7 @@ asn_TYPE_descriptor_t asn_DEF_Enum1 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
@@ -103,7 +105,7 @@ typedef enum Enum2 {
 	Enum2_green	= 1,
 	Enum2_blue	= 45,
 	Enum2_orange	= 23,
-	Enum2_alpha	= 46,
+	Enum2_alpha	= 2,
 	/*
 	 * Enumeration is extensible
 	 */
@@ -125,6 +127,8 @@ ber_type_decoder_f Enum2_decode_ber;
 der_type_encoder_f Enum2_encode_der;
 xer_type_decoder_f Enum2_decode_xer;
 xer_type_encoder_f Enum2_encode_xer;
+cbor_type_decoder_f Enum2_decode_cbor;
+cbor_type_encoder_f Enum2_encode_cbor;
 
 /*** <<< CODE [Enum2] >>> ***/
 
@@ -138,16 +142,16 @@ xer_type_encoder_f Enum2_encode_xer;
 static const asn_INTEGER_enum_map_t asn_MAP_Enum2_value2enum_1[] = {
 	{ 0,	3,	"red" },
 	{ 1,	5,	"green" },
-	{ 12,	4,	"beta" },
+	{ 2,	5,	"alpha" },
 	{ 23,	6,	"orange" },
 	{ 45,	4,	"blue" },
-	{ 46,	5,	"alpha" },
+	{ 12,	4,	"beta" },
 	{ 103,	5,	"gamma" }
 	/* This list is extensible */
 };
 static const unsigned int asn_MAP_Enum2_enum2value_1[] = {
-	5,	/* alpha(46) */
-	2,	/* beta(12) */
+	2,	/* alpha(2) */
+	5,	/* beta(12) */
 	4,	/* blue(45) */
 	6,	/* gamma(103) */
 	1,	/* green(1) */
@@ -185,7 +189,7 @@ asn_TYPE_descriptor_t asn_DEF_Enum2 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
@@ -223,6 +227,8 @@ ber_type_decoder_f Enum3_decode_ber;
 der_type_encoder_f Enum3_encode_der;
 xer_type_decoder_f Enum3_decode_xer;
 xer_type_encoder_f Enum3_encode_xer;
+cbor_type_decoder_f Enum3_decode_cbor;
+cbor_type_encoder_f Enum3_encode_cbor;
 
 /*** <<< CODE [Enum3] >>> ***/
 
@@ -235,14 +241,14 @@ xer_type_encoder_f Enum3_encode_xer;
 
 static const asn_INTEGER_enum_map_t asn_MAP_Enum3_value2enum_1[] = {
 	{ 0,	1,	"a" },
-	{ 1,	1,	"c" },
-	{ 3,	1,	"b" }
+	{ 3,	1,	"b" },
+	{ 1,	1,	"c" }
 	/* This list is extensible */
 };
 static const unsigned int asn_MAP_Enum3_enum2value_1[] = {
 	0,	/* a(0) */
-	2,	/* b(3) */
-	1	/* c(1) */
+	1,	/* b(3) */
+	2	/* c(1) */
 	/* This list is extensible */
 };
 static const asn_INTEGER_specifics_t asn_SPC_Enum3_specs_1 = {
@@ -275,7 +281,7 @@ asn_TYPE_descriptor_t asn_DEF_Enum3 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
@@ -314,6 +320,8 @@ ber_type_decoder_f Enum4_decode_ber;
 der_type_encoder_f Enum4_encode_der;
 xer_type_decoder_f Enum4_decode_xer;
 xer_type_encoder_f Enum4_encode_xer;
+cbor_type_decoder_f Enum4_decode_cbor;
+cbor_type_encoder_f Enum4_encode_cbor;
 
 /*** <<< CODE [Enum4] >>> ***/
 
@@ -368,7 +376,7 @@ asn_TYPE_descriptor_t asn_DEF_Enum4 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
@@ -389,7 +397,7 @@ typedef enum Enum5 {
 	/*
 	 * Enumeration is extensible
 	 */
-	Enum5_d	= 26
+	Enum5_d	= 1
 } e_Enum5;
 
 /*** <<< TYPE-DECLS [Enum5] >>> ***/
@@ -406,6 +414,8 @@ ber_type_decoder_f Enum5_decode_ber;
 der_type_encoder_f Enum5_encode_der;
 xer_type_decoder_f Enum5_decode_xer;
 xer_type_encoder_f Enum5_encode_xer;
+cbor_type_decoder_f Enum5_decode_cbor;
+cbor_type_encoder_f Enum5_encode_cbor;
 
 /*** <<< CODE [Enum5] >>> ***/
 
@@ -419,12 +429,12 @@ xer_type_encoder_f Enum5_encode_xer;
 static const asn_INTEGER_enum_map_t asn_MAP_Enum5_value2enum_1[] = {
 	{ 0,	1,	"a" },
 	{ 25,	1,	"z" },
-	{ 26,	1,	"d" }
+	{ 1,	1,	"d" }
 	/* This list is extensible */
 };
 static const unsigned int asn_MAP_Enum5_enum2value_1[] = {
 	0,	/* a(0) */
-	2,	/* d(26) */
+	2,	/* d(1) */
 	1	/* z(25) */
 	/* This list is extensible */
 };
@@ -458,7 +468,7 @@ asn_TYPE_descriptor_t asn_DEF_Enum5 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
@@ -513,9 +523,23 @@ typedef struct EXTERNAL {
 
 extern asn_TYPE_descriptor_t asn_DEF_EXTERNAL;
 
+/*** <<< CODE [EXTERNAL] >>> ***/
+
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_encoding __attribute__((weak, alias("asn_DEF_encoding_5")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_encoding_5;
+static asn_TYPE_descriptor_t asn_DEF_encoding;
+__attribute__((constructor)) static void asn_DEF_encoding_5_alias_init(void) {
+	asn_DEF_encoding = asn_DEF_encoding_5;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
+
 /*** <<< STAT-DEFS [EXTERNAL] >>> ***/
 
-static asn_TYPE_member_t asn_MBR_encoding_5[] = {
+static asn_TYPE_member_t asn_MBR_EXTERNAL__encoding_5[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.single_ASN1_type),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		.tag_mode = +1,	/* EXPLICIT tag at current level */
@@ -529,7 +553,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -549,7 +573,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -569,7 +593,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -609,11 +633,11 @@ asn_TYPE_descriptor_t asn_DEF_encoding_5 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		CHOICE_constraint
 	},
-	asn_MBR_encoding_5,
+	asn_MBR_EXTERNAL__encoding_5,
 	3,	/* Elements count */
 	&asn_SPC_encoding_specs_5	/* Additional specs */
 };
@@ -632,7 +656,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -652,7 +676,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -672,7 +696,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -692,7 +716,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -738,7 +762,7 @@ asn_TYPE_descriptor_t asn_DEF_EXTERNAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},

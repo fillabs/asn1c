@@ -1,0 +1,22 @@
+-- Semantic error for check-exit-status.sh (not scanned by check_fixer).
+-- Y is listed in IMPORTS (second position) but ModuleExitA does not export
+-- it (X.680 (02/2021) 13.16 b). The fixer shall report the EXPORTS error.
+
+ModuleExitA
+	{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 166 1 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	EXPORTS X;
+	X ::= INTEGER
+	Y ::= BOOLEAN
+END
+
+ModuleExitB
+	{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 166 2 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	IMPORTS X, Y FROM ModuleExitA;
+	T ::= SEQUENCE { x X, y Y }
+END

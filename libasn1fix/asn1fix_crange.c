@@ -977,6 +977,7 @@ asn1constraint_compute_constraint_range(
 	int expectation_met;
 	unsigned int i;
 	int ret;
+	int past_ext = 0;	/* Seen the "..." extension marker in this list */
 
 	if(!exmet) {
 		exmet = &expectation_met;
@@ -1050,7 +1051,7 @@ asn1constraint_compute_constraint_range(
      * SIZE constraints on restricted character string types
      * which are not known-multiplier are not OER-visible.
      */
-	if(requested_ct_type == ACT_CT_SIZE && (expr_type & ASN_STRING_NKM_MASK))
+    if(requested_ct_type == ACT_CT_SIZE && (expr_type & ASN_STRING_NKM_MASK))
 		range->not_OER_visible = 1;
 
     if(!ct
@@ -1151,7 +1152,7 @@ asn1constraint_compute_constraint_range(
 			}
 
 			if(tmp->not_OER_visible
-			&& (cpr_flags & CPR_strict_OER_visibility)) {
+			   && (cpr_flags & CPR_strict_OER_visibility)) {
                 /*
                  * Ignore not OER-visible
                  */
@@ -1160,7 +1161,7 @@ asn1constraint_compute_constraint_range(
 			}
 
 			if(tmp->not_PER_visible
-			&& (cpr_flags & CPR_strict_PER_visibility)) {
+			   && (cpr_flags & CPR_strict_PER_visibility)) {
 				if(ct->type == ACT_CA_SET) {
 					/*
 					 * X.691, #9.3.18:
@@ -1177,7 +1178,7 @@ asn1constraint_compute_constraint_range(
 			}
 
 			if(tmp->not_JER_visible
-			&& (cpr_flags & CPR_strict_JER_visibility)) {
+			   && (cpr_flags & CPR_strict_JER_visibility)) {
                 /*
                  * Ignore not JER-visible
                  */
@@ -1214,6 +1215,7 @@ asn1constraint_compute_constraint_range(
 					range->extensible = 1;
 					range->not_OER_visible = 1;
 					range->not_JER_visible = 1;
+					past_ext = 1;
 					continue;
 				} else {
 					_range_free(range);
@@ -1251,6 +1253,7 @@ asn1constraint_compute_constraint_range(
 					range->extensible = 1;
 					range->not_OER_visible = 1;
 					range->not_JER_visible = 1;
+					past_ext = 1;
 					continue;
 				} else {
 					_range_free(range);
@@ -1272,6 +1275,29 @@ asn1constraint_compute_constraint_range(
 				range->extensible |= tmp->extensible;
 				range->not_OER_visible |= tmp->not_OER_visible;
 				range->not_JER_visible |= tmp->not_JER_visible;
+				_range_free(tmp);
+				continue;
+			}
+
+			if(past_ext && (cpr_flags & CPR_ignore_extension_additions)) {
+				/*
+				 * Elements following the "..." extension marker are
+				 * extension additions (e.g. the "3" in SIZE(2,...,3)).
+				 * When the caller asked to compute the PER-visible root
+				 * range (CPR_ignore_extension_additions), they must not
+				 * widen it: in PER an extension value is encoded with a
+				 * general length determinant, independent of which
+				 * extension sizes the version happens to name. Folding
+				 * them into the root produced encodings incompatible with
+				 * the standard and corrupted cross-version decoding.
+				 *
+				 * Every other caller (notably the generated
+				 * asn_check_constraints checker, which has no ellipsis
+				 * escape and compares against the returned root) keeps the
+				 * additions folded in, so that a value in the named
+				 * extension range still satisfies the constraint.
+				 */
+				range->extensible = 1;
 				_range_free(tmp);
 				continue;
 			}

@@ -6,6 +6,15 @@
 #include <asn_internal.h>
 #include <REAL.h>
 
+static int
+REAL__isfinite(double d) {
+#ifdef isfinite
+    return isfinite(d);
+#else
+    return finite(d);
+#endif
+}
+
 asn_enc_rval_t
 REAL_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
                 enum xer_encoder_flags_e flags, asn_app_consume_bytes_f *cb,
@@ -17,6 +26,26 @@ REAL_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
     (void)ilevel;
 
     if(!st || !st->buf || asn_REAL2double(st, &d))
+        ASN__ENCODE_FAILED;
+
+    er.encoded = REAL__dump(d, flags & XER_F_CANONICAL, cb, app_key);
+    if(er.encoded < 0) ASN__ENCODE_FAILED;
+
+    ASN__ENCODED_OK(er);
+}
+
+asn_enc_rval_t
+REAL_encode_xer_decimal(const asn_TYPE_descriptor_t *td, const void *sptr,
+                        int ilevel, enum xer_encoder_flags_e flags,
+                        asn_app_consume_bytes_f *cb, void *app_key) {
+    const REAL_t *st = (const REAL_t *)sptr;
+    asn_enc_rval_t er = {0,0,0};
+    double d;
+
+    (void)td;
+    (void)ilevel;
+
+    if(!st || !st->buf || asn_REAL2double(st, &d) || !REAL__isfinite(d))
         ASN__ENCODE_FAILED;
 
     er.encoded = REAL__dump(d, flags & XER_F_CANONICAL, cb, app_key);
@@ -100,4 +129,60 @@ REAL_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
     return xer_decode_primitive(opt_codec_ctx, td,
                                 sptr, sizeof(REAL_t), opt_mname,
                                 buf_ptr, size, REAL__xer_body_decode);
+}
+
+/*
+ * Decode XER DECIMAL REAL. This is intentionally narrower than the generic
+ * REAL XER decoder: XMLSpecialRealValue and trailing garbage are rejected.
+ */
+static enum xer_pbd_rval
+REAL__xer_decimal_body_decode(const asn_TYPE_descriptor_t *td, void *sptr,
+                              const void *chunk_buf, size_t chunk_size) {
+    REAL_t *st = (REAL_t *)sptr;
+    double value;
+    const char *start = (const char *)chunk_buf;
+    const char *stop = start + chunk_size;
+    char *endptr = 0;
+    char *b;
+
+    (void)td;
+
+    while(start < stop
+          && (*start == 9 || *start == 10 || *start == 13 || *start == 32))
+        start++;
+    while(stop > start
+          && (stop[-1] == 9 || stop[-1] == 10 || stop[-1] == 13
+              || stop[-1] == 32))
+        stop--;
+
+    if(start == stop || *start == '<')
+        return XPBD_BROKEN_ENCODING;
+
+    b = (char *)MALLOC((size_t)(stop - start) + 1);
+    if(!b) return XPBD_SYSTEM_FAILURE;
+    memcpy(b, start, (size_t)(stop - start));
+    b[stop - start] = 0;
+
+    value = strtod(b, &endptr);
+    if(endptr == b || *endptr != 0 || !REAL__isfinite(value)) {
+        FREEMEM(b);
+        return XPBD_BROKEN_ENCODING;
+    }
+    FREEMEM(b);
+
+    if(asn_double2REAL(st, value))
+        return XPBD_SYSTEM_FAILURE;
+
+    return XPBD_BODY_CONSUMED;
+}
+
+asn_dec_rval_t
+REAL_decode_xer_decimal(const asn_codec_ctx_t *opt_codec_ctx,
+                        const asn_TYPE_descriptor_t *td, void **sptr,
+                        const char *opt_mname, const void *buf_ptr,
+                        size_t size) {
+    return xer_decode_primitive(opt_codec_ctx, td,
+                                sptr, sizeof(REAL_t), opt_mname,
+                                buf_ptr, size,
+                                REAL__xer_decimal_body_decode);
 }

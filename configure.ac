@@ -1,5 +1,18 @@
-AC_INIT([asn1c],[0.9.29-DF],[vlm@lionet.info])
+dnl Compute version string safely: use git if available, else fallback
+m4_define([ASN1C_VERSION], m4_esyscmd_s([
+  echo $(git describe --tags --long --always --dirty || echo NOGIT)-$(git log -1 --format=%ad --date=short || date +%F)
+]))
 
+dnl Compute bug report URL safely: use git if available, else fallback
+m4_define([ASN1C_BUGURL], m4_esyscmd_s([
+  if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git remote get-url origin 2>/dev/null | sed 's/.git$//'
+  else
+    echo -n "https://github.com/mouse07410/asn1c/issues"
+  fi
+]))
+
+AC_INIT([asn1c], ASN1C_VERSION, ASN1C_BUGURL)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign tar-pax])
@@ -27,6 +40,27 @@ dnl   when runing 32bit binaries on a 64bit host;
 dnl   readdir() and other related functions used in some 
 dnl   test cases will return a null pointer and fail
 AC_SYS_LARGEFILE
+
+AC_CANONICAL_HOST
+
+dnl Newer Darwin hosts may deny `sysctl -n kern.argmax` in restricted
+dnl environments.  The libtool Darwin probe does not fall back after an empty
+dnl sysctl result, which leaves max_cmd_len empty and produces noisy
+dnl "integer expression expected" diagnostics while linking archives.
+case "$build_os" in
+darwin*)
+	AS_IF([test -z "$lt_cv_sys_max_cmd_len"], [
+		lt_cv_sys_max_cmd_len=`(getconf ARG_MAX) 2>/dev/null`
+		AS_IF([test -n "$lt_cv_sys_max_cmd_len" \
+		       && test "x$lt_cv_sys_max_cmd_len" != xundefined], [
+			lt_cv_sys_max_cmd_len=`expr "$lt_cv_sys_max_cmd_len" / 4`
+			lt_cv_sys_max_cmd_len=`expr "$lt_cv_sys_max_cmd_len" \* 3`
+		], [
+			lt_cv_sys_max_cmd_len=786432
+		])
+	])
+	;;
+esac
 
 LT_INIT
 
@@ -206,18 +240,44 @@ AS_IF([test "x$disable_test_asan" != xno], [
 Check out https://clang.llvm.org/docs/AddressSanitizer.html#how-to-build])])
       ])
 
+    dnl Bound the AddressSanitizer runtime memory footprint.  The large
+    dnl randomized SEQUENCE OF / SET OF bundles (e.g. RMAX=70000 and unbounded
+    dnl SIZE(1..MAX) cases) build and round-trip very large values 100x across
+    dnl every encoding; under a stacked sanitizer build on a memory-limited CI
+    dnl runner this can exhaust host memory and trip the kernel OOM killer,
+    dnl observed as spurious "Killed: 9" SIGKILLs (sometimes on unrelated
+    dnl commands such as mkdir/grep) that fail otherwise-correct bundles.
+    dnl These options tune only the sanitizer runtime; they do not change what
+    dnl the tests exercise:
+    dnl   quarantine_size_mb / malloc_context_size cap the two largest sources
+    dnl     of ASan bookkeeping memory under high allocation churn;
+    dnl   allocator_may_return_null + max_allocation_size_mb turn a single
+    dnl     runaway allocation into a handled NULL (the codec checks its
+    dnl     allocations) instead of a host-wide OOM that SIGKILLs the runner.
+    dnl The same defaults are applied idempotently in
+    dnl tests/tests-randomized/check-bundles.sh for trees that are run without
+    dnl re-running configure.
+    ASAN_RUNTIME_OPTS="quarantine_size_mb=64:malloc_context_size=5:allocator_may_return_null=1:max_allocation_size_mb=2048"
+
     dnl Address sanitizer sometimes is equipped with the leak sanitizer.
     dnl If address sanitizer is not equipped with a leak sanitizer,
-    dnl invoking programs with ASAN_OPTIONS=detect_leaks=1 will break them.
+    dnl invoking programs with ASAN_OPTIONS=detect_leaks=1 will break them,
+    dnl so only enable leak detection when a trivial program runs successfully.
     ASAN_OPTIONS="detect_leaks=1"
     export ASAN_OPTIONS
     save_cflags="${CFLAGS}"
     CFLAGS="${CFLAGS} ${SANITIZER_CFLAGS}"
     AC_RUN_IFELSE([AC_LANG_PROGRAM()], [
-        ASAN_ENV_FLAGS="${ASAN_ENV_FLAGS} ASAN_OPTIONS=detect_leaks=1"
+        ASAN_RUNTIME_OPTS="detect_leaks=1:${ASAN_RUNTIME_OPTS}"
+    ], [], [
+        AC_MSG_WARN([cannot determine ASan leak-detection support while cross-compiling; assuming detect_leaks=1 is unsupported])
     ])
     CFLAGS="${save_cflags}"
     unset ASAN_OPTIONS
+
+    dnl Emit a single ASAN_OPTIONS token (a later assignment would otherwise
+    dnl override an earlier one at runtime).
+    ASAN_ENV_FLAGS="${ASAN_ENV_FLAGS} ASAN_OPTIONS=${ASAN_RUNTIME_OPTS}"
 
     dnl Keep error messages nice. Also consider:
     dnl export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer
@@ -261,15 +321,6 @@ AC_SUBST(SKELETONS_CFLAGS)
 AC_SUBST(ASAN_ENV_FLAGS)
 
 dnl Checks for header files.
-m4_warn([obsolete],
-[The preprocessor macro `STDC_HEADERS' is obsolete.
-  Except in unusual embedded environments, you can safely include all
-  ISO C90 headers unconditionally.])dnl
-# Autoupdate added the next two lines to ensure that your configure
-# script's behavior did not change.  They are probably safe to remove.
-AC_CHECK_INCLUDES_DEFAULT
-AC_PROG_EGREP
-
 AC_CHECK_HEADERS(sys/param.h)
 AC_CHECK_HEADERS(netinet/in.h)
 
@@ -309,6 +360,9 @@ tests/tests-asn1c-smoke/Makefile            \
 tests/tests-randomized/Makefile             \
 tests/tests-c-compiler/Makefile             \
 tests/tests-skeletons/Makefile              \
+tests/ioc-v2x/Makefile                      \
+tests/ieee1609-ioc/Makefile                 \
+tests/f1ap-regression/Makefile              \
 asn1-tools/enber/Makefile                   \
 asn1-tools/unber/Makefile                   \
 asn1-tools/Makefile                         \
@@ -327,4 +381,3 @@ doc/Makefile                                \
 Makefile                                    \
 ])
 AC_OUTPUT
-

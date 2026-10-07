@@ -7,6 +7,9 @@
 #include <OCTET_STRING.h>
 #include <BIT_STRING.h>  /* for .bits_unused member */
 
+static const char jer_base64_encode_table[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 asn_enc_rval_t
 OCTET_STRING_encode_jer(const asn_TYPE_descriptor_t *td,
                         const asn_jer_constraints_t *constraints,
@@ -47,6 +50,67 @@ OCTET_STRING_encode_jer(const asn_TYPE_descriptor_t *td,
     if(p - scratch) {
       ASN__CALLBACK(scratch, p-scratch);  /* Dump the rest */
     }
+    ASN__CALLBACK("\"", 1);
+
+    ASN__ENCODED_OK(er);
+cb_failed:
+    ASN__ENCODE_FAILED;
+}
+
+asn_enc_rval_t
+OCTET_STRING_encode_jer_base64(const asn_TYPE_descriptor_t *td,
+                               const asn_jer_constraints_t *constraints,
+                               const void *sptr, int ilevel,
+                               enum jer_encoder_flags_e flags,
+                               asn_app_consume_bytes_f *cb, void *app_key) {
+    const OCTET_STRING_t *st = (const OCTET_STRING_t *)sptr;
+    asn_enc_rval_t er = { 0, 0, 0 };
+    char scratch[128];
+    char *p = scratch;
+    const uint8_t *buf;
+    const uint8_t *end;
+
+    (void)td;
+    (void)constraints;
+    (void)ilevel;
+    (void)flags;
+
+    if(!st || (!st->buf && st->size))
+        ASN__ENCODE_FAILED;
+
+    er.encoded = 0;
+    ASN__CALLBACK("\"", 1);
+
+    buf = st->buf;
+    end = buf + st->size;
+    while(buf < end) {
+        uint32_t value = 0;
+        int bytes_left = (int)(end - buf);
+        int bytes_to_encode = bytes_left >= 3 ? 3 : bytes_left;
+        int i;
+
+        for(i = 0; i < bytes_to_encode; i++)
+            value = (value << 8) | buf[i];
+        if(bytes_to_encode < 3)
+            value <<= 8 * (3 - bytes_to_encode);
+        buf += bytes_to_encode;
+
+        for(i = 0; i < 4; i++) {
+            if(p >= scratch + sizeof(scratch) - 4) {
+                ASN__CALLBACK(scratch, p - scratch);
+                p = scratch;
+            }
+            if(i < bytes_to_encode + 1) {
+                int idx = (value >> (18 - i * 6)) & 0x3F;
+                *p++ = jer_base64_encode_table[idx];
+            } else {
+                *p++ = '=';
+            }
+        }
+    }
+
+    if(p > scratch)
+        ASN__CALLBACK(scratch, p - scratch);
     ASN__CALLBACK("\"", 1);
 
     ASN__ENCODED_OK(er);
@@ -229,16 +293,22 @@ static ssize_t OCTET_STRING__convert_hexadecimal(void *sptr, const void *chunk_b
             break;
         }
     }
-    --pend;
-    for (; pend >= p; --pend) {
-        if (*pend == CQUOTE)
-            break;
+    /* Find ending quote - ensure we don't go below the start */
+    if (pend > (const char *)chunk_buf) {
+        --pend;
+        for (; pend >= p; --pend) {
+            if (*pend == CQUOTE)
+                break;
+        }
     }
-    if (pend - p < 0) return -1;
+    if (pend < p) return -1;
     chunk_size = pend - p;
 
     /* Reallocate buffer according to high cap estimation */
-    size_t new_size = st->size + (chunk_size + 1) / 2;
+    size_t hex_byte_count = (chunk_size + 1) / 2;
+    /* Check for potential overflow */
+    if (hex_byte_count > SIZE_MAX - st->size - 1) return -1;
+    size_t new_size = st->size + hex_byte_count;
     void *nptr = REALLOC(st->buf, new_size + 1);
     if(!nptr) return -1;
     st->buf = (uint8_t *)nptr;
@@ -299,7 +369,10 @@ static ssize_t OCTET_STRING__convert_hexadecimal(void *sptr, const void *chunk_b
     assert(st->size <= new_size);
     st->buf[st->size] = 0;  /* Courtesy termination */
 
-    return (chunk_stop - (const char *)chunk_buf);  /* Converted size */
+    /* Ensure return value is valid */
+    ssize_t consumed = chunk_stop - (const char *)chunk_buf;
+    if (consumed < 0 || (size_t)consumed > chunk_size + 2) return -1;  /* +2 for quotes */
+    return consumed;  /* Converted size */
 }
 
 /*
@@ -564,6 +637,106 @@ OCTET_STRING_decode_jer_hex(const asn_codec_ctx_t *opt_codec_ctx,
     return OCTET_STRING__decode_jer(opt_codec_ctx, td, sptr,
                                     buf_ptr, size, 0,
                                     OCTET_STRING__convert_hexadecimal);
+}
+
+static int
+jer_base64_decode_char(char c) {
+    if(c >= 'A' && c <= 'Z') return c - 'A';
+    if(c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if(c >= '0' && c <= '9') return c - '0' + 52;
+    if(c == '+') return 62;
+    if(c == '/') return 63;
+    if(c == '=') return -2;
+    return -1;
+}
+
+static ssize_t
+OCTET_STRING__convert_base64(void *sptr, const void *chunk_buf,
+                             size_t chunk_size, int have_more) {
+    OCTET_STRING_t *st = (OCTET_STRING_t *)sptr;
+    const char *p = (const char *)chunk_buf;
+    const char *pend = p + chunk_size;
+    size_t original_size = chunk_size;
+    uint8_t *buf;
+    uint32_t value;
+    int bits_collected;
+    int padding_seen;
+    size_t new_size;
+    void *nptr;
+
+    for(; p < pend; ++p) {
+        if(*p == CQUOTE) {
+            ++p;
+            break;
+        }
+    }
+    if(pend > (const char *)chunk_buf) {
+        --pend;
+        for(; pend >= p; --pend) {
+            if(*pend == CQUOTE)
+                break;
+        }
+    }
+    if(pend < p) return -1;
+    chunk_size = pend - p;
+
+    new_size = st->size + (chunk_size * 3 / 4) + 3;
+    nptr = REALLOC(st->buf, new_size + 1);
+
+    if(!nptr) return -1;
+    st->buf = (uint8_t *)nptr;
+    buf = st->buf + st->size;
+
+    if(!st->_xer_decode_state.decoder_initialized) {
+        st->_xer_decode_state.accumulated_value = 0;
+        st->_xer_decode_state.bits_collected = 0;
+        st->_xer_decode_state.padding_seen = 0;
+        st->_xer_decode_state.decoder_initialized = 1;
+    }
+
+    value = st->_xer_decode_state.accumulated_value;
+    bits_collected = st->_xer_decode_state.bits_collected;
+    padding_seen = st->_xer_decode_state.padding_seen;
+
+    for(; p < pend; p++) {
+        int ch = *(const unsigned char *)p;
+        int decoded = jer_base64_decode_char((char)ch);
+
+        if(decoded == -1) return -1;
+        if(decoded == -2) {
+            padding_seen = 1;
+            continue;
+        }
+        if(padding_seen) return -1;
+
+        value = (value << 6) | (uint32_t)decoded;
+        bits_collected += 6;
+        while(bits_collected >= 8) {
+            bits_collected -= 8;
+            *buf++ = (uint8_t)((value >> bits_collected) & 0xFF);
+        }
+    }
+
+    st->size = buf - st->buf;
+    st->buf[st->size] = 0;
+    st->_xer_decode_state.accumulated_value = value;
+    st->_xer_decode_state.bits_collected = bits_collected;
+    st->_xer_decode_state.padding_seen = padding_seen;
+
+    if(!have_more && bits_collected != 0 && !padding_seen)
+        return -1;
+
+    return original_size;
+}
+
+asn_dec_rval_t
+OCTET_STRING_decode_jer_base64(const asn_codec_ctx_t *opt_codec_ctx,
+                               const asn_TYPE_descriptor_t *td,
+                               const asn_jer_constraints_t *constraints,
+                               void **sptr, const void *buf_ptr, size_t size) {
+    return OCTET_STRING__decode_jer(opt_codec_ctx, td, sptr,
+                                    buf_ptr, size, 0,
+                                    OCTET_STRING__convert_base64);
 }
 
 /*

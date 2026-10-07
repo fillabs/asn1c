@@ -298,10 +298,18 @@ SET_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
         if(tmper.encoded == -1) return tmper;
         er.encoded += tmper.encoded;
 
-        ASN__CALLBACK3("</", 2, mname, mlen, ">", 1);
+        if(!xcan) {
+            /* Add indentation before closing tag only if element is a structured type
+             * that outputs newlines in its content (SEQUENCE, SET, CHOICE, etc.)
+             * Primitive types like INTEGER output inline content, so no indent needed. */
+            if(tmper.encoded > 0 && ASN__IS_STRUCTURED_TYPE(elm)) {
+                ASN__TEXT_INDENT(0, ilevel);
+            }
+            ASN__CALLBACK3("</", 2, mname, mlen, ">\n", 2);
+        } else {
+            ASN__CALLBACK3("</", 2, mname, mlen, ">", 1);
+        }
     }
-
-    if(!xcan) ASN__TEXT_INDENT(1, ilevel - 1);
 
     ASN__ENCODED_OK(er);
 cb_failed:

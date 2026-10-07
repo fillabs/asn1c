@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <limits.h>
 
 #include <asn1_buffer.h>
 #include <asn1_namespace.h>
@@ -154,6 +155,10 @@ asn1print_module(asn1p_t *asn, asn1p_module_t *mod, enum asn1print_flags flags) 
 	safe_printf("BEGIN\n\n");
 
 	TQ_FOR(tc, &(mod->members), next) {
+		/* Skip encoding instructions - they're not regular ASN.1 types */
+		if(tc->_mark & TM_ENCODING_INSTRUCTION) {
+			continue;
+		}
 		asn1print_expr(asn, mod, tc, flags, 0);
 		if(flags & APF_PRINT_CONSTRAINTS)
 			safe_printf("\n");
@@ -834,9 +839,19 @@ asn1print_expr(asn1p_t *asn, asn1p_module_t *mod, asn1p_expr_t *tc, enum asn1pri
 				tc->combined_constraints, CPR_strict_OER_visibility);
 			safe_printf("\n-- PER-visible constraints (%s): ",
 				top_parent->Identifier);
+			/*
+			 * Report the PER-visible *root* range: named extension
+			 * additions (e.g. the "3" in SIZE(2,...,3)) are encoded as
+			 * extensions with a general length determinant, so they are
+			 * not part of the root the way the emitted asn_per_constraints_t
+			 * table represents it. Use the same flag the table emitter uses
+			 * so the diagnostic matches what is actually generated.
+			 */
 			asn1print_constraint_explain(top_parent->Identifier,
 				top_parent->expr_type,
-				tc->combined_constraints, CPR_strict_PER_visibility);
+				tc->combined_constraints,
+				CPR_strict_PER_visibility
+					| CPR_ignore_extension_additions);
 		}
 		safe_printf("\n");
 	}
@@ -849,29 +864,30 @@ asn1print_expr(asn1p_t *asn, asn1p_module_t *mod, asn1p_expr_t *tc, enum asn1pri
             }
 			break;
 		}
-		safe_printf("\n-- Information Object Set has %d entr%s:\n",
+		safe_printf("\n-- Information Object Set has %zu entr%s:\n",
 				tc->ioc_table->rows,
 				tc->ioc_table->rows==1 ? "y" : "ies");
 		maxidlen = asn1p_ioc_table_max_identifier_length(tc->ioc_table);
+		int ioc_col_width = (maxidlen > (size_t)INT_MAX) ? INT_MAX : (int)maxidlen;
 		for(ssize_t r = -1; r < (ssize_t)tc->ioc_table->rows; r++) {
 			asn1p_ioc_row_t *row;
 			row = tc->ioc_table->row[r<0?0:r];
 			if(r < 0) safe_printf("--    %s", r > 9 ? " " : "");
             else
-                safe_printf("-- [%*d]", (tc->ioc_table->rows > 9) + 1, r + 1);
+                safe_printf("-- [%*zd]", (tc->ioc_table->rows > 9) + 1, r + 1);
             for(col = 0; col < row->columns; col++) {
 				struct asn1p_ioc_cell_s *cell;
 				cell = &row->column[col];
 				if(r < 0) {
-					safe_printf("[%*s]", maxidlen,
+					safe_printf("[%*s]", ioc_col_width,
 						cell->field->Identifier);
 					continue;
 				}
 				if(!cell->value) {
-					safe_printf(" %*s ", maxidlen, "<no entry>");
+					safe_printf(" %*s ", ioc_col_width, "<no entry>");
 					continue;
 				}
-				safe_printf(" %*s ", maxidlen,
+				safe_printf(" %*s ", ioc_col_width,
 					cell->value->Identifier);
 			}
 			safe_printf("\n");

@@ -30,6 +30,7 @@
 #define ASN_DISABLE_UPER_SUPPORT 1
 #define ASN_DISABLE_APER_SUPPORT 1
 #define ASN_DISABLE_OER_SUPPORT 1
+#define ASN_DISABLE_CBOR_SUPPORT 1
 #define ASN_DISABLE_PRINT_SUPPORT 1
 
 #include <asn1parser.h> /* For static string tables */

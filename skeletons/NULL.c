@@ -12,6 +12,7 @@ static const ber_tlv_tag_t asn_DEF_NULL_tags[] = {
     (ASN_TAG_CLASS_UNIVERSAL | (5 << 2))
 };
 asn_TYPE_operation_t asn_OP_NULL = {
+    .kind = ASN_KIND_PRIMITIVE,
     NULL_free,
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     NULL_print,
@@ -67,7 +68,14 @@ asn_TYPE_operation_t asn_OP_NULL = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-    0  /* Use generic outmost tag fetcher */
+    0  /* Use generic outmost tag fetcher */,
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    NULL_decode_cbor,
+    NULL_encode_cbor,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 asn_TYPE_descriptor_t asn_DEF_NULL = {
     "NULL",

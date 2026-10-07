@@ -26,6 +26,10 @@
         consumed_myself += num;                                   \
     } while(0)
 
+extern const asn_TYPE_operation_t asn_OP_SEQUENCE;
+extern const asn_TYPE_operation_t asn_OP_SEQUENCE_OF;
+extern const asn_TYPE_operation_t asn_OP_SET_OF;
+
 /*
  * Decode the XER (XML) data.
  */
@@ -61,6 +65,11 @@ CHOICE_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
      * Restore parsing context.
      */
     ctx = (asn_struct_ctx_t *)((char *)st + specs->ctx_offset);
+
+    /* Check recursion depth to prevent stack overflow */
+    if(ASN__STACK_OVERFLOW_CHECK(opt_codec_ctx))
+        RETURN(RC_FAIL);
+
     if(ctx->phase == 0 && !*xml_tag)
         ctx->phase = 1;  /* Skip the outer tag checking phase */
 
@@ -273,44 +282,76 @@ CHOICE_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
     if(!sptr)
         ASN__ENCODE_FAILED;
 
+    /* Check recursion depth to prevent stack overflow */
+    XER_ENCODER_RECURSION_DEPTH_INC();
+
     /*
      * Figure out which CHOICE element is encoded.
      */
     present = _fetch_present_idx(sptr, specs->pres_offset,specs->pres_size);
 
     if(present == 0 || present > td->elements_count) {
+        XER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
     } else {
         asn_enc_rval_t tmper = {0,0,0};
         asn_TYPE_member_t *elm = &td->elements[present-1];
         const void *memb_ptr = NULL;
         const char *mname = elm->name;
-        unsigned int mlen = strlen(mname);
+        
+        /* Check if mname contains ASN.1 meta-syntax keywords that should not be output as wrapper tags */
+        unsigned int mlen = (mname && *mname) ? strlen(mname) : 0;
+        int skip_wrapper = asn_is_meta_syntax_keyword(mname);
+        if(skip_wrapper) {
+            mlen = 0;
+        }
 
         if(elm->flags & ATF_POINTER) {
             memb_ptr =
                 *(const void *const *)((const char *)sptr + elm->memb_offset);
-            if(!memb_ptr) ASN__ENCODE_FAILED;
+            if(!memb_ptr) {
+                XER_ENCODER_RECURSION_DEPTH_DEC();
+                ASN__ENCODE_FAILED;
+            }
         } else {
             memb_ptr = (const void *)((const char *)sptr + elm->memb_offset);
         }
 
         er.encoded = 0;
 
-        if(!(flags & XER_F_CANONICAL)) ASN__TEXT_INDENT(1, ilevel);
-        ASN__CALLBACK3("<", 1, mname, mlen, ">", 1);
+        /* Output opening tag (unless it's ASN.1 meta-syntax) */
+        if(!skip_wrapper) {
+            if(!(flags & XER_F_CANONICAL)) ASN__TEXT_INDENT(1, ilevel);
+            ASN__CALLBACK3("<", 1, mname, mlen, ">", 1);
+        }
 
         tmper = elm->type->op->xer_encoder(elm->type, memb_ptr,
-                                           ilevel + 1, flags, cb, app_key);
-        if(tmper.encoded == -1) return tmper;
+                                           skip_wrapper ? ilevel : ilevel + 1, flags, cb, app_key);
+        if(tmper.encoded == -1) {
+            XER_ENCODER_RECURSION_DEPTH_DEC();
+            return tmper;
+        }
         er.encoded += tmper.encoded;
 
-        ASN__CALLBACK3("</", 2, mname, mlen, ">", 1);
+        /* Output closing tag (unless it's ASN.1 meta-syntax) */
+        if(!skip_wrapper) {
+            if(!(flags & XER_F_CANONICAL)) {
+                /* Add indentation before closing tag only if element is a structured type
+                 * that outputs newlines in its content (SEQUENCE, SET, CHOICE, etc.)
+                 * Primitive types like INTEGER output inline content, so no indent needed. */
+                if(tmper.encoded > 0 && ASN__IS_STRUCTURED_TYPE(elm)) {
+                    ASN__TEXT_INDENT(0, ilevel);
+                }
+                ASN__CALLBACK3("</", 2, mname, mlen, ">\n", 2);
+            } else {
+                ASN__CALLBACK3("</", 2, mname, mlen, ">", 1);
+            }
+        }
     }
 
-    if(!(flags & XER_F_CANONICAL)) ASN__TEXT_INDENT(1, ilevel - 1);
-
+    XER_ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODED_OK(er);
 cb_failed:
+    XER_ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODE_FAILED;
 }

@@ -1,0 +1,15 @@
+TestModule DEFINITIONS ::= BEGIN
+
+-- Test case that might match the problematic pattern from ISO file
+SOME-CLASS ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type
+}
+
+-- Another pattern that might cause issues 
+ANOTHER-CLASS ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    IDENTIFIED BY &id
+}
+
+END

@@ -286,8 +286,18 @@ constraint_type_resolve(arg_t *arg, asn1p_constraint_t *ct) {
         DEBUG("Found %s in constraints", "ValueSet");
     } else if(get_reference_from(ct)) {
         arg_t tmparg;
+        asn1p_expr_t *rhs_pspecs = NULL;
 
-        rtype = asn1f_lookup_symbol(arg, arg->expr->rhs_pspecs,
+        /* If the constraint contains a parameterized type reference,
+         * use the rhs_pspecs from that specific type expression */
+        if(ct->containedSubtype->type == ATV_TYPE &&
+           ct->containedSubtype->value.v_type->expr_type == A1TC_REFERENCE) {
+            rhs_pspecs = ct->containedSubtype->value.v_type->rhs_pspecs;
+        } else {
+            rhs_pspecs = arg->expr->rhs_pspecs;
+        }
+
+        rtype = asn1f_lookup_symbol(arg, rhs_pspecs,
                                     get_reference_from(ct));
         if(!rtype) {
             FATAL(

@@ -51,6 +51,10 @@ SET_OF_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
                   (long)nelems, ct->lower_bound, td->name);
         if(nelems < 0)  ASN__DECODE_STARVED;
         nelems += ct->lower_bound;
+	/* check if nelem is in root, when it is not extensible */
+        if (nelems > ct->upper_bound && !(ct->flags & APC_EXTENSIBLE)) {
+            ASN__DECODE_FAILED;
+        }
     } else {
         nelems = -1;
     }
@@ -62,6 +66,14 @@ SET_OF_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
             ASN_DEBUG("Got to decode %" ASN_PRI_SSIZE " elements (eff %d)",
                       nelems, (int)(ct ? ct->effective_bits : -1));
             if(nelems < 0) ASN__DECODE_STARVED;
+        }
+
+        /* Empty collections do not invoke the element codec. Non-empty
+         * collections must reject a missing codec instead of calling NULL. */
+        if(nelems > 0 && !elm->type->op->uper_decoder) {
+            ASN_DEBUG("Element type %s of %s has no UPER decoder",
+                      elm->type->name, td->name);
+            ASN__DECODE_FAILED;
         }
 
         for(i = 0; i < nelems; i++) {
@@ -115,6 +127,9 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
 
     if(!sptr) ASN__ENCODE_FAILED;
 
+    /* Check recursion depth to prevent stack overflow */
+    UPER_ENCODER_RECURSION_DEPTH_INC();
+
     list = _A_CSET_FROM_VOID(sptr);
 
     er.encoded = 0;
@@ -134,9 +149,13 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
                   ct->flags & APC_EXTENSIBLE ? "ext" : "fix");
         if(ct->flags & APC_EXTENSIBLE) {
             /* Declare whether size is in extension root */
-            if(per_put_few_bits(po, not_in_root, 1)) ASN__ENCODE_FAILED;
+            if(per_put_few_bits(po, not_in_root, 1)) {
+                UPER_ENCODER_RECURSION_DEPTH_DEC();
+                ASN__ENCODE_FAILED;
+            }
             if(not_in_root) ct = 0;
         } else if(not_in_root && ct->effective_bits >= 0) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
             ASN__ENCODE_FAILED;
         }
 
@@ -145,15 +164,19 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
     if(ct && ct->effective_bits >= 0) {
         /* X.691, #19.5: No length determinant */
         if(per_put_few_bits(po, list->count - ct->lower_bound,
-                            ct->effective_bits))
+                            ct->effective_bits)) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
             ASN__ENCODE_FAILED;
+        }
     } else if(list->count == 0) {
         /* When the list is empty add only the length determinant
          * X.691, #20.6 and #11.9.4.1
          */
         if (uper_put_length(po, 0, 0)) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
             ASN__ENCODE_FAILED;
         }
+        UPER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODED_OK(er);
     }
 
@@ -174,7 +197,10 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
         } else {
             may_encode =
                 uper_put_length(po, list->count - encoded_edx, &need_eom);
-            if(may_encode < 0) ASN__ENCODE_FAILED;
+            if(may_encode < 0) {
+                UPER_ENCODER_RECURSION_DEPTH_DEC();
+                ASN__ENCODE_FAILED;
+            }
         }
 
         for(edx = encoded_edx; edx < encoded_edx + may_encode; edx++) {
@@ -185,8 +211,10 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
             }
         }
 
-        if(need_eom && uper_put_length(po, 0, 0))
+        if(need_eom && uper_put_length(po, 0, 0)) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
             ASN__ENCODE_FAILED;  /* End of Message length */
+        }
 
         encoded_edx += may_encode;
     }
@@ -194,8 +222,10 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
     SET_OF__encode_sorted_free(encoded_els, list->count);
 
     if((ssize_t)encoded_edx == list->count) {
+        UPER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODED_OK(er);
     } else {
+        UPER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
     }
 }

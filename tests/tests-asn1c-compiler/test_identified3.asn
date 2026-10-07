@@ -1,0 +1,10 @@
+TestModule DEFINITIONS ::= BEGIN
+
+-- Test case where IDENTIFIED appears as regular identifier
+SOME-CLASS ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type,
+    IDENTIFIED BY &id  -- This should trigger the error
+}
+
+END

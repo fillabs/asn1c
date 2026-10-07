@@ -9,6 +9,8 @@
 
 /* Workaround for https://github.com/vlm/asn1c/issues/321 */
 #pragma GCC diagnostic ignored "-Wsign-compare"
+/* Suppress misleading-indentation warnings in flex-generated code */
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
 int asn1p_lex(void);
 void asn1p_lexer_hack_push_opaque_state(void);		/* Used in .y */
@@ -214,11 +216,38 @@ WSP	[\t\r\v\f\n ]
 			for(; p >= s; p--) unput(*p);
 			yy_pop_state();
 		}
-	END	unput('D'); unput('N'); unput('E'); yy_pop_state();
-	[^{} \t\r\v\f\n]+
-	[[:alnum:]]+
-	.	/* Eat everything else */
-	"\n"
+	END	{
+		yy_pop_state();
+		return TOK_END;
+	}
+	
+	{WSP}+		/* skip whitespace */
+	"--".*		/* skip single-line comments */
+	
+	"::="		return TOK_PPEQ;
+	"."		return '.';
+	
+	OCTET		return TOK_OCTET;
+	STRING		return TOK_STRING;
+
+	\"[^\"]*	{
+			asn1p_lval.tv_opaque.buf = 0;
+			asn1p_lval.tv_opaque.len = 0;
+			QAPPEND(yytext+1, yyleng-1);
+			yy_push_state(quoted);
+		}
+	
+	[a-z][a-zA-Z0-9]*([-][a-zA-Z0-9]+)*	{
+		asn1p_lval.tv_str = strdup(yytext);
+		return TOK_identifier;
+	}
+	
+	[A-Z][A-Za-z0-9]*([-][A-Za-z0-9]+)*	{
+		asn1p_lval.tv_str = strdup(yytext);
+		return TOK_typereference;
+	}
+	
+	.	/* ignore other characters for error recovery */
 	}
 
 '[0-9A-F \t\r\v\f\n]+'H {
@@ -327,6 +356,7 @@ GeneralizedTime		return TOK_GeneralizedTime;
 GeneralString		return TOK_GeneralString;
 GraphicString		return TOK_GraphicString;
 IA5String		return TOK_IA5String;
+IDENTIFIED		return TOK_IDENTIFIED;
 IDENTIFIER		return TOK_IDENTIFIER;
 IMPLICIT		return TOK_IMPLICIT;
 IMPLIED			return TOK_IMPLIED;
@@ -615,4 +645,3 @@ _lex_atod(const char *ptr) {
 	}
 	return value;
 }
-

@@ -6,20 +6,281 @@ on:
   pull_request:
     branches: [ vlm_master ]
 
+# Cancel superseded runs of the same branch/PR instead of letting them
+# pile up and exhaust runner time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Strategy:
+#  * Three independent jobs run concurrently when the platform allows it
+#    (and simply queue, each individually faster than before, when it
+#    does not):
+#      - build-and-check: gcc build + full `make check` (ASan/UBSan are
+#        enabled by default by configure) + PKIX1 example codec test.
+#        LibFuzzer remains opt-in and is explicitly excluded from standard CI.
+#      - distcheck: the full VPATH dist/build/check/install cycle.  This
+#        repeats `make check` by design; it runs in parallel with the
+#        job above instead of after it, so it no longer doubles the
+#        critical path.
+#      - clang-sanitizers: the same `make check` under clang, which adds
+#        clang-only sanitizers (nullability, unsigned-integer-overflow)
+#        on top of the gcc ASan/UBSan coverage.
+#  * Every make invocation uses -j$(nproc).  The automake parallel test
+#    harness runs the per-directory TESTS concurrently as well.
+#  * ccache (masquerade via PATH) runs through actions/cache.  The test
+#    suite recompiles identical skeleton sources hundreds of times (once
+#    per generated test project), so ccache pays off massively even
+#    within a single run, and makes the distcheck rebuild and repeat
+#    runs largely I/O-bound.
+
 jobs:
-  build:
-
+  build-and-check:
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
-
+    timeout-minutes: 70
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+
+    - name: Set up ccache
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq ccache
+        mkdir -p "$HOME/ccache-bin"
+        for c in cc c++ gcc g++; do
+          ln -sf "$(command -v ccache)" "$HOME/ccache-bin/$c"
+        done
+        echo "$HOME/ccache-bin" >> "$GITHUB_PATH"
+        {
+          echo "CCACHE_DIR=$HOME/.ccache"
+          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
+          echo "CCACHE_NOHASHDIR=true"
+          echo "CCACHE_MAXSIZE=800M"
+        } >> "$GITHUB_ENV"
+
+    - name: Restore ccache
+      uses: actions/cache@v5
+      with:
+        path: ~/.ccache
+        key: ccache-gcc-check-${{ github.sha }}
+        restore-keys: |
+          ccache-gcc-check-
+          ccache-gcc-
+
     - name: preconf
       run: autoreconf -ivf
+
     - name: configure
-      run: ./configure
+      run: ./configure --disable-test-fuzzer
+
     - name: make
-      run: make
+      run: make -j"$(nproc)"
+
     - name: make check
-      run: make check
+      # Standard, non-fuzz tests must fail visibly instead of consuming a runner indefinitely.
+      timeout-minutes: 70
+      run: make -j"$(nproc)" check
+
+    - name: test PKIX1 example - generate codecs and test all supported formats
+      run: |
+        cd examples/sample.source.PKIX1
+        # Generate C codecs from PKIX1 ASN.1 schemas for all supported encoding formats:
+        # BER/DER, XER, OER, PER/UPER, APER, JER, CBOR
+        make regen-makefile
+        # Build the x509dump tool (compiles all generated codecs)
+        make -j"$(nproc)" x509dump
+        # Run full roundtrip tests for all formats with sample files:
+        # BER, XER, OER (COER), UPER, APER are all verified with encode/decode roundtrips
+        # and fault injection tests.  The sample-Certificate-1.{coer,per,aper} files
+        # activate the corresponding check-oer, check-per, check-aper targets.
+        make check
+        # Test CBOR encoding/decoding roundtrip
+        ./x509dump -p Certificate -iber -ocbor sample-Certificate-1.der > /tmp/cert-1.cbor
+        test -s /tmp/cert-1.cbor
+        ./x509dump -p Certificate -icbor -oxer /tmp/cert-1.cbor > /tmp/cert-1-cbor-xer.xml
+        ./x509dump -p Certificate -iber  -oxer sample-Certificate-1.der > /tmp/cert-1-ber-xer.xml
+        diff /tmp/cert-1-ber-xer.xml /tmp/cert-1-cbor-xer.xml
+        # Test JER encoding (JER decode of PKIX is not supported due to ANY open types)
+        ./x509dump -p Certificate -iber -ojer sample-Certificate-1.der > /tmp/cert-1.jer
+        test -s /tmp/cert-1.jer
+        echo "PKIX1 codec test passed: BER, XER, OER, UPER, APER, CBOR, JER(encode-only) verified"
+
+    - name: ccache statistics
+      if: always()
+      run: ccache -s
+
+    - name: Print failing test logs to console
+      if: failure()
+      run: |
+        # Automake's test-suite.log embeds the full per-test log of every
+        # failed test.  Print them so failure details are readable directly
+        # in the CI console, without downloading the artifact.
+        find . -name 'test-suite.log' 2>/dev/null | while read -r f; do
+          if grep -q -E '^# +(FAIL|ERROR): +[1-9]' "$f"; then
+            echo "::group::${f}"
+            cat "$f"
+            echo "::endgroup::"
+          fi
+        done
+
+    - name: Upload test logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: check-test-logs
+        if-no-files-found: ignore
+        path: |
+          config.log
+          tests/**/test-suite.log
+          tests/**/*.log
+
+  distcheck:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up ccache
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq ccache
+        mkdir -p "$HOME/ccache-bin"
+        for c in cc c++ gcc g++; do
+          ln -sf "$(command -v ccache)" "$HOME/ccache-bin/$c"
+        done
+        echo "$HOME/ccache-bin" >> "$GITHUB_PATH"
+        {
+          echo "CCACHE_DIR=$HOME/.ccache"
+          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
+          echo "CCACHE_NOHASHDIR=true"
+          echo "CCACHE_MAXSIZE=800M"
+        } >> "$GITHUB_ENV"
+
+    - name: Restore ccache
+      uses: actions/cache@v5
+      with:
+        path: ~/.ccache
+        key: ccache-gcc-distcheck-${{ github.sha }}
+        restore-keys: |
+          ccache-gcc-distcheck-
+          ccache-gcc-
+
+    - name: preconf
+      run: autoreconf -ivf
+
+    - name: configure
+      run: ./configure --disable-test-fuzzer
+
     - name: make distcheck
-      run: make distcheck
+      run: make -j"$(nproc)" distcheck DISTCHECK_CONFIGURE_FLAGS=--disable-test-fuzzer
+
+    - name: ccache statistics
+      if: always()
+      run: ccache -s
+
+    - name: Print failing test logs to console
+      if: failure()
+      run: |
+        # Automake's test-suite.log embeds the full per-test log of every
+        # failed test.  Print them so failure details are readable directly
+        # in the CI console, without downloading the artifact.
+        find . -name 'test-suite.log' 2>/dev/null | while read -r f; do
+          if grep -q -E '^# +(FAIL|ERROR): +[1-9]' "$f"; then
+            echo "::group::${f}"
+            cat "$f"
+            echo "::endgroup::"
+          fi
+        done
+
+    - name: Upload test logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: distcheck-test-logs
+        if-no-files-found: ignore
+        path: |
+          config.log
+          asn1c-*/_build/**/test-suite.log
+          asn1c-*/_build/**/tests/**/*.log
+
+  clang-sanitizers:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up ccache and clang
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq ccache clang
+        mkdir -p "$HOME/ccache-bin"
+        for c in cc c++ gcc g++ clang clang++; do
+          ln -sf "$(command -v ccache)" "$HOME/ccache-bin/$c"
+        done
+        echo "$HOME/ccache-bin" >> "$GITHUB_PATH"
+        {
+          echo "CCACHE_DIR=$HOME/.ccache"
+          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
+          echo "CCACHE_NOHASHDIR=true"
+          echo "CCACHE_MAXSIZE=800M"
+        } >> "$GITHUB_ENV"
+
+    - name: Restore ccache
+      uses: actions/cache@v5
+      with:
+        path: ~/.ccache
+        key: ccache-clang-check-${{ github.sha }}
+        restore-keys: |
+          ccache-clang-check-
+
+    - name: preconf
+      run: autoreconf -ivf
+
+    - name: configure
+      # clang enables additional UBSan checks the gcc job cannot:
+      # -fsanitize=nullability and -fsanitize=unsigned-integer-overflow
+      # (auto-detected by configure), on top of ASan/UBSan.
+      run: ./configure --disable-test-fuzzer CC=clang CXX=clang++
+
+    - name: make
+      run: make -j"$(nproc)"
+
+    - name: make check
+      # Keep the sanitizer suite within the same non-fuzz runtime budget.
+      timeout-minutes: 80
+      run: make -j"$(nproc)" check
+
+    - name: ccache statistics
+      if: always()
+      run: ccache -s
+
+    - name: Print failing test logs to console
+      if: failure()
+      run: |
+        # Automake's test-suite.log embeds the full per-test log of every
+        # failed test.  Print them so failure details are readable directly
+        # in the CI console, without downloading the artifact.
+        find . -name 'test-suite.log' 2>/dev/null | while read -r f; do
+          if grep -q -E '^# +(FAIL|ERROR): +[1-9]' "$f"; then
+            echo "::group::${f}"
+            cat "$f"
+            echo "::endgroup::"
+          fi
+        done
+
+    - name: Upload test logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: clang-check-test-logs
+        if-no-files-found: ignore
+        path: |
+          config.log
+          tests/**/test-suite.log
+          tests/**/*.log

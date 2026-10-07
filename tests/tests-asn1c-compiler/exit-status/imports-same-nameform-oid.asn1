@@ -1,0 +1,22 @@
+-- Semantic error for check-exit-status.sh (not scanned by check_fixer).
+-- Two IMPORTS groups name different modules with the same OID in
+-- NameForm ({ iso standard 8571 }). The NameForm arcs match by name, so
+-- the X.680 (02/2021) 13.16 e) check shall report the same OBJECT
+-- IDENTIFIER.
+
+ModuleNameFormDupA { iso standard 8571 } DEFINITIONS ::=
+BEGIN
+	X ::= INTEGER
+END
+
+ModuleNameFormDupC { iso standard 8571 } DEFINITIONS ::=
+BEGIN
+	Y ::= BOOLEAN
+END
+
+ModuleNameFormDupB DEFINITIONS ::=
+BEGIN
+	IMPORTS X FROM ModuleNameFormDupA { iso standard 8571 }
+		Y FROM ModuleNameFormDupC { iso standard 8571 };
+	T ::= SEQUENCE { x X, y Y }
+END

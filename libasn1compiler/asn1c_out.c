@@ -93,6 +93,7 @@ asn1c_compiled_output(arg_t *arg, const char *source, int lineno, const char *fu
         m->len = m->len - 1 + ret;
     }
 
+	/* Deduplicate includes within the same section */
 	if(arg->target->target == OT_INCLUDES
 	|| arg->target->target == OT_FWD_DECLS
 	|| arg->target->target == OT_POST_INCLUDE) {

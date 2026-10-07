@@ -1,8 +1,10 @@
 #include "asn1c_internal.h"
 #include "asn1c_misc.h"
+#include <stdint.h>  /* INT64_MAX, UINT64_MAX */
 
 #include <asn1fix_crange.h>	/* constraint groker from libasn1fix */
 #include <asn1fix_export.h>	/* other exportable stuff from libasn1fix */
+
 
 /*
  * Checks that the given string is not a reserved C/C++ keyword [1],[2].
@@ -60,6 +62,39 @@ asn1c_prefix_get() {
     prefix = "";
 
     return prefix;
+}
+
+/*
+ * Find the parent parameterized type for a specialization.
+ * When a parameterized type is instantiated with parameters, a "fork"
+ * (specialization) is created. This specialization has spec_index >= 0.
+ * This function searches the module for the parent parameterized type
+ * that contains the given specialization.
+ * Returns NULL if not found.
+ */
+asn1p_expr_t *
+asn1c_find_parent_parameterized_type(asn1p_t *asn, asn1p_expr_t *spec) {
+    asn1p_module_t *mod;
+    asn1p_expr_t *expr;
+    
+    if(!spec || spec->spec_index < 0) return NULL;
+    
+    /* Search all modules */
+    TQ_FOR(mod, &(asn->modules), mod_next) {
+        TQ_FOR(expr, &(mod->members), next) {
+            /* Only look at parameterized types */
+            if(!expr->lhs_params) continue;
+            
+            /* Check if spec is one of this type's specializations */
+            for(size_t i = 0; i < (size_t)expr->specializations.pspecs_count; i++) {
+                if(expr->specializations.pspec[i].my_clone == spec) {
+                    return expr;
+                }
+            }
+        }
+    }
+    
+    return NULL;
 }
 
 /*
@@ -213,6 +248,39 @@ asn1c_make_identifier(enum ami_flags_e flags, asn1p_expr_t *expr, ...) {
 }
 
 const char *
+asn1c_disambiguate_generated_filename(const char *name) {
+    static const char *system_header_names[] = {
+        "time",   "string", "assert", "errno", "stdio",  "stdlib",
+        "stdint", "stddef", "stdbool", "limits", "math", "memory",
+        "setjmp", "signal", "unistd",
+    };
+    static char storage[64];
+
+    if(asn1c_prefix_get()[0] != '\0') {
+        return name;
+    }
+
+    for(size_t i = 0; i < sizeof(system_header_names) / sizeof(system_header_names[0]);
+        i++) {
+        const char *sysname = system_header_names[i];
+        const unsigned char *n = (const unsigned char *)name;
+        const unsigned char *s = (const unsigned char *)sysname;
+
+        while(*n && *s && tolower(*n) == tolower(*s)) {
+            n++;
+            s++;
+        }
+
+        if(*n == '\0' && *s == '\0') {
+            snprintf(storage, sizeof(storage), "asn1c_%s", sysname);
+            return storage;
+        }
+    }
+
+    return name;
+}
+
+const char *
 asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 	asn1p_expr_t *exprid = 0;
 	asn1p_expr_t *top_parent;
@@ -220,6 +288,7 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 	int stdname = 0;
 	const char *typename;
 	const char *prefix;
+	asn1c_integer_storage_kind_e int_isk = AISK_INTEGER_T;
 
 	/* Rewind to the topmost parent expression */
 	if((top_parent = expr->parent_expr))
@@ -274,22 +343,62 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 		}
 
 		if(_format != TNF_RSAFE  && terminal && ((terminal->spec_index != -1) || (terminal->_mark & TM_NAMECLASH))) {
-			exprid = terminal;
-			typename = 0;
+			/*
+			 * For TNF_INCLUDE format, when the terminal is a specialization
+			 * (spec_index >= 0), we need to include the parent parameterized
+			 * type's file, not a non-existent specialization-specific file.
+			 * The specialization is defined inside the parent's .h file.
+			 */
+			if(_format == TNF_INCLUDE && terminal->spec_index >= 0) {
+				asn1p_expr_t *parent = asn1c_find_parent_parameterized_type(arg->asn, terminal);
+				if(parent) {
+					exprid = parent;
+					typename = 0;
+				} else {
+					/* Fall back to terminal if parent not found */
+					exprid = terminal;
+					typename = 0;
+				}
+			} else {
+				exprid = terminal;
+				typename = 0;
+			}
 		}
 
 		break;
 	case ASN_BASIC_INTEGER:
 	case ASN_BASIC_ENUMERATED:
 	case ASN_BASIC_REAL:
-        if((expr->expr_type == ASN_BASIC_REAL
-            && (_format == TNF_CONSTYPE || !(arg->flags & A1C_USE_WIDE_TYPES)
-                || asn1c_REAL_fits(arg, expr) != RL_NOTFIT))
-           || asn1c_type_fits_long(arg, expr)) {
+        {
+        /*
+         * For INTEGER the -finteger-native-type policy (via the storage
+         * selector) is authoritative: it decides long / unsigned long /
+         * int32_t / uint32_t / int64_t / uint64_t / INTEGER_t.
+         * ENUMERATED and REAL keep their traditional decisions.
+         */
+        int use_native;
+        if(expr->expr_type == ASN_BASIC_INTEGER) {
+            int_isk = asn1c_select_integer_storage(arg, expr);
+            use_native = (int_isk != AISK_INTEGER_T);
+        } else {
+            use_native = (expr->expr_type == ASN_BASIC_REAL
+                && (_format == TNF_CONSTYPE || !(arg->flags & A1C_USE_WIDE_TYPES)
+                    || asn1c_REAL_fits(arg, expr) != RL_NOTFIT))
+                || asn1c_type_fits_long(arg, expr);
+        }
+        if(use_native) {
+            const char *int_scalar =
+                (int_isk == AISK_UINT64) ? "uint64_t" :
+                (int_isk == AISK_INT64)  ? "int64_t"  :
+                (int_isk == AISK_UINT32) ? "uint32_t" :
+                (int_isk == AISK_INT32)  ? "int32_t"  :
+                (int_isk == AISK_ULONG)  ? "unsigned long" : "long";
             switch(_format) {
 			case TNF_CONSTYPE:
 				if(expr->expr_type == ASN_BASIC_REAL) {
                     return "double";
+                } else if(expr->expr_type == ASN_BASIC_INTEGER) {
+                    return int_scalar;
                 } else if(asn1c_type_fits_long(arg, expr) == FL_FITS_UNSIGN) {
                     return "unsigned long";
                 } else {
@@ -297,7 +406,9 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
                 }
             case TNF_CTYPE:
             case TNF_RSAFE:
-                if(expr->expr_type == ASN_BASIC_REAL) {
+                if(expr->expr_type == ASN_BASIC_INTEGER) {
+                    return int_scalar;
+                } else if(expr->expr_type == ASN_BASIC_REAL) {
                     asn1cnst_range_t *range = asn1constraint_compute_OER_range(
                         expr->Identifier, ASN_BASIC_REAL,
                         expr->combined_constraints, ACT_EL_RANGE, 0, 0, 0);
@@ -334,6 +445,7 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 				break;
 			}
 		}
+		}
 		/* Fall through */
 	default:
 		if(expr->expr_type
@@ -366,17 +478,34 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 
 	switch(_format) {
 	case TNF_UNMODIFIED:
-		return asn1c_make_identifier(AMI_MASK_ONLY_SPACES | AMI_NODELIMITER | (stdname ? 0 : AMI_USE_PREFIX),
-			0, prefix, MODULE_NAME_OF(exprid), exprid ? exprid->Identifier : typename, (char*)0);
+        return asn1c_make_identifier(
+            AMI_MASK_ONLY_SPACES | AMI_NODELIMITER | (stdname ? 0 : AMI_USE_PREFIX), 0,
+            prefix, MODULE_NAME_OF(exprid), exprid ? exprid->Identifier : typename,
+            (char *)0);
 	case TNF_INCLUDE:
-		return asn1c_make_identifier(
-			AMI_MASK_ONLY_SPACES | AMI_NODELIMITER,
-			0, ((!stdname || (arg->flags & A1C_INCLUDES_QUOTED))
-				? "\"" : "<"),
-			prefix, MODULE_NAME_OF(exprid),
-			exprid ? exprid->Identifier : typename,
-			((!stdname || (arg->flags & A1C_INCLUDES_QUOTED))
-				? ".h\"" : ".h>"), (char*)0);
+        {
+            char *open = ((!stdname || (arg->flags & A1C_INCLUDES_QUOTED))
+                              ? "\""
+                              : "<");
+            char *close = ((!stdname || (arg->flags & A1C_INCLUDES_QUOTED))
+                               ? ".h\""
+                               : ".h>");
+            char filename_storage[PATH_MAX];
+            const char *filename = asn1c_make_identifier(
+                AMI_MASK_ONLY_SPACES | AMI_NODELIMITER, 0, prefix,
+                MODULE_NAME_OF(exprid), exprid ? exprid->Identifier : typename,
+                (char *)0);
+            const char *include_filename = stdname
+                                               ? filename
+                                               : asn1c_disambiguate_generated_filename(
+                                                     filename);
+
+            snprintf(filename_storage, sizeof(filename_storage), "%s",
+                     include_filename);
+            return asn1c_make_identifier(
+                AMI_MASK_ONLY_SPACES | AMI_NODELIMITER, 0, open,
+                filename_storage, close, (char *)0);
+        }
 	case TNF_SAFE:
 		return asn1c_make_identifier(stdname ? 0 : AMI_USE_PREFIX, exprid, typename, (char*)0);
 	case TNF_CTYPE:	/* C type */
@@ -384,8 +513,18 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 		return asn1c_make_identifier(stdname ? 0 : AMI_USE_PREFIX, exprid,
 				exprid?"t":typename, exprid?0:"t", (char*)0);
 	case TNF_RSAFE:	/* Recursion-safe type */
+		/*
+		 * Keep the recursion-safe "struct" keyword outside the generated
+		 * type name, but still apply -fprefix to the struct tag itself.
+		 *
+		 * Pass an empty token after prefix so asn1c_make_identifier() does
+		 * not insert an extra '_' between a prefix such as "S1AP_" and
+		 * the generated type name. This yields
+		 * "struct S1AP_Foo", not "struct S1AP__Foo".
+		 */
 		return asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NODELIMITER, 0,
-			"struct", " ", prefix, MODULE_NAME_OF(exprid), typename, (char*)0);
+			"struct", " ", prefix, "", MODULE_NAME_OF(exprid), typename,
+			(char*)0);
 	}
 
 	assert(!"unreachable");
@@ -426,6 +565,65 @@ asn1c_REAL_fits(arg_t *arg, asn1p_expr_t *expr) {
     }
 }
 
+static int
+asn1c_target_long_bits(void) {
+    switch(asn1c_target_long_size) {
+    case ASN_TARGET_LONG_32:
+        return 32;
+    case ASN_TARGET_LONG_64:
+        return 64;
+    case ASN_TARGET_LONG_AUTO:
+    default:
+        /*
+         * Preserve the historical generated-output contract: without an
+         * explicit target model, assume only the portable 32-bit long range.
+         */
+        return 32;
+    }
+}
+
+static asn1c_integer_t
+asn1c_signed_max_for_bits(int bits) {
+    return (bits == 64) ? (asn1c_integer_t)INT64_MAX
+                        : (asn1c_integer_t)INT32_MAX;
+}
+
+static asn1c_integer_t
+asn1c_signed_min_for_bits(int bits) {
+    return (bits == 64) ? -(asn1c_integer_t)INT64_MAX - 1
+                        : -(asn1c_integer_t)INT32_MAX - 1;
+}
+
+static int
+asn1c_value_fits_signed_long(asn1c_integer_t value, int bits) {
+    return value >= asn1c_signed_min_for_bits(bits)
+           && value <= asn1c_signed_max_for_bits(bits);
+}
+
+static int
+asn1c_value_fits_uint64(asn1c_integer_t value) {
+    if(value < 0)
+        return 0;
+#ifdef HAVE_128_BIT_INT
+    return value <= (asn1c_integer_t)UINT64_MAX;
+#else
+    /*
+     * Without __int128, asn1c_integer_t is intmax_t.  Every non-negative
+     * representable intmax_t value is within uint64_t.
+     */
+    return 1;
+#endif
+}
+
+static int
+asn1c_value_fits_unsigned_long(asn1c_integer_t value, int bits) {
+    if(value < 0)
+        return 0;
+    if(bits == 64)
+        return asn1c_value_fits_uint64(value);
+    return value <= (asn1c_integer_t)UINT32_MAX;
+}
+
 /*
  * Check whether the specified INTEGER or ENUMERATED type can be represented
  * using the generic 'long' or 'unsigned long' type.
@@ -436,17 +634,7 @@ asn1c_type_fits_long(arg_t *arg, asn1p_expr_t *expr) {
 	asn1cnst_edge_t left;
 	asn1cnst_edge_t right;
 	asn1p_expr_t *v;
-
-/*
- * Since we don't know the sizeof(long) on the possible target platform
- * which will be compiling the code generated by asn1c, let's play it
- * simple: long's range is equal to or greater than int32_t.
- * NOTE: the most negative integer cannot be written in C, as the C99
- * standard will give it an unsigned type.
- * It is defined here as a constant expression.
- */
-#define	RIGHTMAX	2147483647	/* of 32-bit integer type */
-#define	LEFTMIN		(-RIGHTMAX-1)	/* of 32-bit integer type */
+    int long_bits = asn1c_target_long_bits();
 
 	/* Descend to the terminal type */
     expr = WITH_MODULE_NAMESPACE(
@@ -469,8 +657,8 @@ asn1c_type_fits_long(arg_t *arg, asn1p_expr_t *expr) {
 	TQ_FOR(v, &(expr->members), next) {
 		if(v->expr_type != A1TC_UNIVERVAL)
 			continue;
-		if(v->value->value.v_integer < LEFTMIN
-		|| v->value->value.v_integer > RIGHTMAX)
+        if(!asn1c_value_fits_signed_long(v->value->value.v_integer,
+                                         long_bits))
 			return FL_NOTFIT;
 	}
 
@@ -490,8 +678,7 @@ asn1c_type_fits_long(arg_t *arg, asn1p_expr_t *expr) {
 	if(range) {
 		if(!range->incompatible) {
 			right = range->right;
-			/* Use 4 instead of sizeof(long) is justified! */
-			if(right.type == ARE_VALUE && right.value <= 4)
+            if(right.type == ARE_VALUE && right.value <= long_bits / 8)
 				return FL_FITS_SIGNED;
 		}
 		asn1constraint_range_free(range);
@@ -524,25 +711,31 @@ asn1c_type_fits_long(arg_t *arg, asn1p_expr_t *expr) {
 
 	/* Special case for unsigned */
     if(!(arg->flags & A1C_USE_WIDE_TYPES) && left.type == ARE_VALUE
-       && left.value >= 0 && left.value <= 2147483647
+       && left.value >= 0
+       && asn1c_value_fits_signed_long(left.value, long_bits)
        && right.type == ARE_MAX) {
         return FL_FITS_UNSIGN;
     }
-    if(left.type == ARE_VALUE
-		&& left.value >= 0
-	&& right.type == ARE_VALUE
-		&& right.value > 2147483647
-		&& right.value <= (asn1c_integer_t)(4294967295UL))
-		return FL_FITS_UNSIGN;
-		
 
-	/* If some fixed value is outside of target range, not fit */
-	if(left.type == ARE_VALUE
-			&& (left.value < LEFTMIN || left.value > RIGHTMAX))
-		return FL_NOTFIT;
-	if(right.type == ARE_VALUE
-			&& (right.value > RIGHTMAX || right.value < LEFTMIN))
-		return FL_NOTFIT;
+    if(left.type == ARE_VALUE && right.type == ARE_VALUE) {
+        if(asn1c_value_fits_signed_long(left.value, long_bits)
+           && asn1c_value_fits_signed_long(right.value, long_bits))
+            return FL_FITS_SIGNED;
+        if(left.value >= 0
+           && asn1c_value_fits_unsigned_long(right.value, long_bits))
+            return FL_FITS_UNSIGN;
+        return FL_NOTFIT;
+    }
+
+	/* If some fixed value is outside of signed target range, not fit. */
+    if(left.type == ARE_VALUE
+       && !asn1c_value_fits_signed_long(left.value, long_bits)) {
+        return FL_NOTFIT;
+    }
+    if(right.type == ARE_VALUE
+       && !asn1c_value_fits_signed_long(right.value, long_bits)) {
+        return FL_NOTFIT;
+    }
 
 	/* If the range is open, fits only unless -fwide-types is given */
 	if(left.type != ARE_VALUE || right.type != ARE_VALUE) {
@@ -550,5 +743,107 @@ asn1c_type_fits_long(arg_t *arg, asn1p_expr_t *expr) {
 			? FL_NOTFIT : FL_PRESUMED;
 	}
 
-	return FL_FITS_SIGNED;
+    return FL_FITS_SIGNED;
+}
+
+/*
+ * Fetch the PER-visible value range of an INTEGER as 128-bit edges.
+ * Returns 0 and fills the has_lo/lo, has_hi/hi and extensible outputs on
+ * success; returns -1 if the range is unusable (incompatible / empty /
+ * not PER-visible).
+ */
+static int
+asn1c_int_value_range(arg_t *arg, asn1p_expr_t *expr,
+                      int *has_lo, asn1c_integer_t *lo,
+                      int *has_hi, asn1c_integer_t *hi,
+                      int *extensible) {
+    asn1cnst_range_t *range;
+    asn1p_expr_t *t;
+
+    *has_lo = *has_hi = *extensible = 0;
+
+    t = WITH_MODULE_NAMESPACE(
+        expr->module, expr_ns,
+        asn1f_find_terminal_type_ex(arg->asn, expr_ns, expr));
+    if(!t || !t->combined_constraints)
+        return -1;
+
+    range = asn1constraint_compute_PER_range(t->Identifier, t->expr_type,
+        t->combined_constraints, ACT_EL_RANGE, 0, 0, 0);
+    if(!range || range->incompatible || range->empty_constraint
+       || range->not_PER_visible) {
+        asn1constraint_range_free(range);
+        return -1;
+    }
+    *extensible = range->extensible;
+    if(range->left.type == ARE_VALUE) { *has_lo = 1; *lo = range->left.value; }
+    if(range->right.type == ARE_VALUE) { *has_hi = 1; *hi = range->right.value; }
+    asn1constraint_range_free(range);
+    return 0;
+}
+
+asn1c_integer_storage_kind_e
+asn1c_select_integer_storage(arg_t *arg, asn1p_expr_t *expr) {
+    asn_integer_native_type_e mode = asn1c_integer_native_type;
+    enum asn1c_fitslong_e fl = asn1c_type_fits_long(arg, expr);
+    asn1p_expr_t *t;
+    int has_lo = 0, has_hi = 0, ext = 0, bounded;
+    asn1c_integer_t lo = 0, hi = 0;
+    /* Fixed-width comparison limits expressed in the 128-bit work type. */
+    const asn1c_integer_t I32MAX = (asn1c_integer_t)INT32_MAX;
+    const asn1c_integer_t I32MIN = (asn1c_integer_t)INT32_MIN;
+    const asn1c_integer_t U32MAX = (asn1c_integer_t)UINT32_MAX;
+    const asn1c_integer_t I64MAX = (asn1c_integer_t)INT64_MAX;
+    const asn1c_integer_t I64MIN = -(asn1c_integer_t)INT64_MAX - 1;
+
+    t = WITH_MODULE_NAMESPACE(
+        expr->module, expr_ns,
+        asn1f_find_terminal_type_ex(arg->asn, expr_ns, expr));
+    if(!t || t->expr_type != ASN_BASIC_INTEGER)
+        return AISK_INTEGER_T;
+
+    /*
+     * auto preserves the traditional storage decision exactly: signed/
+     * unsigned long for ranges that fit the conservative 32-bit native
+     * window, INTEGER_t otherwise.  This keeps the default-generated API
+     * unchanged.  Fixed-width int32_t/uint32_t/int64_t/uint64_t storage is
+     * opt-in through the explicit modes below.
+     */
+    if(mode == AINT_NATIVE_AUTO) {
+        if(fl == FL_FITS_UNSIGN) return AISK_ULONG;
+        if(fl == FL_NOTFIT) return AISK_INTEGER_T;
+        return AISK_LONG;   /* FL_FITS_SIGNED / FL_PRESUMED */
+    }
+
+    bounded = (asn1c_int_value_range(arg, expr, &has_lo, &lo, &has_hi, &hi,
+                                     &ext) == 0)
+              && !ext && has_lo && has_hi;
+
+    if(!bounded) {
+        switch(mode) {
+        case AINT_NATIVE_INT32:  return (fl == FL_NOTFIT) ? AISK_INTEGER_T : AISK_INT32;
+        case AINT_NATIVE_INT64:  return (fl == FL_NOTFIT) ? AISK_INTEGER_T : AISK_INT64;
+        case AINT_NATIVE_UINT32:
+        case AINT_NATIVE_UINT64: return AISK_INTEGER_T; /* cannot prove non-negative */
+        default:                 return AISK_INTEGER_T;
+        }
+    }
+
+    switch(mode) {
+    case AINT_NATIVE_INT32:
+        if(lo >= I32MIN && hi <= I32MAX) return AISK_INT32;
+        return AISK_INTEGER_T;
+    case AINT_NATIVE_UINT32:
+        if(lo >= 0 && hi <= U32MAX) return AISK_UINT32;
+        return AISK_INTEGER_T;
+    case AINT_NATIVE_INT64:
+        if(lo >= I64MIN && hi <= I64MAX) return AISK_INT64;
+        return AISK_INTEGER_T;
+    case AINT_NATIVE_UINT64:
+        if(lo >= 0 && asn1c_value_fits_uint64(hi)) return AISK_UINT64;
+        return AISK_INTEGER_T;
+
+    default:            /* AINT_NATIVE_AUTO handled above */
+        return AISK_INTEGER_T;
+    }
 }

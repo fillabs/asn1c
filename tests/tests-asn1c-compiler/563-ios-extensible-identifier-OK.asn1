@@ -1,0 +1,49 @@
+-- Regression test for issue #563.
+-- An extensible integer used as an information-object identifier must retain
+-- its PER extension bit when the field constraint is generated from an object set.
+
+Issue563 DEFINITIONS ::= BEGIN
+
+I8e ::= INTEGER (1..128, ...)
+Null ::= NULL
+
+B-TYPE ::= CLASS {
+    &id I8e,
+    &Content
+} WITH SYNTAX { &Content IDENTIFIED BY &id }
+
+ISet B-TYPE ::= {
+    { Null IDENTIFIED BY 128 },
+    ...
+}
+
+Rext ::= SEQUENCE {
+    id B-TYPE.&id({ISet}),
+    cnt B-TYPE.&Content({ISet}{@id})
+}
+
+ID-OCTETS-B-TYPE ::= CLASS {
+    &id OCTET STRING (SIZE (1..2, ...)) UNIQUE,
+    &Content
+} WITH SYNTAX { &Content IDENTIFIED BY &id }
+
+OctetISet ID-OCTETS-B-TYPE ::= {
+    { Null IDENTIFIED BY '01'H },
+    ...
+}
+
+OctetRext ::= SEQUENCE {
+    id ID-OCTETS-B-TYPE.&id({OctetISet}),
+    payload ID-OCTETS-B-TYPE.&Content({OctetISet}{@id})
+}
+
+-- Explicit subtype constraints must not recover the base type's extension bit.
+Rmix ::= SEQUENCE {
+    id B-TYPE.&id({ISet}) (1..10)
+}
+
+OctetRmix ::= SEQUENCE {
+    id ID-OCTETS-B-TYPE.&id({OctetISet}) (SIZE (1))
+}
+
+END

@@ -119,6 +119,37 @@ SEQUENCE_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
                                              elm->encoding_constraints.per_constraints,
                                              memb_ptr2, pd);
         }
+        
+        /*
+         * Canonical UPER validation: X.691 19.5 - DEFAULT value check.
+         * For BASIC-PER, encodings of components marked DEFAULT shall always be
+         * absent if the value to be encoded is the default value of a simple type.
+         * The decoder should reject messages that encode default values.
+         */
+        if(rv.code == RC_OK && opt_codec_ctx && opt_codec_ctx->uper_canonical &&
+           elm->optional && elm->default_value_set) {
+            /* Check if the decoded value matches the default value */
+            void *default_ptr = NULL;
+            if(elm->default_value_set(&default_ptr) == 0 && default_ptr) {
+                /* Compare the decoded value with the default */
+                if(elm->type->op->compare_struct &&
+                   elm->type->op->compare_struct(elm->type, *memb_ptr2, default_ptr) == 0) {
+                    if(opt_codec_ctx->uper_canonical_lenient) {
+                        ASN_DEBUG("Non-canonical UPER: encoded default value for %s (lenient mode - continuing)", elm->name);
+                    } else {
+                        ASN_DEBUG("Non-canonical UPER: encoded default value for %s", elm->name);
+                        /* Free the default value we created for comparison */
+                        ASN_STRUCT_FREE_CONTENTS_ONLY(*elm->type, default_ptr);
+                        FREEMEM(default_ptr);
+                        FREEMEM(opres);
+                        ASN__DECODE_FAILED;
+                    }
+                }
+                /* Free the default value we created for comparison */
+                ASN_STRUCT_FREE_CONTENTS_ONLY(*elm->type, default_ptr);
+                FREEMEM(default_ptr);
+            }
+        }
         if(rv.code != RC_OK) {
             ASN_DEBUG("Failed decode %s in %s",
                       elm->name, td->name);
@@ -157,6 +188,38 @@ SEQUENCE_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
         epmd.nbits = bmlength;
         ASN_DEBUG("Read in extensions bitmap for %s of %ld bits (%x..)",
                   td->name, (long)bmlength, *epres);
+
+        /*
+         * Canonical UPER validation: X.691 19.9 - Extension Addition Group check.
+         * If all components of the ExtensionAdditionGroup are missing, then the
+         * ExtensionAdditionGroup shall be encoded as a missing extension addition.
+         */
+        if(opt_codec_ctx && opt_codec_ctx->uper_canonical) {
+            int any_present = 0;
+            asn_per_data_t temp_epmd = epmd;
+            
+            /* Check if any extension is actually present */
+            for(edx = specs->first_extension; edx < td->elements_count; edx++) {
+                int present = per_get_few_bits(&temp_epmd, 1);
+                if(present > 0) {
+                    any_present = 1;
+                    break;
+                } else if(present < 0) {
+                    break;  /* No more extensions */
+                }
+            }
+            
+            /* If no extensions are present but extension bit was set, it's non-canonical */
+            if(!any_present) {
+                if(opt_codec_ctx->uper_canonical_lenient) {
+                    ASN_DEBUG("Non-canonical UPER: extension bit set but no extensions present (lenient mode - continuing)");
+                } else {
+                    ASN_DEBUG("Non-canonical UPER: extension bit set but no extensions present");
+                    FREEMEM(epres);
+                    ASN__DECODE_FAILED;
+                }
+            }
+        }
 
         /* Go over extensions and read them in */
         for(edx = specs->first_extension; edx < td->elements_count; edx++) {
@@ -275,6 +338,10 @@ SEQUENCE__handle_extensions(const asn_TYPE_descriptor_t *td, const void *sptr,
             present = 1;
         }
 
+        if(present && elm->default_value_cmp
+           && elm->default_value_cmp(*memb_ptr2) == 0)
+            present = 0;
+
         ASN_DEBUG("checking %s:%s (@%" ASN_PRI_SIZE ") present => %d", elm->name,
                   elm->type->name, edx, present);
         exts_count++;
@@ -311,6 +378,9 @@ SEQUENCE_encode_uper(const asn_TYPE_descriptor_t *td,
     if(!sptr)
         ASN__ENCODE_FAILED;
 
+    /* Check recursion depth to prevent stack overflow */
+    UPER_ENCODER_RECURSION_DEPTH_INC();
+
     er.encoded = 0;
 
     ASN_DEBUG("Encoding %s as SEQUENCE (UPER)", td->name);
@@ -323,8 +393,12 @@ SEQUENCE_encode_uper(const asn_TYPE_descriptor_t *td,
         n_extensions = 0; /* There are no extensions to encode */
     } else {
         n_extensions = SEQUENCE__handle_extensions(td, sptr, 0, 0);
-        if(n_extensions < 0) ASN__ENCODE_FAILED;
+        if(n_extensions < 0) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
+            ASN__ENCODE_FAILED;
+        }
         if(per_put_few_bits(po, n_extensions ? 1 : 0, 1)) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
             ASN__ENCODE_FAILED;
         }
     }
@@ -359,8 +433,10 @@ SEQUENCE_encode_uper(const asn_TYPE_descriptor_t *td,
                   elm->flags & ATF_POINTER ? "ptr" : "inline",
                   elm->default_value_cmp ? "def" : "wtv",
                   td->name, elm->name, present ? "present" : "absent");
-        if(per_put_few_bits(po, present, 1))
+        if(per_put_few_bits(po, present, 1)) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
             ASN__ENCODE_FAILED;
+        }
     }
 
     /*
@@ -388,6 +464,7 @@ SEQUENCE_encode_uper(const asn_TYPE_descriptor_t *td,
                 if(elm->optional)
                     continue;
                 /* Mandatory element is missing */
+                UPER_ENCODER_RECURSION_DEPTH_DEC();
                 ASN__ENCODE_FAILED;
             }
         } else {
@@ -400,30 +477,47 @@ SEQUENCE_encode_uper(const asn_TYPE_descriptor_t *td,
             continue;
 
         ASN_DEBUG("Encoding %s->%s:%s", td->name, elm->name, elm->type->name);
-        er = elm->type->op->uper_encoder(
-            elm->type, elm->encoding_constraints.per_constraints, *memb_ptr2,
-            po);
-        if(er.encoded == -1) return er;
+        if(elm->flags & ATF_OPEN_TYPE) {
+            er = OPEN_TYPE_uper_put(td, sptr, elm, po);
+        } else {
+            er = elm->type->op->uper_encoder(
+                elm->type, elm->encoding_constraints.per_constraints, *memb_ptr2,
+                po);
+        }
+        if(er.encoded == -1) {
+            UPER_ENCODER_RECURSION_DEPTH_DEC();
+            return er;
+        }
     }
 
     /* No extensions to encode */
-    if(!n_extensions) ASN__ENCODED_OK(er);
+    if(!n_extensions) {
+        UPER_ENCODER_RECURSION_DEPTH_DEC();
+        ASN__ENCODED_OK(er);
+    }
 
     ASN_DEBUG("Length of extensions %d bit-map", n_extensions);
     /* #18.8. Write down the presence bit-map length. */
-    if(uper_put_nslength(po, n_extensions))
+    if(uper_put_nslength(po, n_extensions)) {
+        UPER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
+    }
 
     ASN_DEBUG("Bit-map of %d elements", n_extensions);
     /* #18.7. Encoding the extensions presence bit-map. */
     /* TODO: act upon NOTE in #18.7 for canonical PER */
-    if(SEQUENCE__handle_extensions(td, sptr, po, 0) != n_extensions)
+    if(SEQUENCE__handle_extensions(td, sptr, po, 0) != n_extensions) {
+        UPER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
+    }
 
     ASN_DEBUG("Writing %d extensions", n_extensions);
     /* #18.9. Encode extensions as open type fields. */
-    if(SEQUENCE__handle_extensions(td, sptr, 0, po) != n_extensions)
+    if(SEQUENCE__handle_extensions(td, sptr, 0, po) != n_extensions) {
+        UPER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
+    }
 
+    UPER_ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODED_OK(er);
 }

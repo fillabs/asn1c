@@ -27,5 +27,6 @@ dist_check_SCRIPTS=check_unber.sh
 # proper fuzzing options.
 TESTS_ENVIRONMENT=                      \
     ASAN_ENV_FLAGS="@ASAN_ENV_FLAGS@"   \
+    FUZZ_ASAN_OPTIONS="${FUZZ_ASAN_OPTIONS}" \
     builddir=${builddir}
 TESTS= check_unber.sh

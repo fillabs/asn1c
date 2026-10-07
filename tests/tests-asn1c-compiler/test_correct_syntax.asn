@@ -1,0 +1,17 @@
+TestModule DEFINITIONS ::= BEGIN
+
+-- Correct syntax according to ASN.1 standards
+SOME-CLASS ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type
+} WITH SYNTAX {
+    [HAS &Type] IDENTIFIED BY &id
+}
+
+-- Object instance using the class
+SomeObject SOME-CLASS ::= {
+    HAS INTEGER
+    IDENTIFIED BY {1 2 3 4}
+}
+
+END

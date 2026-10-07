@@ -7,6 +7,7 @@
 #include <constr_SEQUENCE.h>
 
 asn_TYPE_operation_t asn_OP_SEQUENCE = {
+    .kind = ASN_KIND_SEQUENCE,
     SEQUENCE_free,
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     SEQUENCE_print,
@@ -62,7 +63,14 @@ asn_TYPE_operation_t asn_OP_SEQUENCE = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-    0  /* Use generic outmost tag fetcher */
+    0  /* Use generic outmost tag fetcher */,
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    SEQUENCE_decode_cbor,
+    SEQUENCE_encode_cbor,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 
 void

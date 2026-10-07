@@ -42,6 +42,9 @@ enum asn1p_flags {
 /*
  * Perform low-level parsing of ASN.1 module[s]
  * and return a list of module trees.
+ * On failure, asn1p_parse_file() returns NULL and sets errno: the errno
+ * value of fopen() if the file cannot be opened, EINVAL otherwise
+ * (not a regular file, or not valid ASN.1).
  */
 asn1p_t	*asn1p_parse_file(const char *filename,
 	enum asn1p_flags);

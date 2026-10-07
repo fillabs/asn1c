@@ -7,6 +7,7 @@
 #include <constr_SET.h>
 
 asn_TYPE_operation_t asn_OP_SET = {
+    .kind = ASN_KIND_SET,
     SET_free,
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     SET_print,
@@ -44,8 +45,13 @@ asn_TYPE_operation_t asn_OP_SET = {
     0,
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
 #if !defined(ASN_DISABLE_UPER_SUPPORT)
-    0,  /* SET_decode_uper */
-    0,  /* SET_encode_uper */
+#if !defined(ASN_DISABLE_UPER_SUPPORT)
+    SET_decode_uper,
+    SET_encode_uper,
+#else
+    0,
+    0,
+#endif
 #else
     0,
     0,
@@ -62,7 +68,14 @@ asn_TYPE_operation_t asn_OP_SET = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-    0  /* Use generic outmost tag fetcher */
+    0  /* Use generic outmost tag fetcher */,
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    SET_decode_cbor,
+    SET_encode_cbor,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 
 int

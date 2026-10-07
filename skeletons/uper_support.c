@@ -109,11 +109,10 @@ uper_put_nsnnwn(asn_per_outp_t *po, int n) {
 		bytes = 1;
 	else if(n < 65536)
 		bytes = 2;
-	else if(n < 256 * 65536)
-		bytes = 3;
 	else
 		return -1;	/* This is not a "normally small" value */
-	if(per_put_few_bits(po, bytes, 8))
+	if(per_put_few_bits(po, 1, 1)
+	|| per_put_few_bits(po, bytes, 8))
 		return -1;
 
 	return per_put_few_bits(po, n, 8 * bytes);
@@ -205,6 +204,7 @@ uper_put_nslength(asn_per_outp_t *po, size_t length) {
         return per_put_few_bits(po, length - 1, 7) ? -1 : 0;
     } else {
         int need_eom = 0;
+        if(per_put_few_bits(po, 1, 1)) return -1;
         if(uper_put_length(po, length, &need_eom) != (ssize_t)length
            || need_eom) {
             /* This might happen in case of >16K extensions */

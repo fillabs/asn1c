@@ -195,6 +195,9 @@ int
 main() {
 	CHECK_DECODE(RC_WMORE, 0, "", 0, "bounds=", 0, 0);
 	CHECK_DECODE(RC_FAIL, 0, "\x00", 1, "bounds=", 0, 0);
+	/* CVE: zero-length OER payload with positive (non-negative) constraint
+	 * must fail, not trigger a 1-byte heap OOB read */
+	CHECK_DECODE(RC_FAIL, 0, "\x00", 1, "bounds=", 0, 1);
 	CHECK_DECODE(RC_WMORE, 0, "", 0, "bounds=", 1, 0);
 	CHECK_DECODE(RC_WMORE, 0, "", 0, "bounds=", 1, 1);
 	CHECK_DECODE(RC_OK, 0, "\x00", 1, "bounds=", 1, 1);
