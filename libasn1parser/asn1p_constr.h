@@ -5,10 +5,19 @@
 #define	ASN1_PARSER_CONSTRAINT_H
 
 /*
+ * Forward declarations, so that this header is self-contained and can be
+ * parsed on its own (e.g., by code analyzers). Struct tags are used
+ * instead of the asn1p_value_t/asn1p_module_t typedefs, which are defined
+ * in asn1p_value.h and asn1p_module.h; the types are identical.
+ */
+struct asn1p_value_s;
+struct asn1p_module_s;
+
+/*
  * The enumerations are declared at file scope rather than nested inside
  * struct asn1p_constraint_s. In C both forms are equivalent (enum tags and
  * enumerators nested in a struct already have file scope), but in C++ the
- * nested form scopes them to the struct, so C/C++ code analysers that parse
+ * nested form scopes them to the struct, so C/C++ code analyzers that parse
  * these headers in C++ mode report ACT_EL_RANGE, ACT_CT_SIZE, etc. as
  * undefined at every use site.
  */
@@ -64,10 +73,10 @@ typedef struct asn1p_constraint_s {
 	/*
 	 * Separate types and values.
 	 */
-	asn1p_value_t *containedSubtype;
-	asn1p_value_t *value;
-	asn1p_value_t *range_start;
-	asn1p_value_t *range_stop;
+	struct asn1p_value_s *containedSubtype;
+	struct asn1p_value_s *value;
+	struct asn1p_value_s *range_start;
+	struct asn1p_value_s *range_stop;
 
 	/*
 	 * A collection of constraint elements.
@@ -94,7 +103,8 @@ void asn1p_constraint_set_source(asn1p_constraint_t *,
 /*
  * Constructors and a recursive destructor.
  */
-asn1p_constraint_t *asn1p_constraint_new(int _lineno, asn1p_module_t *mod);
+asn1p_constraint_t *asn1p_constraint_new(int _lineno,
+                                         struct asn1p_module_s *mod);
 void asn1p_constraint_free(asn1p_constraint_t *);
 
 /*
@@ -103,7 +113,8 @@ void asn1p_constraint_free(asn1p_constraint_t *);
 asn1p_constraint_t *asn1p_constraint_clone(asn1p_constraint_t *source_to_clone);
 asn1p_constraint_t *asn1p_constraint_clone_with_resolver(
 	asn1p_constraint_t *source_to_clone,
-	asn1p_value_t *(*resolver)(asn1p_value_t *, void *), void *);
+	struct asn1p_value_s *(*resolver)(struct asn1p_value_s *, void *),
+	void *);
 
 /*
  * Insert additional element into the element array of a (to) constraint.
