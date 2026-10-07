@@ -1,0 +1,14 @@
+{
+    "default": true,
+    "MD007": {
+        "indent": 2
+    },
+    "MD013": {
+        "line_length": 90
+    },
+    "MD024": {
+        "siblings_only": true
+    },
+    "no-hard-tabs": true,
+    "no-inline-html": false
+}
