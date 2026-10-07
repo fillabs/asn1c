@@ -1,7 +1,7 @@
 Changes since v1.5.0:
 	* Moved the asn1p_constraint_type_e and asn1p_constr_pres_e enums in
 	  libasn1parser/asn1p_constr.h out of struct asn1p_constraint_s to file
-	  scope. C behaviour is unchanged, but code analysers that parse the
+	  scope. C behavior is unchanged, but code analyzers that parse the
 	  headers as C++ can now resolve ACT_* and ACPRES_* identifiers (for
 	  example ACT_EL_RANGE in asn1c_misc.c).
 	* Fixed generated filename collisions with skeleton files on

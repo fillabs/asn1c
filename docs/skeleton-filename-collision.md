@@ -5,7 +5,7 @@
 On macOS, `tests/tests-c-compiler` failed in
 `check-src/check-563.-gen-UPER.-gen-APER.c`:
 
-```
+```text
 Retaining local NULL.h (.../skeletons/NULL.h suggested)
 Retaining local NULL.c (.../skeletons/NULL.c suggested)
 ...
