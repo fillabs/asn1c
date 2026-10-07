@@ -173,7 +173,7 @@ main(int ac, char **av) {
                 asn1_compiler_flags |= A1C_COMPOUND_NAMES;
                 asn1_fixer_flags |= A1F_COMPOUND_NAMES;
             } else if(strcmp(optarg, "strict-import-oid") == 0) {
-                asn1_fixer_flags |= A1F_STRICT_MODULE_OID;
+                asn1_fixer_flags |= A1F_PREFER_IMPORT_SOURCE;
             } else if(strcmp(optarg, "indirect-choice") == 0) {
                 asn1_compiler_flags |= A1C_INDIRECT_CHOICE;
             } else if(strncmp(optarg, "known-extern-type=", 18) == 0) {
