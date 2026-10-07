@@ -1,0 +1,9 @@
+# Generated files - created during test runs, cleaned up by CLEANFILES in Makefile.am
+*.[choa]
+converter-example
+converter-example.mk
+Makefile.am.*
+libasncodec.a
+# Test-generated output files
+s4a.xer
+s4a.der

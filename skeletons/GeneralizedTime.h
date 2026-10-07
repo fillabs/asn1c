@@ -5,6 +5,32 @@
 #ifndef	_GeneralizedTime_H_
 #define	_GeneralizedTime_H_
 
+/* Include <time.h> first to ensure the system header is used.
+ * On case-insensitive filesystems with -I. (macOS default APFS, Cygwin), a
+ * local Time.h from ASN.1 schemas (e.g., RFC 3280) can shadow <time.h>.
+ *
+ * On Linux and other case-sensitive filesystems this is typically not an
+ * issue, but on macOS and other case-insensitive systems name clashes are
+ * common when ASN.1 modules define a type named "Time".
+ *
+ * IMPORTANT FOR macOS / CASE-INSENSITIVE FILESYSTEMS:
+ * If you encounter "non-portable path" warnings or header name conflicts,
+ * you can use asn1c's -fprefix= flag to rename generated files, for example:
+ *   asn1c -fprefix=ASN1_ -pdu=Certificate ...
+ * which will generate ASN1_Time.h instead of Time.h and similar names.
+ * The -fprefix= flag automatically handles prefixing in both generated code
+ * and makefiles, so no manual editing is required.
+ *
+ * The most reliable workaround for macOS users is to build on a case-sensitive
+ * filesystem (for example, a case-sensitive APFS volume) to avoid these
+ * header name collisions entirely.
+ */
+#ifdef	__CYGWIN__
+#include "/usr/include/time.h"
+#else
+#include <time.h>
+#endif	/* __CYGWIN__ */
+
 #include <OCTET_STRING.h>
 
 #ifdef __cplusplus
@@ -58,8 +84,6 @@ asn_random_fill_f GeneralizedTime_random_fill;
 /***********************
  * Some handy helpers. *
  ***********************/
-
-struct tm;	/* <time.h> */
 
 /*
  * Convert a GeneralizedTime structure into time_t

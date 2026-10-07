@@ -1,0 +1,15 @@
+TestModule DEFINITIONS ::= BEGIN
+
+-- Test case using IDENTIFIED BY syntax
+SOME-CLASS ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type
+} WITH SYNTAX {
+    [HAS &Type] IDENTIFIED BY &id
+}
+
+SomeObject SOME-CLASS ::= {
+    IDENTIFIED BY {1 2 3}
+}
+
+END

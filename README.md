@@ -1,4 +1,6 @@
-# About
+# README
+
+## About
 
 ASN.1 to C compiler takes the ASN.1 module files (example) and generates
 the C++ compatible C source code. That code can be used to serialize
@@ -14,9 +16,43 @@ The ASN.1 family of standards is large and complex, and no open source
 compiler supports it in its entirety.
 The asn1c is arguably the most evolved open source ASN.1 compiler.
 
-# ASN.1 Transfer Syntaxes
+### Latest release
+
+Current release: **1.5.3**
+
+This release corrects imported-name resolution and compiler diagnostics,
+fixes PER extensibility, avoids generated-file collisions with runtime
+skeletons on case-insensitive filesystems, and addresses a skeleton build race.
+It also includes header usability improvements and updated compiler
+documentation.
+See the [v1.5.3 release notes](release-notes/v1.5.3.md) for details.
+
+#### Upgrade warning: unknown extensions
+
+> **Important:** Decoding behavior for unknown extensions has changed from
+> "fail" to "skip/relay". Evaluate the impact on your application before
+> upgrading; define `ASN_REJECT_UNKNOWN_EXTENSIONS` to restore the previous
+> strict behavior.
+
+This forward-compatible default applies to unknown alternatives of extensible
+UPER/OER `CHOICE` values and unknown additions of extensible UPER/APER
+`ENUMERATED` values. Existing deployments may rely on the old `RC_FAIL` result
+as an implicit input-validation gate or as a protocol error in a state machine.
+Compile all decoder skeleton objects with the macro and perform a clean rebuild;
+defining it only in application code does not change an already-built runtime
+library. Compatibility warning contributed by <shakespark@gmail.com>.
+
+See [ChangeLog](ChangeLog) for the complete release history and
+[release-notes/v1.5.3.md](release-notes/v1.5.3.md) for these release notes,
+[release-notes/v1.4.2.md](release-notes/v1.4.2.md) for v1.4.2, and
+[release-notes/v1.4.md](release-notes/v1.4.md) for v1.4.
+
+## ASN.1 Transfer Syntaxes
+
+<!-- markdownlint-disable MD033 -->
 <details>
 <summary>ASN.1 encodings interoperability table</summary>
+<!-- markdownlint-enable MD033 -->
 
 The ASN.1 family of standards define a number of ways to encode data,
 including byte-oriented (e.g., BER), bit-oriented (e.g., PER),
@@ -45,41 +81,88 @@ CANONICAL-APER | aper_encode()              | *-APER        | aper_decode()
 BASIC-XER      | xer_encode(XER_F_BASIC)    | *-XER         | xer_decode()
 CANONICAL-XER  | xer_encode(XER_F_CANONICAL)| *-XER         | xer_decode()
 JER            | jer_encode()               | JER           | jer_decode()
+JER-MINIFIED   | jer_encode(JER_F_MINIFIED) | JER           | jer_decode()
+CBOR           | cbor_encode()              | CBOR          | cbor_decode()
 
-*) Asterisk means both BASIC and CANONICAL variants.
+*) Asterisk means both BASIC and CANONICAL variants. JER-MINIFIED produces
+whitespace-free JSON, and `jer_decode()` accepts either JER form.
 </details>
 
-# Build and Install
+## XER and JER Encoding Instructions
+
+asn1c supports schema-level XER and JER encoding instructions for selected
+standard-style encodings. Supported instructions include XER `BASE64`, `TEXT`,
+`DECIMAL`, `GLOBAL-DEFAULTS MODIFIED-ENCODINGS`, and the legacy XER OCTET
+STRING controls `hexadecimal` and `utf8`; JER supports `BASE64`, enumerated
+value `TEXT`, and member `NAME`.
+
+```asn1
+Flag ::= [TEXT] BOOLEAN
+Blob ::= [JER:BASE64] OCTET STRING
+
+ENCODING-CONTROL XER
+    GLOBAL-DEFAULTS MODIFIED-ENCODINGS
+    DECIMAL Ratio
+    TEXT Count.one AS "uno"
+END
+
+ENCODING-CONTROL JER
+    NAME Packet.payload AS "payload64"
+    TEXT Mode.busy AS "occupied"
+END
+```
+
+Bare `[BASE64]` remains a XER instruction for compatibility; use
+`[JER:BASE64]` for JER. XER `DECIMAL` applies only to `REAL` and requires
+`GLOBAL-DEFAULTS MODIFIED-ENCODINGS`. JER `NAME` changes JSON keys only; it
+does not rename C fields or XER XML tags. See
+[ENCODING_CONTROL_STATUS.md](ENCODING_CONTROL_STATUS.md) for the support
+matrix and diagnostics.
+
+## Build and Install
 
 If you haven't installed the asn1c yet, read the [INSTALL.md](INSTALL.md) file
 for a short installation guide.
 
 [![Build Status](https://travis-ci.com/mouse07410/asn1c.svg?branch=vlm_master)](https://travis-ci.com/mouse07410/asn1c)
 
-# Documentation
+## Documentation
 
 For the list of asn1c command line options, see `asn1c -h` or `man asn1c`.
 
 The comprehensive documentation on this compiler is in [doc/asn1c-usage.pdf](doc/asn1c-usage.pdf).
+
+Extensible UPER and OER types, plus extensible APER `ENUMERATED` types, decode
+unknown extension additions forward-compatibly by default. Unknown CHOICE
+alternatives are skipped and reported with no selected local alternative;
+unknown UPER/APER ENUMERATED values are represented by the reserved
+`LONG_MAX - extension_index` range so they can be relayed with the same PER
+transfer syntax. Applications that require the historical strict rejection
+behavior may compile generated skeletons with `ASN_REJECT_UNKNOWN_EXTENSIONS`;
+this forfeits forward compatibility.
 
 Please also read the [FAQ](FAQ) file.
 
 An excellent book on ASN.1 is written by Olivier Dubuisson:
 "ASN.1 Communication between heterogeneous systems", ISBN:0-12-6333361-0.
 
-# Quick start
+## Quick start
 
 (also check out [doc/asn1c-quick.pdf](doc/asn1c-quick.pdf))
 
 After installing the compiler (see [INSTALL.md](INSTALL.md)), you may use
 the asn1c command to compile the ASN.1 specification:
 
+```sh
     asn1c <module.asn1>                         # Compile module
+```
 
 If several specifications contain interdependencies, all of them must be
 specified at the same time:
 
+```sh
     asn1c <module1.asn1> <module2.asn1> ...     # Compile interdependent modules
+```
 
 The asn1c source tarball contains the [examples/](examples/) directory
 with several ASN.1 modules and a [script](examples/crfc2asn1.pl)
@@ -88,7 +171,9 @@ Refer to the [examples/README](examples/README) file in that directory.
 
 To compile the X.509 PKI module:
 
+```sh
     ./asn1c/asn1c -P ./examples/rfc3280-*.asn1  # Compile-n-print
+```
 
 In this example, the **-P** option is to print the compiled text on the
 standard output. The default behavior is that asn1c compiler creates
@@ -102,9 +187,65 @@ to dump out the parsed (and fixed) ASN.1 specification as it was
 whether a particular syntactic construction is properly supported
 by the compiler.
 
+```sh
     asn1c -EF <module-to-test.asn1>             # Check semantic validity
+```
 
-# Model of operation
+### Working with large specifications (PDU selection)
+
+When working with large ASN.1 specifications (such as 3GPP 5G specs), you may
+only need to generate code for specific PDU (Protocol Data Unit) types and their
+dependencies. The asn1c compiler provides options for this:
+
+#### List PDU dependencies
+
+To list all types that a specific PDU depends on without generating code:
+
+```sh
+    asn1c -pdu=PDUType -flist-deps module.asn1
+```
+
+This will output a list of type names that are dependencies of the specified PDU.
+
+#### Generate code only for PDU dependencies
+
+To generate code only for a specific PDU and its dependencies (reducing the
+amount of generated code):
+
+```sh
+    asn1c -pdu=PDUType -fgen-only-pdu-deps module.asn1
+```
+
+This is particularly useful for large specifications where you only need a subset
+of the types. You can specify multiple PDUs:
+
+```sh
+    asn1c -pdu=PDU1 -pdu=PDU2 -fgen-only-pdu-deps module.asn1
+```
+
+The `-fgen-only-pdu-deps` option also works with `-pdu=all` and `-pdu=auto`.
+
+## Resolving imported names (-fprefer-import-source)
+
+A name listed in an IMPORTS group always resolves to the module that its
+`FROM ModuleName` names (X.680 13.19), with or without this flag. So when
+two ASN.1 modules export identically-named types and a third module imports
+one from each, each name binds to the module that it is imported from.
+
+Without the flag (the default), a name that no IMPORTS group lists is also
+searched for in the body of each FROM module (whole-module fallback).
+X.680 does not allow this, but some specifications rely on it. Use
+`-fprefer-import-source` to disable the fallback and resolve only names
+that an IMPORTS group lists:
+
+```sh
+    asn1c -fprefer-import-source <module1.asn1> <module2.asn1> ...
+```
+
+With the flag, a name that is used but not listed in IMPORTS (and not
+defined locally) is reported as an error.
+
+## Model of operation
 
 The asn1c compiler works by processing the ASN.1 module specifications
 in several stages:
@@ -119,12 +260,28 @@ in several stages:
 There are several command-line options reserved for printing the results
 after each stage of operation:
 
+```text
     <parser> => print                                       (-E)
     <parser> => <fixer> => print                            (-E -F)
     <parser> => <fixer> => <compiler> => print              (-P)
     <parser> => <fixer> => <compiler> => save-compiled      [default]
+```
 
+## Partial Decoding Support
 
--- 
-Lev Walkin
-vlm@lionet.info
+When decoding fails (e.g., due to truncated or malformed input), the converter
+tool can print partial decoding results to help with debugging. Use the `-P`
+flag with the generated converter to see what was successfully decoded before
+the error occurred:
+
+```sh
+./converter-example -iper -P truncated-message.uper
+```
+
+For more details, see [PARTIAL_DECODING.md](PARTIAL_DECODING.md).
+
+--
+Mouse and Lev Walkin
+<!-- markdownlint-disable MD033 -->
+<5923577+mouse07410@users.noreply.github.com>    <vlm@lionet.info>
+<!-- markdownlint-enable MD033 -->

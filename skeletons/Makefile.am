@@ -14,16 +14,25 @@ nobase_dist_smods_DATA =     \
 	standard-modules/ASN1C-UsefulInformationObjectClasses.asn1
 
 
-uninstall-local:
+uninstall-local: uninstall-nobase_dist_smodsDATA
 	-@echo -n " "
 	-rm -f -r $(DESTDIR)$(pkgdatadir)
 
 check_LTLIBRARIES =             \
     libasn1cskeletons.la        \
-    libasn1cskeletons_c89.la
+    libasn1cskeletons_c89.la    \
+    libasn1cskeletons_strict.la
 
 libasn1cskeletons_c89_la_CFLAGS = $(SKELETONS_CFLAGS)
 libasn1cskeletons_c89_la_SOURCES = $(libasn1cskeletons_la_SOURCES)
+
+# Variant of the skeletons library built with -DASN_REJECT_UNKNOWN_EXTENSIONS
+# (see asn_internal.h), used solely by
+# tests/tests-skeletons/check-PER-strict-ext.c to exercise the strict,
+# clean-reject behavior of the three unknown-extension decode sites without
+# affecting the default library used by every other test.
+libasn1cskeletons_strict_la_CFLAGS = $(TESTSUITE_CFLAGS) -DASN_REJECT_UNKNOWN_EXTENSIONS
+libasn1cskeletons_strict_la_SOURCES = $(libasn1cskeletons_la_SOURCES)
 
 libasn1cskeletons_la_CFLAGS = $(TESTSUITE_CFLAGS)
 libasn1cskeletons_la_SOURCES =                  \
@@ -39,6 +48,7 @@ libasn1cskeletons_la_SOURCES =                  \
     IA5String.c IA5String.h                     \
     INTEGER.c INTEGER.h                         \
     INTEGER_oer.c                               \
+    asn_constraint_value.c asn_constraint_value.h \
     ISO646String.c ISO646String.h               \
     NULL.c NULL.h                               \
     NativeEnumerated.c NativeEnumerated.h       \
@@ -106,6 +116,9 @@ libasn1cskeletons_la_SOURCES =                  \
     jer_encoder.c jer_encoder.h                 \
     xer_support.c xer_support.h                 \
     jer_support.c jer_support.h                 \
+    cbor_decoder.c cbor_decoder.h               \
+    cbor_encoder.c cbor_encoder.h               \
+    cbor_support.c cbor_support.h               \
     ANY_aper.c                                  \
     ANY_ber.c                                   \
     ANY_uper.c                                  \
@@ -151,6 +164,7 @@ libasn1cskeletons_la_SOURCES =                  \
     NULL_xer.c                                  \
     NULL_jer.c                                  \
     NativeEnumerated_aper.c                     \
+    NativeEnumerated_ber.c                      \
     NativeEnumerated_uper.c                     \
     NativeEnumerated_xer.c                      \
     NativeEnumerated_jer.c                      \
@@ -182,6 +196,8 @@ libasn1cskeletons_la_SOURCES =                  \
     OCTET_STRING_jer.c                          \
     OPEN_TYPE_aper.c                            \
     OPEN_TYPE_ber.c                             \
+    OPEN_TYPE_cbor.c                            \
+    OPEN_TYPE_print.c                           \
     OPEN_TYPE_uper.c                            \
     OPEN_TYPE_xer.c                             \
     OPEN_TYPE_jer.c                             \
@@ -236,9 +252,26 @@ libasn1cskeletons_la_SOURCES =                  \
     constr_SET_OF_jer.c                         \
     constr_SET_ber.c                            \
     constr_SET_print.c                          \
+    constr_SET_uper.c                           \
     constr_SET_rfill.c                          \
     constr_SET_xer.c                            \
-    constr_SET_jer.c
+    constr_SET_jer.c                            \
+    asn_codecs_prim_cbor.c                      \
+    BIT_STRING_cbor.c                           \
+    BOOLEAN_cbor.c                              \
+    ENUMERATED_cbor.c                           \
+    INTEGER_cbor.c                              \
+    NULL_cbor.c                                 \
+    NativeEnumerated_cbor.c                     \
+    NativeInteger_cbor.c                        \
+    NativeReal_cbor.c                           \
+    OCTET_STRING_cbor.c                         \
+    REAL_cbor.c                                 \
+    constr_CHOICE_cbor.c                        \
+    constr_SEQUENCE_OF_cbor.c                   \
+    constr_SEQUENCE_cbor.c                      \
+    constr_SET_OF_cbor.c                        \
+    constr_SET_cbor.c
 
 check_PROGRAMS =                    \
     check-converter_example         \
@@ -263,4 +296,3 @@ check_converter_c89_32_example_CFLAGS = $(CFLAGS_M32) -DNO_ASN_PDU
 check_converter_c89_32_example_SOURCES = converter-example.c
 check_converter_c89_32_example_LDADD = libasn1cskeletons_c89_32.la
 endif
-

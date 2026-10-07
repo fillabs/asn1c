@@ -34,6 +34,30 @@ NativeReal_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
     return rval;
 }
 
+asn_dec_rval_t
+NativeReal_decode_xer_decimal(const asn_codec_ctx_t *opt_codec_ctx,
+                              const asn_TYPE_descriptor_t *td, void **sptr,
+                              const char *opt_mname, const void *buf_ptr,
+                              size_t size) {
+    asn_dec_rval_t rval;
+    REAL_t st = { 0, 0 };
+    REAL_t *stp = &st;
+
+    rval = REAL_decode_xer_decimal(opt_codec_ctx, td, (void **)&stp,
+                                   opt_mname, buf_ptr, size);
+    if(rval.code == RC_OK) {
+        double d;
+        if(asn_REAL2double(&st, &d) || NativeReal__set(td, sptr, d) < 0) {
+            rval.code = RC_FAIL;
+            rval.consumed = 0;
+        }
+    } else {
+        rval.consumed = 0;
+    }
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_REAL, &st);
+    return rval;
+}
+
 asn_enc_rval_t
 NativeReal_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
                       int ilevel, enum xer_encoder_flags_e flags,
@@ -47,4 +71,20 @@ NativeReal_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
     if(er.encoded < 0) ASN__ENCODE_FAILED;
 
     ASN__ENCODED_OK(er);
+}
+
+asn_enc_rval_t
+NativeReal_encode_xer_decimal(const asn_TYPE_descriptor_t *td,
+                              const void *sptr, int ilevel,
+                              enum xer_encoder_flags_e flags,
+                              asn_app_consume_bytes_f *cb, void *app_key) {
+    double d = NativeReal__get_double(td, sptr);
+    REAL_t st = { 0, 0 };
+    asn_enc_rval_t er;
+
+    if(asn_double2REAL(&st, d))
+        ASN__ENCODE_FAILED;
+    er = REAL_encode_xer_decimal(td, &st, ilevel, flags, cb, app_key);
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_REAL, &st);
+    return er;
 }

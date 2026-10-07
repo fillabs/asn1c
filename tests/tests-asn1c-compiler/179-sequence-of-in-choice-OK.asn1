@@ -1,0 +1,58 @@
+
+-- OK: SEQUENCE OF with inline SEQUENCE inside CHOICE
+
+-- This test case verifies that SEQUENCE OF with an inline anonymous SEQUENCE
+-- as its member type, when nested inside a CHOICE at embed level >= 2,
+-- generates proper forward type definitions to avoid undefined type references
+-- in A_SEQUENCE_OF() macros.
+-- 
+-- This addresses the issue reported for WCDMA RRC compilation where types like
+-- TFCS_ReconfAdd__ctfcSize__ctfc2Bit__Member were referenced but never defined.
+
+-- iso.org.dod.internet.private.enterprise (1.3.6.1.4.1)
+-- .spelio.software.asn1c.test (9363.1.5.1)
+-- .179
+
+ModuleTestSequenceOfInChoice
+	{ iso org(3) dod(6) internet(1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 179 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+	-- Test case 1: SEQUENCE OF inside CHOICE with inline SEQUENCE members
+	TestMessage ::= SEQUENCE {
+		content CHOICE {
+			type2Bit  SEQUENCE (SIZE(1..32)) OF
+				SEQUENCE {
+					value      INTEGER (0..3),
+					optional   INTEGER OPTIONAL
+				},
+			type4Bit  SEQUENCE (SIZE(1..32)) OF
+				SEQUENCE {
+					value      INTEGER (0..15),
+					optional   INTEGER OPTIONAL
+				}
+		}
+	}
+
+	-- Test case 2: Deeper nesting with SEQUENCE OF inside CHOICE OF SEQUENCE
+	DeepNesting ::= SEQUENCE {
+		nested CHOICE {
+			branch1 SEQUENCE {
+				items SEQUENCE (SIZE(1..10)) OF
+					SEQUENCE {
+						id         INTEGER,
+						data       OCTET STRING
+					}
+			},
+			branch2 SEQUENCE {
+				items SEQUENCE (SIZE(1..10)) OF
+					SEQUENCE {
+						id         INTEGER,
+						name       UTF8String
+					}
+			}
+		}
+	}
+
+END

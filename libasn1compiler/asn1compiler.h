@@ -3,6 +3,38 @@
 
 #include <asn1parser.h>
 
+/*
+ * Policy for selecting the native C storage type of constrained ASN.1
+ * INTEGER values.  Controlled by the -finteger-native-type=<mode> option.
+ */
+typedef enum asn_integer_native_type_e {
+	AINT_NATIVE_AUTO = 0,	/* Preserve traditional long/INTEGER_t policy */
+	AINT_NATIVE_INT32,	/* Permit int32_t storage */
+	AINT_NATIVE_UINT32,	/* Permit uint32_t storage */
+	AINT_NATIVE_INT64,	/* Permit int64_t storage */
+	AINT_NATIVE_UINT64	/* Permit uint64_t storage */
+} asn_integer_native_type_e;
+
+/*
+ * Global selection of the integer native storage policy.
+ * Defaults to AINT_NATIVE_AUTO.  Set from the command line in asn1c.c
+ * before asn1_compile() is invoked, and consulted by the code generator.
+ */
+extern asn_integer_native_type_e asn1c_integer_native_type;
+
+/*
+ * Target C "long" model for generated native INTEGER storage.  AUTO keeps the
+ * historical portable assumption that generated code must fit a 32-bit long;
+ * explicit 32/64 modes are for reproducible cross-generation.
+ */
+typedef enum asn_target_long_size_e {
+	ASN_TARGET_LONG_AUTO = 0,
+	ASN_TARGET_LONG_32 = 32,
+	ASN_TARGET_LONG_64 = 64
+} asn_target_long_size_e;
+
+extern asn_target_long_size_e asn1c_target_long_size;
+
 enum asn1c_flags {
 	A1C_NOFLAGS,
 	/*
@@ -128,13 +160,28 @@ enum asn1c_flags {
 	 * Generate JSON Encoding Rules support code
 	 */
 	A1C_GEN_JER                     = 0x100000000,
+	/*
+	 * -fgen-only-pdu-deps
+	 * Generate code only for PDU dependencies
+	 */
+	A1C_GEN_ONLY_PDU_DEPS           = 0x200000000,
+	/*
+	 * -flist-deps
+	 * List PDU dependencies without generating code
+	 */
+	A1C_LIST_DEPS                   = 0x400000000,
+	/*
+	 * -gen-CBOR / -no-gen-CBOR
+	 * Generate CBOR (Concise Binary Object Representation) support code
+	 */
+	A1C_GEN_CBOR                    = 0x800000000,
 };
 
 /*
  * Compile the ASN.1 specification.
  */
 int asn1_compile(asn1p_t *asn, const char *datadir, const char *destdir, enum asn1c_flags,
-	int argc, int optc, char **argv);
+	int argc, int optc, char **argv, int complex_threshold);
 
 void asn1c_debug_type_naming(asn1p_t *asn, enum asn1c_flags,
                              char **asn_type_names);

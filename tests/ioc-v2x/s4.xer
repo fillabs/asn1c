@@ -1,0 +1,7 @@
+<EndApplicationMessage>
+  <endApplication-Message-id>1.0.15784.1.0.1</endApplication-Message-id>
+  <endApplication-Message-msg>
+    <CommTxPDU><index>1</index><payload>SGVsbG8sIFYxWCBUcmFuc21pdCAx</payload></CommTxPDU>
+    <CommTxPDU><index>2</index><payload>VGhpcyBpcyB0aGUgc2Vjb25kIFRYIFBEVQ==</payload></CommTxPDU>
+  </endApplication-Message-msg>
+</EndApplicationMessage>

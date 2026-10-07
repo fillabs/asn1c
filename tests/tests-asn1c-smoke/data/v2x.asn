@@ -1,0 +1,28 @@
+V2X DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+CommTxPDU ::= SEQUENCE {
+  index   INTEGER (1..2147483647),
+  payload OCTET STRING
+}
+
+CommRxPDU ::= SEQUENCE {
+  psid    INTEGER (0..270549119),
+  payload OCTET STRING
+}
+
+V2X-MESSAGE ::= CLASS {
+  &id OBJECT IDENTIFIER,
+  &MessageBody
+}
+
+Message V2X-MESSAGE ::= {
+  {&id {1 0 15784 1 0 1}, &MessageBody SEQUENCE OF CommTxPDU} |
+  {&id {1 0 15784 1 0 2}, &MessageBody SET OF CommRxPDU}
+}
+
+EndApplicationMessage ::= SEQUENCE {
+  endApplication-Message-id  V2X-MESSAGE.&id ({Message}),
+  endApplication-Message-msg V2X-MESSAGE.&MessageBody ({Message}{@endApplication-Message-id})
+}
+
+END

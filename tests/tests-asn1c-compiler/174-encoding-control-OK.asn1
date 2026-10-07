@@ -1,0 +1,15 @@
+
+-- Test ENCODING-CONTROL recognition
+-- This test verifies that ENCODING-CONTROL sections are accepted by the parser
+-- without generating warnings or errors.
+
+TestEncodingControl DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+TestMessage ::= SEQUENCE {
+    data  OCTET STRING
+}
+
+ENCODING-CONTROL XER
+END
+
+END

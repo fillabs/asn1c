@@ -28,6 +28,7 @@ enum tnfmt {
 	TNF_RSAFE	= 0x60,	/* Recursion-safe C type format */
 };
 const char *asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format);
+const char *asn1c_disambiguate_generated_filename(const char *name);
 
 /*
  * Check whether the specified INTEGER or ENUMERATED type can be represented
@@ -46,11 +47,40 @@ enum asn1c_fitslong_e {
 };
 enum asn1c_fitslong_e asn1c_type_fits_long(arg_t *arg, asn1p_expr_t *expr);
 
+/*
+ * Generated C storage selection for a (possibly constrained) ASN.1 INTEGER.
+ * Answers only the storage-type question; constraint bounds are represented
+ * separately (see asn_cval_t).  The decision honors the -finteger-native-type
+ * policy (asn1c_integer_native_type) and the type's PER-visible range.
+ */
+typedef enum asn1c_integer_storage_kind_e {
+	AISK_INTEGER_T = 0,	/* arbitrary precision INTEGER_t */
+	AISK_LONG,		/* signed long (traditional native; auto mode) */
+	AISK_ULONG,		/* unsigned long (traditional native; auto mode) */
+	AISK_INT32,		/* int32_t  (explicit fixed-width modes) */
+	AISK_UINT32,		/* uint32_t (explicit fixed-width modes) */
+	AISK_INT64,		/* int64_t  (explicit fixed-width modes) */
+	AISK_UINT64		/* uint64_t (explicit fixed-width modes) */
+} asn1c_integer_storage_kind_e;
+
+asn1c_integer_storage_kind_e
+asn1c_select_integer_storage(arg_t *arg, asn1p_expr_t *expr);
+
 enum asn1c_fitsfloat_e {
     RL_NOTFIT,
     RL_FITS_FLOAT32,
     RL_FITS_DOUBLE64
 };
 enum asn1c_fitsfloat_e asn1c_REAL_fits(arg_t *arg, asn1p_expr_t *expr);
+
+/*
+ * Find the parent parameterized type for a specialization.
+ * When a parameterized type is instantiated with parameters, a "fork"
+ * (specialization) is created. This specialization has spec_index >= 0.
+ * This function searches the module for the parent parameterized type
+ * that contains the given specialization.
+ * Returns NULL if not found.
+ */
+asn1p_expr_t *asn1c_find_parent_parameterized_type(asn1p_t *asn, asn1p_expr_t *spec);
 
 #endif	/* ASN1_COMPILER_MISC_H */

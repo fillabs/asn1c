@@ -124,3 +124,44 @@ ENUMERATED_decode_jer(const asn_codec_ctx_t *opt_codec_ctx,
         sptr, sizeof(INTEGER_t),
         buf_ptr, size, ENUMERATED__jer_body_decode);
 }
+
+asn_enc_rval_t
+ENUMERATED_encode_jer(const asn_TYPE_descriptor_t *td,
+                      const asn_jer_constraints_t *constraints,
+                      const void *sptr, int ilevel, enum jer_encoder_flags_e flags,
+                      asn_app_consume_bytes_f *cb, void *app_key) {
+    const asn_INTEGER_specifics_t *specs =
+        (const asn_INTEGER_specifics_t *)td->specifics;
+    const INTEGER_t *st = (const INTEGER_t *)sptr;
+    asn_enc_rval_t er = {0,0,0};
+    intmax_t value;
+    const asn_INTEGER_enum_map_t *el;
+
+    (void)ilevel;
+    (void)flags;
+    (void)constraints;
+
+    if(!st || !st->buf) ASN__ENCODE_FAILED;
+
+    /* Convert INTEGER to native value */
+    if(asn_INTEGER2imax(st, &value)) {
+        /* Value is too large to fit in intmax_t */
+        ASN__ENCODE_FAILED;
+    }
+
+    /* Look up enum name for this value */
+    el = INTEGER_map_value2enum(specs, value);
+    if(el) {
+        /* Encode as string: "enumName" */
+        er.encoded =
+            asn__format_to_callback(cb, app_key, "\"%s\"", el->enum_name);
+        if(er.encoded < 0) ASN__ENCODE_FAILED;
+        ASN__ENCODED_OK(er);
+    } else {
+        /* Unknown enum value - this should not happen with valid data */
+        ASN_DEBUG(
+            "ASN.1 forbids dealing with "
+            "unknown value of ENUMERATED type");
+        ASN__ENCODE_FAILED;
+    }
+}

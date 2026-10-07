@@ -40,6 +40,7 @@ der_type_encoder_f BOOLEAN_encode_der;
 #if !defined(ASN_DISABLE_XER_SUPPORT)
 xer_type_decoder_f BOOLEAN_decode_xer;
 xer_type_encoder_f BOOLEAN_encode_xer;
+xer_type_encoder_f BOOLEAN_encode_xer_text;
 #endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
 
 #if !defined(ASN_DISABLE_JER_SUPPORT)
@@ -51,6 +52,10 @@ jer_type_encoder_f BOOLEAN_encode_jer;
 oer_type_decoder_f BOOLEAN_decode_oer;
 oer_type_encoder_f BOOLEAN_encode_oer;
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+cbor_type_decoder_f BOOLEAN_decode_cbor;
+cbor_type_encoder_f BOOLEAN_encode_cbor;
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 
 #if !defined(ASN_DISABLE_UPER_SUPPORT)
 per_type_decoder_f BOOLEAN_decode_uper;

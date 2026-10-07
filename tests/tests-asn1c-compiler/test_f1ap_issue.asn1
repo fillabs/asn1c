@@ -1,0 +1,22 @@
+TestOctetConstraint DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+PROTOCOL-EXTENSION ::= CLASS {
+    &id                 INTEGER UNIQUE,
+    &Extension
+}
+WITH SYNTAX {
+    ID              &id
+    EXTENSION       &Extension
+}
+
+TestMessage ::= SEQUENCE {
+    extensionID     PROTOCOL-EXTENSION.&id({TestExtensions}),
+    extensionValue  PROTOCOL-EXTENSION.&Extension({TestExtensions}{@extensionID})
+}
+
+TestExtensions PROTOCOL-EXTENSION ::= {
+    { ID 1 EXTENSION OCTET STRING (SIZE(3)) },
+    ...
+}
+
+END

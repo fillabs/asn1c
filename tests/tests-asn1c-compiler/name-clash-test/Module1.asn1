@@ -1,0 +1,17 @@
+Module1 DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+DL-CCCH-MessageType ::= CHOICE {
+    c1                  CHOICE {
+        rrcSetup            RRCSetup,
+        messageClassExtension   SEQUENCE {}
+    }
+}
+
+RRCSetup ::= SEQUENCE {
+    criticalExtensions CHOICE {
+        rrcSetup            SEQUENCE {},
+        criticalExtensionsFuture    SEQUENCE {}
+    }
+}
+
+END

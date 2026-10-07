@@ -30,6 +30,7 @@ BEGIN
 		ns-ir	NumericString (FROM("1"|"9")) OPTIONAL,
 		ut-c	UTF8String (SIZE(6))		OPTIONAL,
 		ut-ce	UTF8String (SIZE(6,...))	OPTIONAL,
+		ut-ce2	UTF8String (SIZE(1..150,...))	OPTIONAL,
 		ut-ir	UTF8String (FROM("A"|"Z"))	OPTIONAL,
 		bm	BMPString			OPTIONAL,
 		bm-c	BMPString (FROM("A".."Z"))	OPTIONAL,

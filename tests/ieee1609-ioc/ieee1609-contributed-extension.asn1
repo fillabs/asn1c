@@ -1,0 +1,66 @@
+-- Reduced IEEE 1609.2 schema for testing IOC with SEQUENCE OF
+-- Tests that IOC constraints can reference parent fields in SEQUENCE OF
+
+Ieee1609Test DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+HashedId8 ::= OCTET STRING (SIZE(8))
+
+-- Information Object Class for extension types
+EXT-TYPE ::= CLASS {
+  &extId      ExtId,
+  &ExtContent
+} WITH SYNTAX {&ExtContent IDENTIFIED BY &extId}
+
+ExtId ::= INTEGER(0..255)
+
+-- Information Object Class for contributed extensions
+IEEE1609DOT2-HEADERINFO-CONTRIBUTED-EXTENSION ::= CLASS {
+  &id   HeaderInfoContributorId UNIQUE,
+  &Extn
+} WITH SYNTAX {&Extn IDENTIFIED BY &id}
+
+HeaderInfoContributorId ::= INTEGER (0..255)
+
+-- Test case: SEQUENCE OF with IOC constraint referencing parent field
+-- This tests the fix for: SEQUENCE OF member with {@.contributorId} constraint
+ContributedExtensionBlock ::= SEQUENCE {
+  contributorId IEEE1609DOT2-HEADERINFO-CONTRIBUTED-EXTENSION.&id({
+    Ieee1609Dot2HeaderInfoContributedExtensions
+  }),
+  extns         SEQUENCE (SIZE(1..MAX)) OF
+    IEEE1609DOT2-HEADERINFO-CONTRIBUTED-EXTENSION.&Extn({
+    Ieee1609Dot2HeaderInfoContributedExtensions
+  }{@.contributorId})
+}
+
+-- Object set with single entry
+Ieee1609Dot2HeaderInfoContributedExtensions
+  IEEE1609DOT2-HEADERINFO-CONTRIBUTED-EXTENSION ::= {
+  {Ieee1609ContributedHeaderInfoExtension IDENTIFIED BY 
+        ieee1609HeaderInfoContributorId},
+  ...
+}
+
+ieee1609HeaderInfoContributorId HeaderInfoContributorId ::= 1
+
+-- Extension type using parameterized type
+Ieee1609ContributedHeaderInfoExtension ::=
+  IeeeExtension{{Ieee1609HeaderInfoExtensions}}
+
+IeeeExtension {EXT-TYPE : ExtensionTypes} ::= SEQUENCE {
+  id      EXT-TYPE.&extId({ExtensionTypes}),
+  content EXT-TYPE.&ExtContent({ExtensionTypes}{@.id})
+}
+
+-- Extension ID
+Ieee1609HeaderInfoExtensionId ::= ExtId
+
+p2pcd8ByteLearningRequestId Ieee1609HeaderInfoExtensionId ::= 1
+
+-- Object set
+Ieee1609HeaderInfoExtensions EXT-TYPE ::= {
+  {HashedId8 IDENTIFIED BY p2pcd8ByteLearningRequestId},
+  ...
+}
+
+END

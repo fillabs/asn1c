@@ -5,6 +5,7 @@
  */
 #include <asn_internal.h>
 #include <constr_SEQUENCE.h>
+#include <constr_CHOICE.h>
 #include <OPEN_TYPE.h>
 
 /*
@@ -150,6 +151,12 @@ SEQUENCE_decode_ber(const asn_codec_ctx_t *opt_codec_ctx,
      * Restore parsing context.
      */
     ctx = (asn_struct_ctx_t *)((char *)st + specs->ctx_offset);
+
+	/*
+     * Check recursion depth to prevent stack overflow from circular references,
+     * using ctx->step 
+	 */
+    ASN__DECODER_RECURSION_DEPTH_CHECK(opt_codec_ctx);
 
     /*
      * Start to parse where left previously
@@ -297,6 +304,14 @@ SEQUENCE_decode_ber(const asn_codec_ctx_t *opt_codec_ctx,
                     edx = n;
                     ctx->step = 1 + 2 * edx;  /* Remember! */
                     goto microphase2;
+                } else if(elements[n].flags & ATF_OPEN_TYPE) {
+                    /*
+                     * This is the OPEN TYPE, which may bear
+                     * any tag whatsoever.
+                     */
+                    edx = n;
+                    ctx->step = 1 + 2 * edx;  /* Remember! */
+                    goto microphase2;
                 } else if(elements[n].tag == (ber_tlv_tag_t)-1) {
                     use_bsearch = 1;
                     break;
@@ -408,11 +423,11 @@ SEQUENCE_decode_ber(const asn_codec_ctx_t *opt_codec_ctx,
             if(elements[edx].flags & ATF_OPEN_TYPE) {
                 rval = OPEN_TYPE_ber_get(opt_codec_ctx, td, st, &elements[edx], ptr, LEFT);
             } else {
-                rval = elements[edx].type->op->ber_decoder(opt_codec_ctx,
-                                                           elements[edx].type,
-                                                           memb_ptr2, ptr, LEFT,
-                                                           elements[edx].tag_mode);
+	            rval = elements[edx].type->op->ber_decoder(opt_codec_ctx, elements[edx].type,
+	                                                       memb_ptr2, ptr, LEFT,
+	                                                       elements[edx].tag_mode);
             }
+            
             ASN_DEBUG("In %s SEQUENCE decoded %" ASN_PRI_SIZE " %s of %d "
                       "in %d bytes rval.code %d, size=%d",
                       td->name, edx, elements[edx].type->name,
@@ -521,6 +536,9 @@ SEQUENCE_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
     ASN_DEBUG("%s %s as SEQUENCE",
               cb?"Encoding":"Estimating", td->name);
 
+    /* Check encoding recursion depth to prevent stack overflow */
+    ASN__ENCODER_RECURSION_DEPTH_INC();
+
     /*
      * Gather the length of the underlying members sequence.
      */
@@ -550,9 +568,16 @@ SEQUENCE_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
         if(elm->default_value_cmp && elm->default_value_cmp(*memb_ptr2) == 0)
             continue;
 
-        erval = elm->type->op->der_encoder(elm->type, *memb_ptr2,
-                                           elm->tag_mode, elm->tag,
-                                           0, 0);
+        if(elm->flags & ATF_OPEN_TYPE) {
+            erval = OPEN_TYPE_ber_put(td, sptr, elm,
+                                      elm->tag_mode, elm->tag,
+                                      0, 0); /* NULL callback for size estimation */
+        } else {
+	        erval = elm->type->op->der_encoder(elm->type, *memb_ptr2,
+	                                           elm->tag_mode, elm->tag,
+	                                           0, 0);  /* NULL callback for size estimation */
+        }
+
         if(erval.encoded == -1)
             return erval;
         computed_size += erval.encoded;
@@ -565,11 +590,16 @@ SEQUENCE_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
      */
     ret = der_write_tags(td, computed_size, tag_mode, 1, tag, cb, app_key);
     ASN_DEBUG("Wrote tags: %ld (+%ld)", (long)ret, (long)computed_size);
-    if(ret == -1)
+    if(ret == -1) {
+        ASN__ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
+    }
     erval.encoded = computed_size + ret;
 
-    if(!cb) ASN__ENCODED_OK(erval);
+    if(!cb) {
+        ASN__ENCODER_RECURSION_DEPTH_DEC();
+        ASN__ENCODED_OK(erval);
+    }
 
     /*
      * Encode all members.
@@ -593,20 +623,41 @@ SEQUENCE_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
         if(elm->default_value_cmp && elm->default_value_cmp(*memb_ptr2) == 0)
             continue;
 
-        tmperval = elm->type->op->der_encoder(elm->type, *memb_ptr2,
-                                              elm->tag_mode, elm->tag, cb, app_key);
-        if(tmperval.encoded == -1)
+        if(elm->flags & ATF_OPEN_TYPE) {
+            tmperval = OPEN_TYPE_ber_put(td, sptr, elm,
+                                         elm->tag_mode, elm->tag, cb, app_key);
+        } else {
+            tmperval = elm->type->op->der_encoder(elm->type, *memb_ptr2,
+                                                  elm->tag_mode, elm->tag, cb, app_key);
+        }
+
+       
+        if(tmperval.encoded == -1) {
+            ASN__ENCODER_RECURSION_DEPTH_DEC();
             return tmperval;
+        }
+
+        if(computed_size < (size_t)tmperval.encoded) {
+	        /* This should never happen if estimation and encoding are consistent */
+	        ASN_DEBUG("Size mismatch: computed_size=%zu < tmperval.encoded=%zd for element %s",
+	                  computed_size, tmperval.encoded, elm->name);
+	        ASN__ENCODER_RECURSION_DEPTH_DEC();
+	        ASN__ENCODE_FAILED;
+        }
+        
         computed_size -= tmperval.encoded;
         ASN_DEBUG("Member %" ASN_PRI_SIZE " %s of SEQUENCE %s encoded in %ld bytes",
                   edx, elm->name, td->name, (long)tmperval.encoded);
     }
 
-    if(computed_size != 0)
+    if(computed_size != 0) {
         /*
          * Encoded size is not equal to the computed size.
          */
+        ASN__ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
+    }
 
+    ASN__ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODED_OK(erval);
 }

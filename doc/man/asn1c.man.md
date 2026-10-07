@@ -1,6 +1,10 @@
-% asn1c(1) ASN.1 Compiler
-% Lev Walkin <vlm@lionet.info>
-% 2017-09-01
+---
+title: "asn1c(1) ASN.1 Compiler"
+author:
+  - "Lev Walkin <vlm@lionet.info>"
+  - "Mouse <5923577+mouse07410@users.noreply.github.com>"
+date: "2026-10-07"
+---
 
 # NAME
 
@@ -9,8 +13,8 @@ asn1c -- the ASN.1 Compiler
 # SYNOPSIS
 
 asn1c [**-E** [**-F**] | **-P** | **-R**] \
-      [**-S***dir*] [**-X**] \
-      [**-W***debug-*...] [**-f***option*] [**-gen-***option*] 
+      [**-S** *dir*] [**-D** *dir*] [**-X**] \
+      [**-W***debug-*...] [**-f***option*] [**-gen-***option*]
       [**-pdu**={**all**|**auto**|*Type*}] \
       [**-print-***option*] \
       *input-filenames*...
@@ -18,15 +22,15 @@ asn1c [**-E** [**-F**] | **-P** | **-R**] \
 # DESCRIPTION
 
 asn1c compiles ASN.1 specifications into a set of
-target language (C/C++) encoders and decoders for BER, DER, PER, XER, OER
-and other encoding rules.
+target language (C/C++) encoders and decoders for BER, DER, PER, XER, OER,
+JER, CBOR and other encoding rules.
 
 # OPTIONS
 
 ## Stage Selection Options
 
 -E
-:   Run the parsing stage only. Print the reconstructed ASN.1 text.
+:   Run the ASN.1 parsing stage only. Print the reconstructed ASN.1 tree (text).
 
 -F
 :   Used together with **-E**,
@@ -44,6 +48,9 @@ and other encoding rules.
 
 -S *directory*
 :   Use the specified directory with ASN.1 skeleton files.
+
+-D *directory*
+:   Destination directory for generated files (default current dir)
 
 -X
 :   Generate an XML DTD schema for the specified ASN.1 files.
@@ -87,7 +94,8 @@ and other encoding rules.
     to prevent circular references.
 
 -fincludes-quoted
-:   Refer to header files in `#include`s using **"**double**"** instead of **\<**angle**>** quotes.
+:   Refer to header files in `#include`s using **"**double**"** instead of
+    **\<**angle**>** quotes.
 
 -fknown-extern-type=*name*
 :   Pretend the specified type is known.
@@ -105,6 +113,40 @@ and other encoding rules.
 :   Do not generate courtesy #include lines for non-critical type dependencies.
     Helps prevent namespace collisions.
 
+-fprefer-import-source
+:   Resolve only names that an IMPORTS group lists (`xp_members`).
+    In both modes, a name listed in any IMPORTS group resolves to the module
+    that its group names (X.680 13.19).
+    Without this option, a name that no IMPORTS group lists is also searched
+    for in the body of each FROM module (whole-module fallback), which X.680
+    does not allow.
+    Enable this option to disable that fallback.
+
+-fprefix=*prefix*
+: Add the specified prefix to all generated type names and filenames.
+ This helps avoid naming conflicts in several scenarios:
+
+* **System header conflicts**: On case-insensitive filesystems (macOS HFS+, Windows),
+   ASN.1 types like "Time" would generate `Time.h`, which can conflict with
+   system header `<time.h>`. asn1c now automatically disambiguates these generated
+   filenames (for example, `Time.h` becomes `asn1c_time.h` when no explicit prefix
+   is set). Likewise, types whose names match a runtime skeleton file
+   case-insensitively (e.g. "Null" vs `NULL.h`, "Integer" vs `INTEGER.h`)
+   are generated as `asn1c_Null.h`, `asn1c_Integer.h`, etc.
+   Using `-fprefix=ASN1_` still generates `ASN1_Time.h` when you need a
+   project-specific naming convention.
+
+* **Multiple ASN.1 modules**: When generating code for multiple ASN.1 syntaxes
+   that have type name clashes, a prefix prevents symbol collisions.
+
+* **Integration with existing code**: Prefixes help avoid conflicts with
+   existing types in your codebase.
+
+ **Important**: use this flag when you want a consistent custom namespace for all
+ generated symbols and filenames, especially when integrating multiple schemas.
+
+ Example: `asn1c -fprefix=PKIX_ rfc3280.asn1`
+
 -funnamed-unions
 :   Enable unnamed unions in the definitions of target language's structures.
 
@@ -112,7 +154,35 @@ and other encoding rules.
 :   Use the unbounded size data types (`INTEGER_t`, `ENUMERATED_t`, `REAL_t`)
     by default, instead of using the native machine's data types (long, double).
 
+-flong-size=*bits*
+:   Select the target C `long` model used by the default native INTEGER
+    storage policy.  *bits* is one of `32` or `64`; the default `auto`
+    behavior preserves the historical portable 32-bit assumption.  Use this
+    option when generating code on one platform for a target with a different
+    `long` size.
+
+-finteger-native-type=*mode*
+:   Select the fixed-width native C storage policy for constrained ASN.1
+    INTEGER types.  *mode* is one of `auto`, `int32`, `uint32`, `int64`, or
+    `uint64`; the default is `auto`.  `auto` preserves the traditional storage
+    decision: `long` or `unsigned long` for ranges that fit the target `long`
+    model, and `INTEGER_t` otherwise.  `int32`/`int64` permit signed fixed-width
+    storage for ranges that fit signed 32-bit or 64-bit values; `uint32`/
+    `uint64` permit unsigned fixed-width storage only when the compiler can
+    prove a non-negative bounded range that fits unsigned 32-bit or 64-bit
+    values.  Values that do not fit the selected native policy are generated
+    as `INTEGER_t`.  Unsigned
+    upper bounds such as `18446744073709551615` are preserved without signed
+    wraparound, and bounds beyond 64 bits are stored as static
+    arbitrary-precision constraint values.
+
 ## Codecs Generation Options
+
+-fgen-only-pdu-deps
+:   Generate code only for types that are dependencies of -pdu types
+
+-flist-deps
+: List PDU dependencies (requires -pdu option, no code generated)
 
 -no-gen-BER
 :   Do not generate the Basic Encoding Rules (BER, X.690) support code
@@ -122,6 +192,11 @@ and other encoding rules.
 
 -no-gen-OER
 :   Do not generate the Octet Encoding Rules (OER, X.696) support code
+
+-no-gen-CBOR
+:   Do not generate the Concise Binary Object Representation (CBOR, RFC 8949)
+    support code.
+    By default, CBOR encoder and decoder support code is generated.
 
 -no-gen-UPER
 :   Do not generate the Unaligned Packed Encoding Rules (PER, X.691) support code
@@ -138,6 +213,9 @@ and other encoding rules.
 -no-gen-example
 :   Do not generate the ASN.1 format converter example
 
+-gen-autotools
+: Generate example top-level configure.ac and Makefile.am
+
 -pdu={all|auto|*Type*}
 :   Create a PDU table for specified types, or discover Protocol Data Units
     automatically. In case of **-pdu=all**,
@@ -150,6 +228,9 @@ and other encoding rules.
 
 ## Output Options
 
+-print-class-matrix
+: Print out the collected object class matrix (debug)
+
 -print-constraints
 :   When **-EF** options are also specified,
     this option forces the compiler to explain its internal understanding
@@ -160,48 +241,138 @@ and other encoding rules.
 
 # TRANSFER SYNTAXES
 
-The ASN.1 family of standards define a number of ways to encode data,
-including byte-oriented (e.g., BER), bit-oriented (e.g., PER),
-and textual (e.g., XER). Some encoding variants (e.g., DER) are just stricter
-variants of the more general encodings (e.g., BER).
+The ASN.1 family of standards defines a number of ways to encode data,
+including byte-oriented (e.g., BER and CBOR), bit-oriented (e.g., PER),
+and textual (e.g., XER and JER). Some encoding variants (e.g., DER) are
+stricter variants of more general encodings (e.g., BER).
 
 The interoperability table below specifies which API functions can be used
-to exchange data in a compatible manner. If you need to _produce_ data
+to exchange data in a compatible manner. If you need to *produce* data
 conforming to the standard specified in the column 1,
 use the API function in the column 2.
-If you need to _process_ data conforming to the standard(s) specified in the
+If you need to *process* data conforming to the standard(s) specified in the
 column 3, use the API function specified in column 4.
 See the `asn1c-usage.pdf` for details.
 
--------------------------------------------------------------
-Encoding       API function       Understood by API function
--------------- ------------------ ------------- -------------
-BER            der_encode()       BER           ber_decode()
+| Encoding | API function | Understood by | API function |
+| -------------- | -------------------- | -------------- | -------------- |
+| BER | `der_encode()` | BER | `ber_decode()` |
+| DER | `der_encode()` | DER, BER | `ber_decode()` |
+| CER | *not supported* | CER, BER | `ber_decode()` |
+| BASIC-OER | `oer_encode()` | *-OER | `oer_decode()` |
+| CANONICAL-OER | `oer_encode()` | *-OER | `oer_decode()` |
+| BASIC-UPER | `uper_encode()` | *-UPER | `uper_decode()` |
+| CANONICAL-UPER | `uper_encode()` | *-UPER | `uper_decode()` |
+| BASIC-APER | `aper_encode()` | *-APER | `aper_decode()` |
+| CANONICAL-APER | `aper_encode()` | *-APER | `aper_decode()` |
+| BASIC-XER | `xer_encode()` | *-XER | `xer_decode()` |
+| CANONICAL-XER | `xer_encode()` | *-XER | `xer_decode()` |
+| JER | `jer_encode()` | JER | `jer_decode()` |
+| JER-MINIFIED | `jer_encode()` | JER | `jer_decode()` |
+| CBOR | `cbor_encode()` | CBOR | `cbor_decode()` |
 
-DER            der_encode()       DER, BER      ber_decode()
+*) Asterisk means both BASIC and CANONICAL variants. Pass `XER_F_BASIC` or
+`XER_F_CANONICAL` to `xer_encode()` for the corresponding XER variant. Use
+`JER_F_MINIFIED` with `jer_encode()` for whitespace-free output; `jer_decode()`
+accepts either JER form.
 
-CER            _not supported_    CER, BER      ber_decode()
+# XER AND JER ENCODING INSTRUCTIONS
 
-BASIC-OER      oer_encode()       *-OER         oer_decode()
+asn1c supports a selected set of schema-level encoding instructions for XER
+and JER. Instructions may be written as bracketed type prefixes or in
+`ENCODING-CONTROL` sections.
 
-CANONICAL-OER  oer_encode()       *-OER         oer_decode()
+```asn1
+Flag ::= [TEXT] BOOLEAN
+Mode ::= [XER:TEXT] ENUMERATED { idle(0), busy(1) }
+Blob ::= [JER:BASE64] OCTET STRING
 
-BASIC-UPER     uper_encode()      *-UPER        uper_decode()
+ENCODING-CONTROL XER
+    GLOBAL-DEFAULTS MODIFIED-ENCODINGS
+    DECIMAL Ratio
+    TEXT Count.one AS "uno"
+END
 
-CANONICAL-UPER uper_encode()      *-UPER        uper_decode()
+ENCODING-CONTROL JER
+    BASE64 Blob
+    TEXT Mode.busy AS "occupied"
+    NAME Packet.payload AS "payload64"
+END
+```
 
-*-APER         _not supported_    *-APER        _not supported_
+Supported XER instructions:
 
-BASIC-XER      xer_encode(...)    *-XER         xer_decode()
+* `BASE64` for `OCTET STRING`; bare `[BASE64]` remains XER for compatibility.
+* legacy `Type OCTET STRING ::= hexadecimal`, `base64`, and `utf8` forms.
+* `TEXT` for `BOOLEAN`, `ENUMERATED`, named-number `INTEGER`, and named-bit
+  `BIT STRING`.
+* `DECIMAL` for `REAL`, only when `GLOBAL-DEFAULTS MODIFIED-ENCODINGS` is
+  present in the XER control section.
+* `GLOBAL-DEFAULTS MODIFIED-ENCODINGS`.
 
-CANONICAL-XER  xer_encode         *-XER         xer_decode()
-               (XER_F_CANONICAL)
--------------------------------------------------------------
+Supported JER instructions:
 
-*) Asterisk means both BASIC and CANONICAL variants.
+* `BASE64` for `OCTET STRING`; use `[JER:BASE64]` for type prefixes.
+* `TEXT Type.value AS "json-string"` for named values of `ENUMERATED`.
+* `NAME Type.member AS "json-key"` for members of `SEQUENCE`, `SET`, and
+  `CHOICE`.
 
+The compiler rejects incompatible targets, unknown targets, missing `AS`
+values where required, XER `DECIMAL` without
+`GLOBAL-DEFAULTS MODIFIED-ENCODINGS`, and duplicate JER wire names within the
+same constructed type. JER `NAME` affects JSON keys only; it does not rename
+generated C fields or XER XML tags.
+
+# CBOR TAGS
+
+CBOR (RFC 8949) supports *tags* (major type 6) as optional semantic
+annotations on any data item.  A tag consists of a tag number followed
+by the tagged value.  Common tag numbers are registered by IANA at:
+<https://www.iana.org/assignments/cbor-tags/>
+
+**Encoding:** Call `cbor_encode_tag(tag_number, cb, app_key)` immediately
+before encoding the value to prepend a tag header.  Symbolic constants
+for well-known tags (e.g., `CBOR_TAG_DATETIME_STRING`, `CBOR_TAG_URI`,
+`CBOR_TAG_SELF_DESCRIBED`) are defined in `cbor_support.h`.
+
+**Decoding:** All asn1c CBOR decoders are *tag-transparent*: any number
+of leading tag headers are silently consumed before the underlying value
+is decoded.  No application changes are required to accept tagged data.
+The helper `cbor_skip_tags(buf, size)` (in `cbor_support.h`) returns the
+number of bytes occupied by leading tag headers, or -1 on error.
+When decoder code must skip a complete raw CBOR value, it should call
+`cbor_skip_item_with_ctx(opt_codec_ctx, buf, size)` so recursive arrays,
+maps, and tags are bounded by the decoder stack limit.  The compatibility
+wrapper `cbor_skip_item(buf, size)` remains available for callers without
+decoder context.
+
+**Bignum tags:** Tags 2 and 3 are used internally by the INTEGER encoder
+and decoder for values that exceed the 64-bit signed range, per RFC 8949.
+
+# EXIT STATUS
+
+**0**
+:   Success. No FATAL diagnostic was reported.
+
+**64** (`EX_USAGE`)
+:   Command line usage error, or no input files.
+
+**65** (`EX_DATAERR`)
+:   ASN.1 input error: a syntax error, or a FATAL diagnostic during
+    semantic processing (**-F** and code generation).
+
+**66** (`EX_NOINPUT`)
+:   An input file cannot be opened.
+
+**70** (`EX_SOFTWARE`)
+:   Printing or code generation failed, or reported a FATAL diagnostic.
+    Files can be written, but the output is incomplete.
+
+**72** (`EX_OSFILE`)
+:   Skeleton files were not found and **-Werror** is in effect.
+
+A FATAL diagnostic always gives a non-zero exit status.
 
 # SEE ALSO
 
 `unber`(1), `enber`(1).
-

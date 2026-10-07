@@ -1,21 +1,6 @@
 
 /*** <<< INCLUDES [PDU] >>> ***/
 
-#include "Sequence.h"
-#include "Set.h"
-#include "SequenceOf.h"
-#include "ExtensibleSet.h"
-#include "ExtensibleSequence.h"
-#include "ExtensibleSequence2.h"
-#include "SetOfNULL.h"
-#include "SetOfREAL.h"
-#include "SetOfEnums.h"
-#include "NamedSetOfNULL.h"
-#include "NamedSetOfREAL.h"
-#include "NamedSetOfEnums.h"
-#include "SeqOfZuka.h"
-#include "SetOfChoice.h"
-#include "NamedSetOfChoice.h"
 #include <constr_CHOICE.h>
 
 /*** <<< DEPS [PDU] >>> ***/
@@ -41,26 +26,44 @@ typedef enum PDU_PR {
 	
 } PDU_PR;
 
+/*** <<< FWD-DECLS [PDU] >>> ***/
+
+struct Sequence;
+struct Set;
+struct SequenceOf;
+struct ExtensibleSet;
+struct ExtensibleSequence;
+struct ExtensibleSequence2;
+struct SetOfNULL;
+struct SetOfREAL;
+struct SetOfEnums;
+struct NamedSetOfNULL;
+struct NamedSetOfREAL;
+struct NamedSetOfEnums;
+struct SeqOfZuka;
+struct SetOfChoice;
+struct NamedSetOfChoice;
+
 /*** <<< TYPE-DECLS [PDU] >>> ***/
 
 typedef struct PDU {
 	PDU_PR present;
 	union PDU_u {
-		Sequence_t	 sequence;
-		Set_t	 set;
-		SequenceOf_t	 sequenceOf;
-		ExtensibleSet_t	 extensibleSet;
-		ExtensibleSequence_t	 extensibleSequence;
-		ExtensibleSequence2_t	 extensibleSequence2;
-		SetOfNULL_t	 setOfNULL;
-		SetOfREAL_t	 setOfREAL;
-		SetOfEnums_t	 setOfEnums;
-		NamedSetOfNULL_t	 namedSetOfNULL;
-		NamedSetOfREAL_t	 namedSetOfREAL;
-		NamedSetOfEnums_t	 namedSetOfEnums;
-		SeqOfZuka_t	 seqOfZuka;
-		SetOfChoice_t	 setOfChoice;
-		NamedSetOfChoice_t	 namedSetOfChoice;
+		struct Sequence	*sequence;
+		struct Set	*set;
+		struct SequenceOf	*sequenceOf;
+		struct ExtensibleSet	*extensibleSet;
+		struct ExtensibleSequence	*extensibleSequence;
+		struct ExtensibleSequence2	*extensibleSequence2;
+		struct SetOfNULL	*setOfNULL;
+		struct SetOfREAL	*setOfREAL;
+		struct SetOfEnums	*setOfEnums;
+		struct NamedSetOfNULL	*namedSetOfNULL;
+		struct NamedSetOfREAL	*namedSetOfREAL;
+		struct NamedSetOfEnums	*namedSetOfEnums;
+		struct SeqOfZuka	*seqOfZuka;
+		struct SetOfChoice	*setOfChoice;
+		struct NamedSetOfChoice	*namedSetOfChoice;
 		/*
 		 * This type is extensible,
 		 * possible extensions are below.
@@ -75,10 +78,28 @@ typedef struct PDU {
 
 extern asn_TYPE_descriptor_t asn_DEF_PDU;
 
+/*** <<< POST-INCLUDE [PDU] >>> ***/
+
+#include "Sequence.h"
+#include "Set.h"
+#include "SequenceOf.h"
+#include "ExtensibleSet.h"
+#include "ExtensibleSequence.h"
+#include "ExtensibleSequence2.h"
+#include "SetOfNULL.h"
+#include "SetOfREAL.h"
+#include "SetOfEnums.h"
+#include "NamedSetOfNULL.h"
+#include "NamedSetOfREAL.h"
+#include "NamedSetOfEnums.h"
+#include "SeqOfZuka.h"
+#include "SetOfChoice.h"
+#include "NamedSetOfChoice.h"
+
 /*** <<< STAT-DEFS [PDU] >>> ***/
 
 static asn_TYPE_member_t asn_MBR_PDU_1[] = {
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.sequence),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.sequence),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_Sequence,
@@ -91,14 +112,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "sequence"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.set),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.set),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_Set,
@@ -111,14 +132,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "set"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.sequenceOf),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.sequenceOf),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (2 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_SequenceOf,
@@ -131,14 +152,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "sequenceOf"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.extensibleSet),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.extensibleSet),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (3 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_ExtensibleSet,
@@ -151,14 +172,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "extensibleSet"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.extensibleSequence),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.extensibleSequence),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (4 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_ExtensibleSequence,
@@ -171,14 +192,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "extensibleSequence"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.extensibleSequence2),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.extensibleSequence2),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (5 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_ExtensibleSequence2,
@@ -191,14 +212,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "extensibleSequence2"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.setOfNULL),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.setOfNULL),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (6 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_SetOfNULL,
@@ -211,14 +232,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "setOfNULL"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.setOfREAL),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.setOfREAL),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (7 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_SetOfREAL,
@@ -231,14 +252,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "setOfREAL"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.setOfEnums),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.setOfEnums),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (8 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_SetOfEnums,
@@ -251,14 +272,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "setOfEnums"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.namedSetOfNULL),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.namedSetOfNULL),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (9 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NamedSetOfNULL,
@@ -271,14 +292,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "namedSetOfNULL"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.namedSetOfREAL),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.namedSetOfREAL),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (10 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NamedSetOfREAL,
@@ -291,14 +312,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "namedSetOfREAL"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.namedSetOfEnums),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.namedSetOfEnums),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (11 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NamedSetOfEnums,
@@ -311,14 +332,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "namedSetOfEnums"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.seqOfZuka),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.seqOfZuka),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (12 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_SeqOfZuka,
@@ -331,14 +352,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "seqOfZuka"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.setOfChoice),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.setOfChoice),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (13 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_SetOfChoice,
@@ -351,14 +372,14 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
 		0, 0, /* No default value */
 		.name = "setOfChoice"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct PDU, choice.namedSetOfChoice),
+	{ ATF_POINTER, 0, offsetof(struct PDU, choice.namedSetOfChoice),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (14 << 2)),
 		.tag_mode = -1,	/* IMPLICIT tag at current level */
 		.type = &asn_DEF_NamedSetOfChoice,
@@ -371,7 +392,7 @@ static asn_TYPE_member_t asn_MBR_PDU_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -422,7 +443,7 @@ asn_TYPE_descriptor_t asn_DEF_PDU = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		CHOICE_constraint
 	},
@@ -481,7 +502,7 @@ asn_TYPE_member_t asn_MBR_Sequence_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -501,7 +522,7 @@ asn_TYPE_member_t asn_MBR_Sequence_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -521,7 +542,7 @@ asn_TYPE_member_t asn_MBR_Sequence_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -541,7 +562,7 @@ asn_TYPE_member_t asn_MBR_Sequence_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -584,7 +605,7 @@ asn_TYPE_descriptor_t asn_DEF_Sequence = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},
@@ -647,7 +668,7 @@ asn_TYPE_member_t asn_MBR_Set_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -667,7 +688,7 @@ asn_TYPE_member_t asn_MBR_Set_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -714,7 +735,7 @@ asn_TYPE_descriptor_t asn_DEF_Set = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_constraint
 	},
@@ -772,6 +793,17 @@ extern asn_TYPE_member_t asn_MBR_ExtensibleSet_1[2];
 
 /*** <<< CODE [ExtensibleSet] >>> ***/
 
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_enum __attribute__((weak, alias("asn_DEF_enum_4")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_enum_4;
+static asn_TYPE_descriptor_t asn_DEF_enum;
+__attribute__((constructor)) static void asn_DEF_enum_4_alias_init(void) {
+	asn_DEF_enum = asn_DEF_enum_4;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
 /*
  * This type is implemented using ENUMERATED,
  * so here we adjust the DEF accordingly.
@@ -819,7 +851,7 @@ asn_TYPE_descriptor_t asn_DEF_enum_4 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
@@ -841,7 +873,7 @@ asn_TYPE_member_t asn_MBR_ExtensibleSet_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -861,7 +893,7 @@ asn_TYPE_member_t asn_MBR_ExtensibleSet_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -908,7 +940,7 @@ asn_TYPE_descriptor_t asn_DEF_ExtensibleSet = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_constraint
 	},
@@ -962,7 +994,7 @@ asn_TYPE_member_t asn_MBR_ExtensibleSequence_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -982,7 +1014,7 @@ asn_TYPE_member_t asn_MBR_ExtensibleSequence_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1002,7 +1034,7 @@ asn_TYPE_member_t asn_MBR_ExtensibleSequence_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1044,7 +1076,7 @@ asn_TYPE_descriptor_t asn_DEF_ExtensibleSequence = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},
@@ -1096,7 +1128,7 @@ asn_TYPE_member_t asn_MBR_ExtensibleSequence2_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1116,7 +1148,7 @@ asn_TYPE_member_t asn_MBR_ExtensibleSequence2_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1157,7 +1189,7 @@ asn_TYPE_descriptor_t asn_DEF_ExtensibleSequence2 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},
@@ -1204,7 +1236,7 @@ asn_TYPE_member_t asn_MBR_SetOfNULL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1238,7 +1270,7 @@ asn_TYPE_descriptor_t asn_DEF_SetOfNULL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -1285,7 +1317,7 @@ asn_TYPE_member_t asn_MBR_SetOfREAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1319,7 +1351,7 @@ asn_TYPE_descriptor_t asn_DEF_SetOfREAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -1337,10 +1369,10 @@ asn_TYPE_descriptor_t asn_DEF_SetOfREAL = {
 
 /*** <<< DEPS [SetOfEnums] >>> ***/
 
-typedef enum Member {
-	Member_one	= 0,
-	Member_oneMore	= 1
-} e_Member;
+typedef enum SetOfEnums_Member {
+	SetOfEnums_Member_one	= 0,
+	SetOfEnums_Member_oneMore	= 1
+} e_SetOfEnums_Member;
 
 /*** <<< TYPE-DECLS [SetOfEnums] >>> ***/
 
@@ -1353,7 +1385,7 @@ typedef struct SetOfEnums {
 
 /*** <<< FUNC-DECLS [SetOfEnums] >>> ***/
 
-/* extern asn_TYPE_descriptor_t asn_DEF_Member_2;	// (Use -fall-defs-global to expose) */
+/* extern asn_TYPE_descriptor_t asn_DEF_SetOfEnums_Member_2;	// (Use -fall-defs-global to expose) */
 extern asn_TYPE_descriptor_t asn_DEF_SetOfEnums;
 extern asn_SET_OF_specifics_t asn_SPC_SetOfEnums_specs_1;
 extern asn_TYPE_member_t asn_MBR_SetOfEnums_1[1];
@@ -1367,37 +1399,37 @@ extern asn_TYPE_member_t asn_MBR_SetOfEnums_1[1];
 
 /*** <<< STAT-DEFS [SetOfEnums] >>> ***/
 
-static const asn_INTEGER_enum_map_t asn_MAP_Member_value2enum_2[] = {
+static const asn_INTEGER_enum_map_t asn_MAP_SetOfEnums_Member_value2enum_2[] = {
 	{ 0,	3,	"one" },
 	{ 1,	7,	"oneMore" }
 };
-static const unsigned int asn_MAP_Member_enum2value_2[] = {
+static const unsigned int asn_MAP_SetOfEnums_Member_enum2value_2[] = {
 	0,	/* one(0) */
 	1	/* oneMore(1) */
 };
-static const asn_INTEGER_specifics_t asn_SPC_Member_specs_2 = {
-	asn_MAP_Member_value2enum_2,	/* "tag" => N; sorted by tag */
-	asn_MAP_Member_enum2value_2,	/* N => "tag"; sorted by N */
+static const asn_INTEGER_specifics_t asn_SPC_SetOfEnums_Member_specs_2 = {
+	asn_MAP_SetOfEnums_Member_value2enum_2,	/* "tag" => N; sorted by tag */
+	asn_MAP_SetOfEnums_Member_enum2value_2,	/* N => "tag"; sorted by N */
 	2,	/* Number of elements in the maps */
 	0,	/* Enumeration is not extensible */
 	1,	/* Strict enumeration */
 	0,	/* Native long size */
 	0
 };
-static const ber_tlv_tag_t asn_DEF_Member_tags_2[] = {
+static const ber_tlv_tag_t asn_DEF_SetOfEnums_Member_tags_2[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (10 << 2))
 };
 static /* Use -fall-defs-global to expose */
-asn_TYPE_descriptor_t asn_DEF_Member_2 = {
+asn_TYPE_descriptor_t asn_DEF_SetOfEnums_Member_2 = {
 	"ENUMERATED",
 	"ENUMERATED",
 	&asn_OP_ENUMERATED,
-	asn_DEF_Member_tags_2,
-	sizeof(asn_DEF_Member_tags_2)
-		/sizeof(asn_DEF_Member_tags_2[0]), /* 1 */
-	asn_DEF_Member_tags_2,	/* Same as above */
-	sizeof(asn_DEF_Member_tags_2)
-		/sizeof(asn_DEF_Member_tags_2[0]), /* 1 */
+	asn_DEF_SetOfEnums_Member_tags_2,
+	sizeof(asn_DEF_SetOfEnums_Member_tags_2)
+		/sizeof(asn_DEF_SetOfEnums_Member_tags_2[0]), /* 1 */
+	asn_DEF_SetOfEnums_Member_tags_2,	/* Same as above */
+	sizeof(asn_DEF_SetOfEnums_Member_tags_2)
+		/sizeof(asn_DEF_SetOfEnums_Member_tags_2[0]), /* 1 */
 	{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
 		0,
@@ -1406,19 +1438,19 @@ asn_TYPE_descriptor_t asn_DEF_Member_2 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
 	0, 0,	/* Defined elsewhere */
-	&asn_SPC_Member_specs_2	/* Additional specs */
+	&asn_SPC_SetOfEnums_Member_specs_2	/* Additional specs */
 };
 
 asn_TYPE_member_t asn_MBR_SetOfEnums_1[] = {
 	{ ATF_POINTER, 0, 0,
 		.tag = (ASN_TAG_CLASS_UNIVERSAL | (10 << 2)),
 		.tag_mode = 0,
-		.type = &asn_DEF_Member_2,
+		.type = &asn_DEF_SetOfEnums_Member_2,
 		.type_selector = 0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
@@ -1428,7 +1460,7 @@ asn_TYPE_member_t asn_MBR_SetOfEnums_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1462,7 +1494,7 @@ asn_TYPE_descriptor_t asn_DEF_SetOfEnums = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -1509,7 +1541,7 @@ asn_TYPE_member_t asn_MBR_NamedSetOfNULL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1543,7 +1575,7 @@ asn_TYPE_descriptor_t asn_DEF_NamedSetOfNULL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -1590,7 +1622,7 @@ asn_TYPE_member_t asn_MBR_NamedSetOfREAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1624,7 +1656,7 @@ asn_TYPE_descriptor_t asn_DEF_NamedSetOfREAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -1711,7 +1743,7 @@ asn_TYPE_descriptor_t asn_DEF_name_2 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ENUMERATED_constraint
 	},
@@ -1733,7 +1765,7 @@ asn_TYPE_member_t asn_MBR_NamedSetOfEnums_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1767,7 +1799,7 @@ asn_TYPE_descriptor_t asn_DEF_NamedSetOfEnums = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -1814,7 +1846,7 @@ asn_TYPE_member_t asn_MBR_SequenceOf_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1848,7 +1880,7 @@ asn_TYPE_descriptor_t asn_DEF_SequenceOf = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_OF_constraint
 	},
@@ -1895,7 +1927,7 @@ asn_TYPE_member_t asn_MBR_SeqOfZuka_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1929,7 +1961,7 @@ asn_TYPE_descriptor_t asn_DEF_SeqOfZuka = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_OF_constraint
 	},
@@ -1983,7 +2015,7 @@ asn_TYPE_member_t asn_MBR_SetOfChoice_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2017,7 +2049,7 @@ asn_TYPE_descriptor_t asn_DEF_SetOfChoice = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -2071,7 +2103,7 @@ asn_TYPE_member_t asn_MBR_NamedSetOfChoice_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2105,7 +2137,7 @@ asn_TYPE_descriptor_t asn_DEF_NamedSetOfChoice = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SET_OF_constraint
 	},
@@ -2164,7 +2196,7 @@ asn_TYPE_member_t asn_MBR_SimpleChoice_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2184,7 +2216,7 @@ asn_TYPE_member_t asn_MBR_SimpleChoice_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2222,7 +2254,7 @@ asn_TYPE_descriptor_t asn_DEF_SimpleChoice = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		CHOICE_constraint
 	},
@@ -2278,9 +2310,23 @@ typedef struct EXTERNAL {
 
 extern asn_TYPE_descriptor_t asn_DEF_EXTERNAL;
 
+/*** <<< CODE [EXTERNAL] >>> ***/
+
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_encoding __attribute__((weak, alias("asn_DEF_encoding_5")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_encoding_5;
+static asn_TYPE_descriptor_t asn_DEF_encoding;
+__attribute__((constructor)) static void asn_DEF_encoding_5_alias_init(void) {
+	asn_DEF_encoding = asn_DEF_encoding_5;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
+
 /*** <<< STAT-DEFS [EXTERNAL] >>> ***/
 
-static asn_TYPE_member_t asn_MBR_encoding_5[] = {
+static asn_TYPE_member_t asn_MBR_EXTERNAL__encoding_5[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.single_ASN1_type),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		.tag_mode = +1,	/* EXPLICIT tag at current level */
@@ -2294,7 +2340,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2314,7 +2360,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2334,7 +2380,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2374,11 +2420,11 @@ asn_TYPE_descriptor_t asn_DEF_encoding_5 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		CHOICE_constraint
 	},
-	asn_MBR_encoding_5,
+	asn_MBR_EXTERNAL__encoding_5,
 	3,	/* Elements count */
 	&asn_SPC_encoding_specs_5	/* Additional specs */
 };
@@ -2397,7 +2443,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2417,7 +2463,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2437,7 +2483,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2457,7 +2503,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -2503,7 +2549,7 @@ asn_TYPE_descriptor_t asn_DEF_EXTERNAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},

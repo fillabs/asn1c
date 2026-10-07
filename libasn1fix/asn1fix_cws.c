@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "asn1fix_internal.h"
 #include "asn1fix_cws.h"
 
@@ -134,8 +135,8 @@ _asn1f_parse_object_cb(const uint8_t *buf, size_t size, void *keyp) {
     /*
      * Add a copy of the object to the Information Object Set.
      */
-	row = asn1p_ioc_row_new(eclass);
-	assert(row);
+    row = asn1p_ioc_row_new(eclass);
+    assert(row);
     ret = _asn1f_parse_class_object_data(arg, eclass, row, eclass->with_syntax,
                                          buf, buf + size, 0, 0, key->sequence);
     assert(ret == 0);
@@ -393,13 +394,33 @@ _asn1f_parse_class_object_data_defined_syntx(arg_t *arg, asn1p_expr_t *eclass,
 
 			next_literal = asn1f_next_literal_chunk(syntax, chunk, buf);
 			if(!next_literal) {
-				p += (bend - p);
-			} else {
+				/* No more chunks - this field consumes remaining input */
+				p = bend;
+			} else if(next_literal->type == WC_LITERAL) {
+				/* Next chunk is a literal keyword, search for it */
 				p = (uint8_t *)strstr((const char *)buf, (const char *)next_literal->content.token);
 				if(!p) {
 					if (!optional_mode)
 						FATAL("Next literal \"%s\" not found !", next_literal->content.token);
 
+					if(newpos) *newpos = buf_old;
+					return -1;
+				}
+			} else {
+				/* Next chunk is a field (WC_FIELD), not a literal.
+				 * Two consecutive fields with no literal separator.
+				 * Per ASN.1 X.681, when fields are consecutive in WITH SYNTAX,
+				 * whitespace is used as the delimiter between values. */
+				p = buf;
+				while(p < bend && !isspace(*p)) {
+					p++;
+				}
+				/* If we didn't advance, the field value is empty */
+				if(p == buf) {
+					if (!optional_mode)
+						FATAL("Expected value for field %s (next field: %s)",
+							chunk->content.token,
+							next_literal->content.token);
 					if(newpos) *newpos = buf_old;
 					return -1;
 				}

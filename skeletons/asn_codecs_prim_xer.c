@@ -147,7 +147,7 @@ xer_decode_primitive(const asn_codec_ctx_t *opt_codec_ctx,
     switch(rc.code) {
     case RC_OK:
         if(!s_arg.decoded_something) {
-            char ch;
+            char ch = '\0';
             ASN_DEBUG("Primitive body is not recognized, "
                       "supplying empty one");
             /*

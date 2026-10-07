@@ -1,0 +1,21 @@
+
+-- Test that encoding controls are correctly applied to types
+-- Verifies that parsed encoding directives are matched to type definitions
+-- and that encoding control settings are properly copied to the types
+
+TestEncodingControlApplied DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+Message ::= SEQUENCE {
+    binaryData BinaryData,
+    textData   TextData
+}
+
+BinaryData ::= OCTET STRING
+TextData   ::= OCTET STRING
+
+ENCODING-CONTROL XER
+    BinaryData OCTET STRING ::= hexadecimal
+    TextData   OCTET STRING ::= utf8
+END
+
+END

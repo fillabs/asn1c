@@ -12,15 +12,15 @@ Tree ::= SEQUENCE {
 
 Stuff ::= SET {
     trees	 [1] IMPLICIT SET OF Forest OPTIONAL,
-    anything	 [2] IMPLICIT SET OF SEQUENCE {
-            cup-of-coffee	 BIT STRING,        
-            ...
-        } OPTIONAL,
     ...,
     other	 CHOICE {
         a	 [0] IMPLICIT INTEGER,    
         b	 [3] IMPLICIT INTEGER
-    }
+    },
+    anything	 [2] IMPLICIT SET OF SEQUENCE {
+            cup-of-coffee	 BIT STRING,        
+            ...
+        } OPTIONAL
 }
 
 END

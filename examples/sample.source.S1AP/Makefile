@@ -10,7 +10,7 @@ S1AP-PDU.c: ../sample.makefile.regen ../s1ap-14.4.0.asn1
 	make
 
 regen-makefile:
-	ASN_CMDOPTS="-pdu=all -fcompound-names -findirect-choice -fno-include-deps -flink-skeletons -gen-PER" \
+	ASN_CMDOPTS="-pdu=all -fcompound-names -findirect-choice -fno-include-deps -flink-skeletons" \
 	ASN_MODULES="../s1ap-14.4.0.asn1" \
 	ASN_PDU=S1AP-PDU \
 	ASN_PROGRAM=s1ap-dump \

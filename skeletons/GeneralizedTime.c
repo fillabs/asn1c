@@ -12,13 +12,6 @@
 #endif
 #include <asn_internal.h>
 #include <GeneralizedTime.h>
-
-#ifdef	__CYGWIN__
-#include "/usr/include/time.h"
-#else
-#include <time.h>
-#endif	/* __CYGWIN__ */
-
 #include <errno.h>
 
 #if	defined(_WIN32)
@@ -177,6 +170,7 @@ static asn_per_constraints_t asn_DEF_GeneralizedTime_per_constraints = {
 };
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 asn_TYPE_operation_t asn_OP_GeneralizedTime = {
+    .kind = ASN_KIND_PRIMITIVE,
     OCTET_STRING_free,
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     GeneralizedTime_print,
@@ -232,7 +226,14 @@ asn_TYPE_operation_t asn_OP_GeneralizedTime = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-    0  /* Use generic outmost tag fetcher */
+    0,  /* Use generic outmost tag fetcher */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    OCTET_STRING_decode_cbor_utf8,
+    OCTET_STRING_encode_cbor_utf8,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 asn_TYPE_descriptor_t asn_DEF_GeneralizedTime = {
     "GeneralizedTime",

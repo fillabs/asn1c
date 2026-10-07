@@ -31,6 +31,22 @@ asn_struct_print_f NativeInteger_print;
 asn_struct_compare_f NativeInteger_compare;
 asn_struct_copy_f    NativeInteger_copy;
 
+/*
+ * Width-aware access to the native integer member.  The in-memory storage
+ * width is taken from the type's asn_INTEGER_specifics_t.field_width
+ * (1, 2, 4 or 8 octets, matching int8_t..int64_t / uint8_t..uint64_t).
+ * When field_width is 0 (or there are no specifics) the width defaults to
+ * sizeof(long), preserving the historical behavior byte-for-byte.
+ */
+size_t   NativeInteger_field_width(const asn_INTEGER_specifics_t *specs);
+intmax_t  NativeInteger_load_s(const void *ptr, const asn_INTEGER_specifics_t *specs);
+uintmax_t NativeInteger_load_u(const void *ptr, const asn_INTEGER_specifics_t *specs);
+void NativeInteger_store(void *ptr, const asn_INTEGER_specifics_t *specs, uintmax_t v);
+int  NativeInteger_store_from_INTEGER(void *ptr,
+        const asn_INTEGER_specifics_t *specs, const INTEGER_t *tmp);
+int  NativeInteger_to_INTEGER(const void *ptr,
+        const asn_INTEGER_specifics_t *specs, INTEGER_t *tmp);
+
 #define NativeInteger_constraint asn_generic_no_constraint
 
 #if !defined(ASN_DISABLE_BER_SUPPORT)
@@ -40,7 +56,9 @@ der_type_encoder_f NativeInteger_encode_der;
 
 #if !defined(ASN_DISABLE_XER_SUPPORT)
 xer_type_decoder_f NativeInteger_decode_xer;
+xer_type_decoder_f NativeInteger_decode_xer_text;
 xer_type_encoder_f NativeInteger_encode_xer;
+xer_type_encoder_f NativeInteger_encode_xer_text;
 #endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
 
 #if !defined(ASN_DISABLE_JER_SUPPORT)
@@ -52,6 +70,10 @@ jer_type_encoder_f NativeInteger_encode_jer;
 oer_type_decoder_f NativeInteger_decode_oer;
 oer_type_encoder_f NativeInteger_encode_oer;
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+cbor_type_decoder_f NativeInteger_decode_cbor;
+cbor_type_encoder_f NativeInteger_encode_cbor;
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 
 #if !defined(ASN_DISABLE_UPER_SUPPORT)
 per_type_decoder_f NativeInteger_decode_uper;

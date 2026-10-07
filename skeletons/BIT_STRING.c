@@ -17,6 +17,7 @@ asn_OCTET_STRING_specifics_t asn_SPC_BIT_STRING_specs = {
     ASN_OSUBV_BIT
 };
 asn_TYPE_operation_t asn_OP_BIT_STRING = {
+    .kind = ASN_KIND_PRIMITIVE,
     OCTET_STRING_free,         /* Implemented in terms of OCTET STRING */
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     BIT_STRING_print,
@@ -33,7 +34,7 @@ asn_TYPE_operation_t asn_OP_BIT_STRING = {
     0,
 #endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
 #if !defined(ASN_DISABLE_XER_SUPPORT)
-    OCTET_STRING_decode_xer_binary,
+    BIT_STRING_decode_xer_binary_or_hex,
     BIT_STRING_encode_xer,
 #else
     0,
@@ -72,7 +73,14 @@ asn_TYPE_operation_t asn_OP_BIT_STRING = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-    0  /* Use generic outmost tag fetcher */
+    0  /* Use generic outmost tag fetcher */,
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    BIT_STRING_decode_cbor,
+    BIT_STRING_encode_cbor,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 asn_TYPE_descriptor_t asn_DEF_BIT_STRING = {
     "BIT STRING",

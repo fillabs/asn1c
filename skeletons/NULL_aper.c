@@ -27,7 +27,9 @@ NULL_decode_aper(const asn_codec_ctx_t *opt_codec_ctx,
     }
 
     /*
-     * NULL type does not have content octets.
+     * NULL type produces no encoding per X.691 §18. Any alignment required
+     * for the surrounding context (e.g. CHOICE alternative alignment) is the
+     * responsibility of the enclosing decoder, not NULL's.
      */
 
     rv.code = RC_OK;

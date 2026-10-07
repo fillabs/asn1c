@@ -101,6 +101,10 @@ BIT_STRING_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
                                   &repeat);
         if(raw_len < 0) RETURN(RC_WMORE);
         if(raw_len == 0 && st->buf) break;
+	/* Check upper bound for Constrained Length */
+        if (csiz->effective_bits >= 0 && csiz->effective_bits <= 16 && raw_len > csiz->upper_bound && !(csiz->flags & APC_EXTENSIBLE)) {
+	    ASN__DECODE_FAILED;
+        }
 
         ASN_DEBUG("Got PER length eb %ld, len %ld, %s (%s)",
             (long)csiz->effective_bits, (long)raw_len,
@@ -158,8 +162,10 @@ BIT_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
     }
     ct_extensible = csiz->flags & APC_EXTENSIBLE;
 
-    /* Figure out the size without the trailing bits */
-    st = BIT_STRING__compactify(st, &compact_bstr);
+    /* X.680 permits removing trailing zero bits only for NamedBitList
+     * types. Plain BIT STRING values preserve their exact bit length. */
+    if(specs->has_named_bits)
+        st = BIT_STRING__compactify(st, &compact_bstr);
     size_in_bits = 8 * st->size - st->bits_unused;
 
     ASN_DEBUG(
@@ -172,6 +178,15 @@ BIT_STRING_encode_uper(const asn_TYPE_descriptor_t *td,
 
     if(csiz->effective_bits >= 0) {
         if((ssize_t)size_in_bits > csiz->upper_bound) {
+            if(ct_extensible) {
+                csiz = &asn_DEF_BIT_STRING_constraint_size;
+                inext = 1;
+            } else {
+                ASN__ENCODE_FAILED;
+            }
+        } else if((ssize_t)size_in_bits < csiz->lower_bound
+                  && !specs->has_named_bits) {
+            /* Padding a plain BIT STRING would change its abstract value. */
             if(ct_extensible) {
                 csiz = &asn_DEF_BIT_STRING_constraint_size;
                 inext = 1;

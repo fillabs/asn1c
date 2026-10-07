@@ -35,6 +35,64 @@ abs_builddir="${abs_builddir:-`pwd`}"
 export abs_builddir
 MAKE="${MAKE:-make}"
 FUZZ_TIME="${FUZZ_TIME:-10}"
+FUZZ_TARGETS="${FUZZ_TARGETS:-all}"
+FUZZ_MAX_CORPUS_BYTES="${FUZZ_MAX_CORPUS_BYTES:-0}"
+
+#
+# Bound AddressSanitizer's runtime memory footprint.
+#
+# The large randomized SEQUENCE OF / SET OF bundles (e.g. RMAX=70000 and
+# unbounded SIZE(1..MAX) cases) build and round-trip very large values 100x
+# across every encoding.  Under a stacked sanitizer build on a memory-limited
+# CI runner this can exhaust host memory and trip the kernel OOM killer, which
+# shows up as spurious "Killed: 9" SIGKILLs -- sometimes on unrelated commands
+# such as mkdir or grep -- and fails otherwise-correct bundles (notably the
+# SEQUENCE-OF and SET-OF ones, which are the heaviest).
+#
+# These options only tune the AddressSanitizer runtime; they do not change what
+# the tests exercise, and they are silently ignored by non-instrumented
+# binaries (so this is a no-op when ASan is disabled, e.g. -m32 builds):
+#   quarantine_size_mb / malloc_context_size
+#       cap the delayed-free quarantine and per-allocation stack depth, the two
+#       largest sources of ASan bookkeeping memory under high allocation churn.
+#   allocator_may_return_null + max_allocation_size_mb
+#       turn a single runaway allocation into a handled NULL (the codec checks
+#       its allocations) instead of a host-wide OOM that SIGKILLs the runner.
+# Any detect_leaks setting passed in via ASAN_ENV_FLAGS is preserved.
+#
+ASAN_MEM_OPTS="quarantine_size_mb=64:malloc_context_size=5:allocator_may_return_null=1:max_allocation_size_mb=2048"
+case "${ASAN_ENV_FLAGS}" in
+    *quarantine_size_mb=*)
+        # Already applied (e.g. re-entrant invocation); leave as-is.
+        ;;
+    *ASAN_OPTIONS=*)
+        # Merge our bounds into the existing ASAN_OPTIONS value.
+        ASAN_ENV_FLAGS=`echo "${ASAN_ENV_FLAGS}" \
+            | sed -e "s#\(ASAN_OPTIONS=[^ ]*\)#\1:${ASAN_MEM_OPTS}#"`
+        ;;
+    *)
+        ASAN_ENV_FLAGS="${ASAN_ENV_FLAGS} ASAN_OPTIONS=${ASAN_MEM_OPTS}"
+        ;;
+esac
+export ASAN_ENV_FLAGS
+
+FUZZ_ASAN_ENV_FLAGS="${ASAN_ENV_FLAGS}"
+if [ "x${FUZZ_ASAN_OPTIONS:-}" != "x" ]; then
+    case "${FUZZ_ASAN_OPTIONS}" in
+        *quarantine_size_mb=*) ;;
+        *) FUZZ_ASAN_OPTIONS="${FUZZ_ASAN_OPTIONS}:${ASAN_MEM_OPTS}" ;;
+    esac
+
+    case "${FUZZ_ASAN_ENV_FLAGS}" in
+        *ASAN_OPTIONS=*)
+            FUZZ_ASAN_ENV_FLAGS=`echo "${FUZZ_ASAN_ENV_FLAGS}" \
+                | sed -e "s#ASAN_OPTIONS=[^ ]*#ASAN_OPTIONS=${FUZZ_ASAN_OPTIONS}#"`
+            ;;
+        *)
+            FUZZ_ASAN_ENV_FLAGS="${FUZZ_ASAN_ENV_FLAGS} ASAN_OPTIONS=${FUZZ_ASAN_OPTIONS}"
+            ;;
+    esac
+fi
 
 tests_succeeded=0
 tests_failed=0
@@ -210,23 +268,84 @@ compile_and_test() {
     fi
 
     # Do a LibFuzzer based testing
-    fuzz_cmd="${ASAN_ENV_FLAGS} UBSAN_OPTIONS=print_stacktrace=1"
+    fuzz_cmd="${FUZZ_ASAN_ENV_FLAGS} UBSAN_OPTIONS=print_stacktrace=1"
     fuzz_cmd="${fuzz_cmd} ./random-test-driver"
     fuzz_cmd="${fuzz_cmd} -timeout=3 -max_total_time=${FUZZ_TIME} -max_len=${rmax}"
 
+    have_fuzz_targets=0
     if grep "^fuzz:" Makefile >/dev/null ; then
-        echo "No fuzzer defined, skipping fuzzing"
+        echo "Fuzzer target already defined"
+        have_fuzz_targets=1
     else
-        fuzz_targets=`echo random-data/* | sed -e 's/random-data./fuzz-/g'`
-        {
-        echo "fuzz: $fuzz_targets"
-        echo "fuzz-%: random-data/% random-test-driver"
-        echo "	ASN1_DATA_DIR=\$< ${fuzz_cmd} \$<"
-        } >> Makefile
+        case "${FUZZ_MAX_CORPUS_BYTES}" in
+            ''|*[!0-9]*)
+                echo "FUZZ_MAX_CORPUS_BYTES must be numeric"
+                return 4
+                ;;
+        esac
+
+        selected_corpora=""
+        fuzz_data_dir="random-data"
+        if [ "${FUZZ_MAX_CORPUS_BYTES}" != "0" ]; then
+            fuzz_data_dir=".tmp.fuzz-data"
+            rm -rf "${fuzz_data_dir}"
+            mkdir -p "${fuzz_data_dir}"
+        fi
+
+        if [ "x${FUZZ_TARGETS}" = "x" ] || [ "x${FUZZ_TARGETS}" = "xall" ]; then
+            for corpus in random-data/*; do
+                test -d "$corpus" || continue
+                selected_corpora="${selected_corpora} `basename "$corpus"`"
+            done
+        else
+            selected_corpora="${FUZZ_TARGETS}"
+        fi
+
+        fuzz_targets=""
+        for corpus_name in ${selected_corpora}; do
+            test -d "random-data/${corpus_name}" || continue
+
+            if [ "${FUZZ_MAX_CORPUS_BYTES}" != "0" ]; then
+                copied=0
+                mkdir -p "${fuzz_data_dir}/${corpus_name}"
+                for seed in random-data/${corpus_name}/*; do
+                    test -f "$seed" || continue
+                    seed_size=`wc -c < "$seed" | tr -d '[:space:]'`
+                    if [ "${seed_size}" -le "${FUZZ_MAX_CORPUS_BYTES}" ]; then
+                        cp -p "$seed" "${fuzz_data_dir}/${corpus_name}/"
+                        copied=`expr ${copied} + 1`
+                    fi
+                done
+                if [ "${copied}" = "0" ]; then
+                    echo "No ${corpus_name} fuzzer corpus files under ${FUZZ_MAX_CORPUS_BYTES} bytes, skipping"
+                    continue
+                fi
+            fi
+
+            if [ -d "${fuzz_data_dir}/${corpus_name}" ]; then
+                fuzz_targets="${fuzz_targets} fuzz-${corpus_name}"
+            fi
+        done
+
+        if [ "x${fuzz_targets}" = "x" ]; then
+            echo "No requested fuzzer corpus found, skipping fuzzing"
+        else
+            echo "Fuzzer corpora:${fuzz_targets}"
+            {
+            echo "fuzz:${fuzz_targets}"
+            echo "fuzz-%: ${fuzz_data_dir}/% random-test-driver"
+            echo "	ASN1_DATA_DIR=\$< ${fuzz_cmd} \$<"
+            } >> Makefile
+            have_fuzz_targets=1
+        fi
     fi
 
     # If LIBFUZZER_CFLAGS are properly defined, do the fuzz test as well
     if echo "${LIBFUZZER_CFLAGS}" | grep -i "[a-z]" > /dev/null; then
+        if [ "${have_fuzz_targets}" != "1" ]; then
+            echo "No fuzzer corpus selected, skipping fuzzing"
+            return 0
+        fi
 
         echo "Recompiling for fuzzing..."
         rm -f random-test-driver.o
@@ -272,6 +391,17 @@ asn1c_invoke() {
     fi
 }
 
+# Purpose: Generate the per-case ASN.1 project and its randomized-test Makefile.
+# Original source: The asn1c randomized test driver.
+# Version: 2026-07-17, cache-safe per-program ASN1_TEXT compilation.
+# Parameters:
+#   $1 - ASN.1 declaration text for the generated T type.
+#   $2 - Human-readable bundle location used in generated diagnostics.
+# Returns: Zero after generating the project; non-zero when generation or setup fails.
+# Exceptions: None; filesystem and compiler failures are returned to the caller.
+# Author: asn1c maintainers.
+# History: Updated on 2026-07-17 to keep case-specific flags off shared codec objects.
+# Example: asn_compile "T ::= INTEGER (0..10)" "in integer bundle line 1".
 asn_compile() {
     asn="$1"
     where="$2"
@@ -290,15 +420,29 @@ asn_compile() {
     fi
 
     rm -f converter-example.c
-    ln -sf "../${srcdir}/random-test-driver.c" || cp "../${srcdir}/random-test-driver.c" .
+    case "${srcdir}" in
+        /*) random_driver="${srcdir}/random-test-driver.c" ;;
+        *) random_driver="../${srcdir}/random-test-driver.c" ;;
+    esac
+    if [ ! -f "${random_driver}" ]; then
+        echo "Cannot find ${random_driver}"
+        return 1
+    fi
+    ln -sf "${random_driver}" random-test-driver.c || cp "${random_driver}" .
     {
-    echo "CFLAGS+= -DASN1_TEXT='$short_asn'";
+    # Keep case-specific text out of shared codec compile commands so ccache
+    # can reuse sanitizer-instrumented skeleton objects across bundle cases.
+    echo "ASN1_TEXT = $short_asn"
     echo "ASN_PROGRAM = random-test-driver"
     echo "ASN_PROGRAM_SRCS = random-test-driver.c"
     echo
     echo "include converter-example.mk"
     echo
-    echo "all-tests-succeeded: ${abs_top_builddir}/asn1c/asn1c \$(ASN_PROGRAM_SRCS) \$(ASN_MODULE_SRCS) \$(ASN_MODULE_HDRS)"
+    echo "random-test-driver.o: random-test-driver.c"
+    printf "\t\$(CC) \$(CFLAGS) \$(DEPFLAGS) -DASN1_TEXT='\$(ASN1_TEXT)' -o \$@ -c \$<\n"
+    echo
+    echo "all-tests-succeeded: ${abs_top_builddir}/asn1c/asn1c \$(ASN_PROGRAM_SRCS) \\"
+    echo "    \$(ASN_MODULE_SRCS) \$(ASN_MODULE_HDRS)"
     echo "	@rm -f \$@"
     echo "	@echo Previous try did not go correctly. To reproduce:"
     echo "	@cat .test-reproduce"
@@ -390,7 +534,7 @@ while :; do
             continue
             ;;
         -e) encodings="${encodings} -e $2"; shift 2; continue;;
-        -j) parallelism="$1"; shift 2; continue;;
+        -j) parallelism="$2"; shift 2; continue;;
         -t)
             test_drive verify_asn_type "full" "$2" "(command line)" || exit 1 ;;
         "")

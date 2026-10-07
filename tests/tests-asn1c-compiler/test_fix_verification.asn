@@ -1,0 +1,25 @@
+TestModule DEFINITIONS ::= BEGIN
+
+-- Simple test for IDENTIFIED BY construct 
+TestClass ::= CLASS {
+    &id  OBJECT IDENTIFIER UNIQUE,
+    &Type,
+    IDENTIFIED BY &id
+}
+
+-- Test with different placement
+AnotherClass ::= CLASS {
+    &Value INTEGER,
+    &code OBJECT IDENTIFIER UNIQUE,
+    IDENTIFIED BY &code
+}
+
+-- Test with proper WITH SYNTAX as well (should still work)
+CompleteClass ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type
+} WITH SYNTAX {
+    [HAS &Type] IDENTIFIED BY &id
+}
+
+END

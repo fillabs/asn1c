@@ -110,14 +110,21 @@ int asn1c_compiled_output(arg_t *arg, const char *file, int lineno,
 	OUT_NOINDENT("#include %s\n", filename);		\
 	REDIR(saved_target);					\
 } while(0)
+/*
+ * The include of a parameterized type reference names the generic type:
+ * look it up without the actual parameters, and without diagnostics
+ * (such a lookup reports "expects specialization" by design).
+ */
 #define GEN_POS_INCLUDE_BASE(pos, expr) do {			\
 	asn1p_expr_t *rhs_pspecs = expr->rhs_pspecs;		\
+	int saved_quiet = rhs_pspecs ? asn1f_quiet_lookups(1) : -1;	\
 	expr->rhs_pspecs = (asn1p_expr_t *)0;			\
 	int saved_target = arg->target->target;			\
 	REDIR(pos);						\
 	OUT_NOINDENT("#include %s\n",				\
 		asn1c_type_name(arg, expr, TNF_INCLUDE));	\
 	expr->rhs_pspecs = rhs_pspecs;				\
+	if(saved_quiet >= 0) asn1f_quiet_lookups(saved_quiet);	\
 	REDIR(saved_target);					\
 } while(0)
 

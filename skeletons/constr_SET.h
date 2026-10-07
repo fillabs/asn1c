@@ -70,6 +70,10 @@ xer_type_encoder_f SET_encode_xer;
 jer_type_decoder_f SET_decode_jer;
 jer_type_encoder_f SEQUENCE_encode_jer; /* X.697 29. (2021) */
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+cbor_type_decoder_f SET_decode_cbor;
+cbor_type_encoder_f SET_encode_cbor;
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 
 #if !defined(ASN_DISABLE_UPER_SUPPORT)
 per_type_decoder_f SET_decode_uper;

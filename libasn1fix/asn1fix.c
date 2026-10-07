@@ -8,6 +8,7 @@ static void _default_error_logger(int _severity, const char *fmt, ...);
  * Internal check functions.
  */
 static int asn1f_fix_module__phase_1(arg_t *arg);
+static int oid_certainly_equal(const asn1p_oid_t *a, const asn1p_oid_t *b);
 static int asn1f_fix_module__phase_2(arg_t *arg);
 static int asn1f_fix_simple(arg_t *arg);	/* For INTEGER/ENUMERATED */
 static int asn1f_fix_constructed(arg_t *arg);	/* For SEQUENCE/SET/CHOICE */
@@ -74,15 +75,14 @@ asn1f_process(asn1p_t *asn, enum asn1f_flags flags,
 		}
 	}
 
-	if(flags & A1F_STRICT_MODULE_OID) {
-		arg.flags |= A1F_STRICT_MODULE_OID;
-		flags &= ~A1F_STRICT_MODULE_OID;
+	if(flags & A1F_PREFER_IMPORT_SOURCE) {
+		arg.flags |= A1F_PREFER_IMPORT_SOURCE;
+		flags &= ~A1F_PREFER_IMPORT_SOURCE;
 		if(arg.debug) {
 			arg.debug(-1,
-				"Use strict module OID in import");
+				"IMPORTS resolution: require explicit xp_members match");
 		}
 	}
-
 
 	a1f_replace_me_with_proper_interface_arg = arg;
 
@@ -120,7 +120,11 @@ asn1f_process(asn1p_t *asn, enum asn1f_flags flags,
         arg.ns = 0;
     }
 
-    memset(&a1f_replace_me_with_proper_interface_arg, 0, sizeof(arg_t));
+	a1f_replace_me_with_proper_interface_arg = (arg_t){
+		.eh = arg.eh,
+		.debug = arg.debug,
+		.flags = arg.flags,
+	};
 
 	/*
 	 * Compute a return value.
@@ -168,6 +172,47 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 		}
 	}
 
+	/*
+	 * X.680 (02/2021) 13.16 e): the module references in the IMPORTS
+	 * clause shall be different from each other and from the importing
+	 * module. The object identifiers, when present, shall also be
+	 * different from each other and from the one of the importing module.
+	 */
+	{
+		asn1p_xports_t *xp, *xp2;
+		TQ_FOR(xp, &(arg->mod->imports), xp_next) {
+			asn1p_expr_t *first = TQ_FIRST(&(xp->xp_members));
+			int line = first ? first->_lineno : 0;
+			if(strcmp(xp->fromModuleName, arg->mod->ModuleName) == 0
+			|| oid_certainly_equal(xp->identifier.oid,
+					arg->mod->module_oid)) {
+				FATAL("IMPORTS of module %s name the module itself "
+					"(%s) at line %d (X.680 13.16 e)",
+					arg->mod->ModuleName, xp->fromModuleName, line);
+				RET2RVAL(-1, rvalue);
+			}
+			for(xp2 = TQ_NEXT(xp, xp_next); xp2;
+					xp2 = TQ_NEXT(xp2, xp_next)) {
+				first = TQ_FIRST(&(xp2->xp_members));
+				line = first ? first->_lineno : 0;
+				if(strcmp(xp->fromModuleName, xp2->fromModuleName) == 0) {
+					FATAL("IMPORTS of module %s name module %s more "
+						"than once, at line %d (X.680 13.16 e)",
+						arg->mod->ModuleName, xp2->fromModuleName, line);
+					RET2RVAL(-1, rvalue);
+				} else if(oid_certainly_equal(xp->identifier.oid,
+						xp2->identifier.oid)) {
+					FATAL("IMPORTS of module %s give modules %s and %s "
+						"the same OBJECT IDENTIFIER, at line %d "
+						"(X.680 13.16 e)",
+						arg->mod->ModuleName, xp->fromModuleName,
+						xp2->fromModuleName, line);
+					RET2RVAL(-1, rvalue);
+				}
+			}
+		}
+	}
+
 	switch((arg->mod->module_flags & MSF_MASK_TAGS)) {
 	case MSF_NOFLAGS:
 	case MSF_EXPLICIT_TAGS:
@@ -204,6 +249,9 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 	 * Do various non-recursive transformations.
 	 */
 	TQ_FOR(expr, &(arg->mod->members), next) {
+		/* Skip encoding instructions */
+		if(expr->_mark & TM_ENCODING_INSTRUCTION) continue;
+		
 		arg->expr = expr;
 		ret = phase_1_1(arg, 0);
 		RET2RVAL(ret, rvalue);
@@ -213,6 +261,9 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 		assert(arg->expr == expr);
 	}
 	TQ_FOR(expr, &(arg->mod->members), next) {
+		/* Skip encoding instructions */
+		if(expr->_mark & TM_ENCODING_INSTRUCTION) continue;
+		
 		arg->expr = expr;
 		ret = phase_1_1(arg, 1);
 		RET2RVAL(ret, rvalue);
@@ -225,6 +276,8 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 	 * 5. Automatic tagging
 	 */
 	TQ_FOR(expr, &(arg->mod->members), next) {
+		/* Skip encoding instructions */
+		if(expr->_mark & TM_ENCODING_INSTRUCTION) continue;
 
 		arg->expr = expr;
 
@@ -239,6 +292,9 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 	 * 9. fix spaces in cstrings
 	 */
 	TQ_FOR(expr, &(arg->mod->members), next) {
+		/* Skip encoding instructions */
+		if(expr->_mark & TM_ENCODING_INSTRUCTION) continue;
+		
 		arg->expr = expr;
 
 		ret = asn1f_recurse_expr(arg, asn1f_fix_bit_string);
@@ -254,6 +310,9 @@ asn1f_fix_module__phase_1(arg_t *arg) {
 	 * ... Check for tags distinctness.
 	 */
 	TQ_FOR(expr, &(arg->mod->members), next) {
+		/* Skip encoding instructions */
+		if(expr->_mark & TM_ENCODING_INSTRUCTION) continue;
+		
 		arg->expr = expr;
 
 		ret = asn1f_recurse_expr(arg, asn1f_check_constr_tags_distinct);
@@ -272,6 +331,8 @@ asn1f_fix_module__phase_2(arg_t *arg) {
 	int ret;
 
 	TQ_FOR(expr, &(arg->mod->members), next) {
+		/* Skip encoding instructions */
+		if(expr->_mark & TM_ENCODING_INSTRUCTION) continue;
 
 		arg->expr = expr;
 
@@ -545,6 +606,12 @@ asn1f_check_duplicate(arg_t *arg) {
 
 			if(arg->expr->spec_index != -1)
 				continue;
+			
+			/* Skip encoding instructions - they're not real types */
+			if(arg->expr->_mark & TM_ENCODING_INSTRUCTION)
+				continue;
+			if(tmparg.expr->_mark & TM_ENCODING_INSTRUCTION)
+				continue;
 
 			if(tmparg.expr == arg->expr) break;
 
@@ -599,6 +666,35 @@ asn1f_apply_unique_index(arg_t *arg) {
 	arg->expr->_type_unique_index = ++unique_index;
 
 	return 0;
+}
+
+/*
+ * Return 1 if the two OIDs certainly denote the same object identifier,
+ * 0 if they differ or cannot be compared.
+ * Two arcs match when both have a number and the numbers are equal
+ * (NumberForm or NameAndNumberForm), or when both are in NameForm
+ * (number -1) and the names are equal. An arc in NameForm against an
+ * arc with a number is not resolved here, so such OIDs are not
+ * reported as equal. asn1p_oid_compare() is not used: it compares arc
+ * numbers only, so it takes any two NameForm arcs for equal.
+ */
+static int
+oid_certainly_equal(const asn1p_oid_t *a, const asn1p_oid_t *b) {
+	if(a == NULL || b == NULL) return 0;
+	if(a->arcs_count == 0 || a->arcs_count != b->arcs_count) return 0;
+	for(int i = 0; i < a->arcs_count; i++) {
+		const asn1p_oid_arc_t *aa = &a->arcs[i];
+		const asn1p_oid_arc_t *ba = &b->arcs[i];
+		if(aa->number >= 0 && ba->number >= 0) {
+			if(aa->number != ba->number) return 0;
+		} else if(aa->number < 0 && ba->number < 0
+		       && aa->name && ba->name) {
+			if(strcmp(aa->name, ba->name) != 0) return 0;
+		} else {
+			return 0;	/* Name against number: unresolved */
+		}
+	}
+	return 1;
 }
 
 /*

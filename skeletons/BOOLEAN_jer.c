@@ -9,21 +9,28 @@
 #include <errno.h>
 
 /*
- * Decode the chunk of JSON text encoding INTEGER.
+ * Decode the chunk of JSON text encoding BOOLEAN.
  */
 static enum jer_pbd_rval
 BOOLEAN__jer_body_decode(const asn_TYPE_descriptor_t *td, void *sptr,
                          const void *chunk_buf, size_t chunk_size) {
     BOOLEAN_t *st = (BOOLEAN_t *)sptr;
     const char *p = (const char *)chunk_buf;
+    size_t lead_wsp_size;
 
     (void)td;
-    (void)chunk_size;
 
-    if(p[0] == 't' /* 'true' */) {
+    lead_wsp_size = jer_whitespace_span(p, chunk_size);
+    p += lead_wsp_size;
+    chunk_size -= lead_wsp_size;
+
+    if(chunk_size >= 4 && memcmp(p, "true", 4) == 0
+       && jer_whitespace_span(p + 4, chunk_size - 4) == chunk_size - 4) {
         *st = 1;
         return JPBD_BODY_CONSUMED;
-    } else if (p[0] == 'f' /* 'false' */) {
+    } else if(chunk_size >= 5 && memcmp(p, "false", 5) == 0
+              && jer_whitespace_span(p + 5, chunk_size - 5)
+                     == chunk_size - 5) {
         *st = 0;
         return JPBD_BODY_CONSUMED;
     } else {

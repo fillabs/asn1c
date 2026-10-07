@@ -15,6 +15,8 @@ TESTS_ENVIRONMENT= \
 				   CXXFLAGS="${CXXFLAGS} ${DEFS}" \
 				   LDFLAGS="${LDFLAGS}" \
 				   LIBFUZZER_CFLAGS="${LIBFUZZER_CFLAGS}" \
+				   FUZZ_TIME="${FUZZ_TIME}" \
+				   FUZZ_ASAN_OPTIONS="${FUZZ_ASAN_OPTIONS}" \
 				   ASAN_ENV_FLAGS="@ASAN_ENV_FLAGS@"       \
 				   srcdir=${srcdir} \
 				   abs_top_srcdir=${abs_top_srcdir} \
@@ -26,6 +28,7 @@ TESTS += check-src/check-03.-fwide-types.c
 TESTS += check-src/check-119.-fwide-types.-gen-UPER.c
 TESTS += check-src/check-119.-gen-UPER.c
 TESTS += check-src/check-126.-gen-UPER.c
+TESTS += check-src/check-126.-gen-APER.c
 TESTS += check-src/check-127.-gen-UPER.c
 TESTS += check-src/check-131.-gen-UPER.c
 TESTS += check-src/check-132.-gen-UPER.c
@@ -63,6 +66,30 @@ TESTS += check-src/check-92.c
 TESTS += check-src/check-158.-fcompound-names.c
 TESTS += check-src/check-159.c
 TESTS += check-src/check-164.c
+TESTS += check-src/check-539.-gen-UPER.c
+TESTS += check-src/check-540.-gen-UPER.c
+TESTS += check-src/check-541.-gen-UPER.c
+TESTS += check-src/check-542.-gen-UPER.c
+TESTS += check-src/check-543.-gen-UPER.c
+TESTS += check-src/check-544.-gen-OER.c
+TESTS += check-src/check-545.-gen-UPER.c
+TESTS += check-src/check-546.-gen-UPER.c
+TESTS += check-src/check-547.c
+TESTS += check-src/check-548.-gen-UPER.c
+TESTS += check-src/check-548.-gen-APER.c
+TESTS += check-src/check-550.-gen-UPER.c
+TESTS += check-src/check-552.-gen-UPER.-gen-APER.c
+TESTS += check-src/check-561.-gen-UPER.-gen-APER.c
+TESTS += check-src/check-563.-gen-UPER.-gen-APER.c
+TESTS += check-src/check-173.-findirect-choice.-fcompound-names.-gen-UPER.-gen-APER.c
+TESTS += check-src/check-184.c
+TESTS += check-src/check-185.c
+TESTS += check-src/check-201.c
+TESTS += check-src/check-202.-gen-CBOR.c
+TESTS += check-src/check-203.c
+TESTS += check-src/check-204.c
+TESTS += check-src/check-211.c
+TESTS += check-src/check-212.-fcompound-names.c
 
 if TEST_64BIT
 TESTS += check-src/check64-134.-gen-UPER.c
@@ -70,13 +97,14 @@ TESTS += check-src/check64-136.-gen-OER.c
 endif
 
 XFAIL_TESTS =
-XFAIL_TESTS += check-src/check-158.-fcompound-names.c
 
 EXTRA_DIST =    \
     data-62     \
     data-70     \
     data-119    \
     data-126    \
+    data-202    \
+    data-203    \
     check-src/check64-134.-gen-UPER.c    \
     check-src/check64-136.-gen-OER.c
 

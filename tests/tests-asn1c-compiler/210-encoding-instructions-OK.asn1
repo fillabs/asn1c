@@ -1,0 +1,34 @@
+EncodingInstructions DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+Flag ::= [TEXT] BOOLEAN
+Mode ::= [XER:TEXT] ENUMERATED { idle(0), busy(1) }
+Count ::= [TEXT] INTEGER { one(1), two(2) }
+Bits ::= [TEXT] BIT STRING { alpha(0), beta(1) }
+Blob ::= [JER:BASE64] OCTET STRING
+Ratio ::= REAL
+
+Packet ::= SEQUENCE {
+    payload Blob,
+    state Mode,
+    count Count
+}
+
+Switch ::= CHOICE {
+    payload Blob,
+    state Mode
+}
+
+ENCODING-CONTROL XER
+    GLOBAL-DEFAULTS MODIFIED-ENCODINGS
+    DECIMAL Ratio
+    TEXT Count.one AS "uno"
+END
+
+ENCODING-CONTROL JER
+    NAME Packet.payload AS "payload64"
+    NAME Switch.payload AS "payload64"
+    TEXT Mode.busy AS "occupied"
+END
+
+END

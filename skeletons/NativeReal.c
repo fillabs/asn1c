@@ -39,6 +39,7 @@ static const ber_tlv_tag_t asn_DEF_NativeReal_tags[] = {
     (ASN_TAG_CLASS_UNIVERSAL | (9 << 2))
 };
 asn_TYPE_operation_t asn_OP_NativeReal = {
+    .kind = ASN_KIND_PRIMITIVE,
     NativeReal_free,
 #if !defined(ASN_DISABLE_PRINT_SUPPORT)
     NativeReal_print,
@@ -94,7 +95,14 @@ asn_TYPE_operation_t asn_OP_NativeReal = {
 #else
     0,
 #endif  /* !defined(ASN_DISABLE_RFILL_SUPPORT) */
-    0  /* Use generic outmost tag fetcher */
+    0  /* Use generic outmost tag fetcher */,
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+    NativeReal_decode_cbor,
+    NativeReal_encode_cbor,
+#else
+    0,
+    0,
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 };
 asn_TYPE_descriptor_t asn_DEF_NativeReal = {
     "REAL",  /* The ASN.1 type is still REAL */

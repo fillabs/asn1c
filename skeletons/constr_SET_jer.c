@@ -6,6 +6,12 @@
 #include <asn_internal.h>
 #include <constr_SET.h>
 
+#define JER_MEMBER_NAME(elm) \
+    (((elm)->encoding_constraints.jer_constraints \
+      && (elm)->encoding_constraints.jer_constraints->wire_name) \
+         ? (elm)->encoding_constraints.jer_constraints->wire_name \
+         : (elm)->name)
+
 /*
  * Return a standardized complex structure.
  */
@@ -70,6 +76,10 @@ SET_decode_jer(const asn_codec_ctx_t *opt_codec_ctx,
      * Restore parsing context.
      */
     ctx = (asn_struct_ctx_t *)((char *)st + specs->ctx_offset);
+
+    /* Check recursion depth to prevent stack overflow */
+    if(ASN__STACK_OVERFLOW_CHECK(opt_codec_ctx))
+        RETURN(RC_FAIL);
 
 
     /*
@@ -219,7 +229,7 @@ SET_decode_jer(const asn_codec_ctx_t *opt_codec_ctx,
                  */
                 for(edx = 0; edx < td->elements_count; edx++) {
                     elm = &elements[edx];
-                    scv = jer_check_sym(ptr, ch_size, elm->name);
+                    scv = jer_check_sym(ptr, ch_size, JER_MEMBER_NAME(elm));
                     switch (scv) {
                     case JCK_KEY:
                         ctx->step = edx;

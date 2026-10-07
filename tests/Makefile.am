@@ -5,7 +5,10 @@ SUBDIRS = \
     tests-skeletons         \
     tests-asn1c-smoke       \
     tests-c-compiler        \
-    tests-randomized
+    tests-randomized        \
+    ioc-v2x                 \
+    ieee1609-ioc            \
+    f1ap-regression  
 
 EXTRA_DIST = README
 

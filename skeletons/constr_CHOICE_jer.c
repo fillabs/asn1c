@@ -6,6 +6,12 @@
 #include <asn_internal.h>
 #include <constr_CHOICE.h>
 
+#define JER_MEMBER_NAME(elm) \
+    (((elm)->encoding_constraints.jer_constraints \
+      && (elm)->encoding_constraints.jer_constraints->wire_name) \
+         ? (elm)->encoding_constraints.jer_constraints->wire_name \
+         : (elm)->name)
+
 /*
  * Return a standardized complex structure.
  */
@@ -61,6 +67,10 @@ CHOICE_decode_jer(const asn_codec_ctx_t *opt_codec_ctx,
      * Restore parsing context.
      */
     ctx = (asn_struct_ctx_t *)((char *)st + specs->ctx_offset);
+
+    /* Check recursion depth to prevent stack overflow */
+    if(ASN__STACK_OVERFLOW_CHECK(opt_codec_ctx))
+        RETURN(RC_FAIL);
 
     /*
      * Phases of JER/JSON processing:
@@ -200,7 +210,7 @@ CHOICE_decode_jer(const asn_codec_ctx_t *opt_codec_ctx,
              */
             for(edx = 0; edx < td->elements_count; edx++) {
                 elm = &td->elements[edx];
-                scv = jer_check_sym(buf_ptr,ch_size,elm->name);
+                scv = jer_check_sym(buf_ptr, ch_size, JER_MEMBER_NAME(elm));
                 switch(scv) {
                 case JCK_KEY:
                     /*
@@ -278,24 +288,31 @@ CHOICE_encode_jer(const asn_TYPE_descriptor_t *td, const asn_jer_constraints_t *
     if(!sptr)
         ASN__ENCODE_FAILED;
 
+    /* Check recursion depth to prevent stack overflow */
+    JER_ENCODER_RECURSION_DEPTH_INC();
+
     /*
      * Figure out which CHOICE element is encoded.
      */
     present = _fetch_present_idx(sptr, specs->pres_offset,specs->pres_size);
 
     if(present == 0 || present > td->elements_count) {
+        JER_ENCODER_RECURSION_DEPTH_DEC();
         ASN__ENCODE_FAILED;
     } else {
         asn_enc_rval_t tmper = {0,0,0};
         asn_TYPE_member_t *elm = &td->elements[present-1];
         const void *memb_ptr = NULL;
-        const char *mname = elm->name;
+        const char *mname = JER_MEMBER_NAME(elm);
         unsigned int mlen = strlen(mname);
 
         if(elm->flags & ATF_POINTER) {
             memb_ptr =
                 *(const void *const *)((const char *)sptr + elm->memb_offset);
-            if(!memb_ptr) ASN__ENCODE_FAILED;
+            if(!memb_ptr) {
+                JER_ENCODER_RECURSION_DEPTH_DEC();
+                ASN__ENCODE_FAILED;
+            }
         } else {
             memb_ptr = (const void *)((const char *)sptr + elm->memb_offset);
         }
@@ -321,7 +338,9 @@ CHOICE_encode_jer(const asn_TYPE_descriptor_t *td, const asn_jer_constraints_t *
         ASN__CALLBACK("}", 1);
     }
 
+    JER_ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODED_OK(er);
 cb_failed:
+    JER_ENCODER_RECURSION_DEPTH_DEC();
     ASN__ENCODE_FAILED;
 }

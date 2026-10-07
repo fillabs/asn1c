@@ -1,0 +1,24 @@
+TestModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+-- Simple OPEN TYPE test similar to F1AP structure
+TestMessage ::= SEQUENCE {
+    id INTEGER (0..255),
+    value TestValue
+}
+
+TestValue ::= OPEN TYPE
+
+-- Direct type (no CHOICE wrapper) for OPEN TYPE
+DirectSequence ::= SEQUENCE {
+    field1 INTEGER,
+    field2 UTF8String
+}
+
+-- CHOICE type for OPEN TYPE
+ChoiceValue ::= CHOICE {
+    option1 INTEGER,
+    option2 UTF8String,
+    option3 DirectSequence
+}
+
+END

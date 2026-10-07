@@ -11,9 +11,9 @@ OneType ::= SEQUENCE {
         beta	 [1] IMPLICIT INTEGER,    
         ...
     },
-    one-4	 INTEGER,
     ...,
-    ignored-in-SecondType	 INTEGER
+    ignored-in-SecondType	 INTEGER,
+    one-4	 INTEGER
 }
 
 SecondType ::= SEQUENCE {
@@ -24,8 +24,7 @@ SecondType ::= SEQUENCE {
         alpha	 [0] IMPLICIT INTEGER,    
         beta	 [1] IMPLICIT INTEGER
     },
-    one-4	 [4] IMPLICIT INTEGER,
-    b	 [5] IMPLICIT UniversalString
+    b	 [4] IMPLICIT UniversalString
 }
 
 END

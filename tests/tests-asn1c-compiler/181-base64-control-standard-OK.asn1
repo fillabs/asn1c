@@ -1,0 +1,24 @@
+
+-- Test standard ENCODING-CONTROL XER section with BASE64 TargetName syntax
+-- (X.693 §21 form, as opposed to the legacy "TypeName OCTET STRING ::= base64").
+-- Also tests GLOBAL-DEFAULTS MODIFIED-ENCODINGS (accepted, no-op).
+
+TestBase64ControlStandard DEFINITIONS XER INSTRUCTIONS AUTOMATIC TAGS ::= BEGIN
+
+AuditLog    ::= OCTET STRING
+DigestValue ::= OCTET STRING
+PlainData   ::= OCTET STRING
+
+Record ::= SEQUENCE {
+    log    AuditLog,
+    digest DigestValue,
+    raw    PlainData
+}
+
+ENCODING-CONTROL XER
+    GLOBAL-DEFAULTS MODIFIED-ENCODINGS
+    BASE64 AuditLog
+    BASE64 DigestValue
+END
+
+END

@@ -1,0 +1,17 @@
+Module2 DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+DL-DCCH-MessageType ::= CHOICE {
+    c1                  CHOICE {
+        rrcReconfiguration  RRCReconfiguration,
+        messageClassExtension   SEQUENCE {}
+    }
+}
+
+RRCReconfiguration ::= SEQUENCE {
+    criticalExtensions CHOICE {
+        rrcReconfiguration  SEQUENCE {},
+        criticalExtensionsFuture    SEQUENCE {}
+    }
+}
+
+END

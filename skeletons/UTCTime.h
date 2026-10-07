@@ -5,6 +5,28 @@
 #ifndef	_UTCTime_H_
 #define	_UTCTime_H_
 
+/* Include <time.h> first to ensure the system header is used.
+ * On case-insensitive filesystems with -I. (macOS default APFS, Cygwin), a
+ * local Time.h from ASN.1 schemas (e.g., RFC 3280) can shadow <time.h>.
+ *
+ * IMPORTANT FOR macOS AND OTHER CASE-INSENSITIVE FILESYSTEMS:
+ * If you encounter "non-portable path" or header shadowing warnings,
+ * you can ask asn1c to prefix generated filenames, e.g.:
+ *   asn1c -fprefix=ASN1_ -pdu=Certificate ...
+ * which will generate ASN1_Time.h instead of Time.h and avoid conflicts.
+ * The -fprefix= flag automatically handles prefixing in both generated code
+ * and makefiles, so no manual editing is required.
+ *
+ * This approach works transparently on Linux and other case-sensitive
+ * filesystems. On macOS, the most robust workaround is to build on a
+ * case-sensitive APFS volume so that Time.h and time.h cannot conflict.
+ */
+#ifdef	__CYGWIN__
+#include "/usr/include/time.h"
+#else
+#include <time.h>
+#endif	/* __CYGWIN__ */
+
 #include <OCTET_STRING.h>
 
 #ifdef __cplusplus
@@ -58,8 +80,6 @@ asn_random_fill_f UTCTime_random_fill;
 /***********************
  * Some handy helpers. *
  ***********************/
-
-struct tm;	/* <time.h> */
 
 /* See asn_GT2time() in GeneralizedTime.h */
 time_t asn_UT2time(const UTCTime_t *, struct tm *_optional_tm4fill, int as_gmt);

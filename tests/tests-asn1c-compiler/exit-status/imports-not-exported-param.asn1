@@ -1,0 +1,35 @@
+-- Semantic error for check-exit-status.sh (not scanned by check_fixer).
+-- ModuleExitParamB imports Y, which ModuleExitParamA does not export, and
+-- uses it only inside a parameterized type. With -fcompound-names (ModuleExitParamD
+-- also defines Y), the fixer reports the EXPORTS error but does not return a
+-- failure: asn1c shall still exit non-zero.
+
+ModuleExitParamA
+	{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 167 1 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	EXPORTS X;
+	X ::= INTEGER
+	Y ::= BOOLEAN
+END
+
+ModuleExitParamB
+	{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 167 2 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	EXPORTS Wrapper;
+	IMPORTS X, Y FROM ModuleExitParamA;
+	Wrapper {P} ::= SEQUENCE { p P, y Y }
+END
+
+ModuleExitParamD
+	{ iso org(3) dod(6) internet (1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 167 3 }
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+	IMPORTS Wrapper FROM ModuleExitParamB;
+	Y ::= IA5String
+	U ::= Wrapper {INTEGER}
+END

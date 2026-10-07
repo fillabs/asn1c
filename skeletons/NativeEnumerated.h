@@ -13,6 +13,12 @@
 #define	_NativeEnumerated_H_
 
 #include <NativeInteger.h>
+#include <limits.h>
+
+/* Unknown UPER/APER extension ordinals are stored as LONG_MAX - ordinal. */
+#define ASN_NATIVE_ENUMERATED_UNKNOWN_EXT_BASE (LONG_MAX - 65535L)
+#define ASN_NATIVE_ENUMERATED_IS_UNKNOWN_EXT(v) \
+    ((v) >= ASN_NATIVE_ENUMERATED_UNKNOWN_EXT_BASE)
 #include <ENUMERATED.h>
 
 #ifdef __cplusplus
@@ -31,22 +37,28 @@ extern asn_TYPE_operation_t asn_OP_NativeEnumerated;
 #define NativeEnumerated_compare NativeInteger_compare
 #define NativeEnumerated_copy    NativeInteger_copy
 
-#define NativeEnumerated_constraint asn_generic_no_constraint
+asn_constr_check_f NativeEnumerated_constraint;
 
 #if !defined(ASN_DISABLE_BER_SUPPORT)
-#define NativeEnumerated_decode_ber NativeInteger_decode_ber
-#define NativeEnumerated_encode_der NativeInteger_encode_der
-#endif  /* !defined(ASN_DISABLE_BER_SUPPORT) */
+ber_type_decoder_f NativeEnumerated_decode_ber;
+der_type_encoder_f NativeEnumerated_encode_der;
+#endif /* !defined(ASN_DISABLE_BER_SUPPORT) */
 
 #if !defined(ASN_DISABLE_XER_SUPPORT)
-#define NativeEnumerated_decode_xer NativeInteger_decode_xer
+xer_type_decoder_f NativeEnumerated_decode_xer;
+xer_type_decoder_f NativeEnumerated_decode_xer_text;
 xer_type_encoder_f NativeEnumerated_encode_xer;
+xer_type_encoder_f NativeEnumerated_encode_xer_text;
 #endif  /* !defined(ASN_DISABLE_XER_SUPPORT) */
 
 #if !defined(ASN_DISABLE_JER_SUPPORT)
 jer_type_decoder_f NativeEnumerated_decode_jer;
 jer_type_encoder_f NativeEnumerated_encode_jer;
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+cbor_type_decoder_f NativeEnumerated_decode_cbor;
+cbor_type_encoder_f NativeEnumerated_encode_cbor;
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 
 #if !defined(ASN_DISABLE_OER_SUPPORT)
 oer_type_decoder_f NativeEnumerated_decode_oer;

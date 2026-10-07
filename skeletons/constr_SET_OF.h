@@ -56,6 +56,10 @@ jer_type_encoder_f SET_OF_encode_jer;
 oer_type_decoder_f SET_OF_decode_oer;
 oer_type_encoder_f SET_OF_encode_oer;
 #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+#if !defined(ASN_DISABLE_CBOR_SUPPORT)
+cbor_type_decoder_f SET_OF_decode_cbor;
+cbor_type_encoder_f SET_OF_encode_cbor;
+#endif  /* !defined(ASN_DISABLE_CBOR_SUPPORT) */
 
 #if !defined(ASN_DISABLE_UPER_SUPPORT)
 per_type_decoder_f SET_OF_decode_uper;
@@ -73,9 +77,16 @@ asn_random_fill_f SET_OF_random_fill;
 extern asn_TYPE_operation_t asn_OP_SET_OF;
 
 /*
+ * Generic descriptor for anonymous SET OF (placeholder only).
+ * Not a concrete "OF T".
+ */
+extern asn_TYPE_descriptor_t asn_DEF_SET_OF;
+
+/*
  * Internally visible buffer holding a single encoded element.
  */
 struct _el_buffer {
+    const void *memb_ptr;
     uint8_t *buf;
     size_t length;
     size_t allocated_size;

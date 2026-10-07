@@ -1,0 +1,11 @@
+TestModule DEFINITIONS ::= BEGIN
+
+-- Simple test case that should trigger the IDENTIFIED issue
+SOME-CLASS ::= CLASS {
+    &id   OBJECT IDENTIFIER UNIQUE,
+    &Type
+} WITH SYNTAX {
+    IDENTIFIED BY &id [HAS &Type]
+}
+
+END

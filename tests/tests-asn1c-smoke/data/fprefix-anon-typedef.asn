@@ -1,0 +1,25 @@
+-- Test that -fprefix is applied to anonymous typedef alias names.
+--
+-- When an IOC-constrained member is present the compiler emits a
+-- FWD-DEFS forward typedef.  Without the fix the alias was the bare
+-- field name ("value"); with the fix it must carry the prefix, e.g.
+-- "S1AP_InitiatingMessage__value".
+
+TestModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+MESSAGE-TYPE ::= CLASS {
+    &id    INTEGER UNIQUE,
+    &Type
+} WITH SYNTAX { &Type IDENTIFIED BY &id }
+
+MessageTypes MESSAGE-TYPE ::= {
+    { OCTET STRING IDENTIFIED BY 1 }
+}
+
+InitiatingMessage ::= SEQUENCE {
+    id    MESSAGE-TYPE.&id({MessageTypes}),
+    value MESSAGE-TYPE.&Type({MessageTypes}{@id}),
+    ...
+}
+
+END

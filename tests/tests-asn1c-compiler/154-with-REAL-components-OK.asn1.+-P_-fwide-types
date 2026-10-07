@@ -17,6 +17,8 @@ ber_type_decoder_f UnconstrainedREAL_decode_ber;
 der_type_encoder_f UnconstrainedREAL_encode_der;
 xer_type_decoder_f UnconstrainedREAL_decode_xer;
 xer_type_encoder_f UnconstrainedREAL_encode_xer;
+cbor_type_decoder_f UnconstrainedREAL_decode_cbor;
+cbor_type_encoder_f UnconstrainedREAL_encode_cbor;
 
 /*** <<< CODE [UnconstrainedREAL] >>> ***/
 
@@ -48,7 +50,7 @@ asn_TYPE_descriptor_t asn_DEF_UnconstrainedREAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		REAL_constraint
 	},
@@ -75,6 +77,8 @@ ber_type_decoder_f WeirdlyConstrainedREAL_decode_ber;
 der_type_encoder_f WeirdlyConstrainedREAL_encode_der;
 xer_type_decoder_f WeirdlyConstrainedREAL_decode_xer;
 xer_type_encoder_f WeirdlyConstrainedREAL_encode_xer;
+cbor_type_decoder_f WeirdlyConstrainedREAL_decode_cbor;
+cbor_type_encoder_f WeirdlyConstrainedREAL_encode_cbor;
 
 /*** <<< CODE [WeirdlyConstrainedREAL] >>> ***/
 
@@ -98,7 +102,7 @@ WeirdlyConstrainedREAL_constraint(const asn_TYPE_descriptor_t *td, const void *s
 		return -1;
 	}
 	
-	if((value == 3L)) {
+	if(value == 3L) {
 		/* Constraint check succeeded */
 		return 0;
 	} else {
@@ -137,7 +141,7 @@ asn_TYPE_descriptor_t asn_DEF_WeirdlyConstrainedREAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		WeirdlyConstrainedREAL_constraint
 	},
@@ -165,6 +169,8 @@ ber_type_decoder_f Indirect_IEEE_binary32_decode_ber;
 der_type_encoder_f Indirect_IEEE_binary32_encode_der;
 xer_type_decoder_f Indirect_IEEE_binary32_decode_xer;
 xer_type_encoder_f Indirect_IEEE_binary32_encode_xer;
+cbor_type_decoder_f Indirect_IEEE_binary32_decode_cbor;
+cbor_type_encoder_f Indirect_IEEE_binary32_encode_cbor;
 
 /*** <<< CODE [Indirect-IEEE-binary32] >>> ***/
 
@@ -184,7 +190,12 @@ Indirect_IEEE_binary32_constraint(const asn_TYPE_descriptor_t *td, const void *s
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != Indirect_IEEE_binary32_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -218,7 +229,7 @@ asn_TYPE_descriptor_t asn_DEF_Indirect_IEEE_binary32 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		Indirect_IEEE_binary32_constraint
 	},
@@ -246,6 +257,8 @@ ber_type_decoder_f IEEE_binary32_w_decode_ber;
 der_type_encoder_f IEEE_binary32_w_encode_der;
 xer_type_decoder_f IEEE_binary32_w_decode_xer;
 xer_type_encoder_f IEEE_binary32_w_encode_xer;
+cbor_type_decoder_f IEEE_binary32_w_decode_cbor;
+cbor_type_encoder_f IEEE_binary32_w_encode_cbor;
 
 /*** <<< CODE [IEEE-binary32-w] >>> ***/
 
@@ -265,7 +278,12 @@ IEEE_binary32_w_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != IEEE_binary32_w_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -299,7 +317,7 @@ asn_TYPE_descriptor_t asn_DEF_IEEE_binary32_w = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		IEEE_binary32_w_constraint
 	},
@@ -327,6 +345,8 @@ ber_type_decoder_f IEEE_binary32_0w_decode_ber;
 der_type_encoder_f IEEE_binary32_0w_encode_der;
 xer_type_decoder_f IEEE_binary32_0w_decode_xer;
 xer_type_encoder_f IEEE_binary32_0w_encode_xer;
+cbor_type_decoder_f IEEE_binary32_0w_decode_cbor;
+cbor_type_encoder_f IEEE_binary32_0w_encode_cbor;
 
 /*** <<< CODE [IEEE-binary32-0w] >>> ***/
 
@@ -346,7 +366,12 @@ IEEE_binary32_0w_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != IEEE_binary32_0w_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -380,7 +405,7 @@ asn_TYPE_descriptor_t asn_DEF_IEEE_binary32_0w = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		IEEE_binary32_0w_constraint
 	},
@@ -408,6 +433,8 @@ ber_type_decoder_f IEEE_binary32_w0_decode_ber;
 der_type_encoder_f IEEE_binary32_w0_encode_der;
 xer_type_decoder_f IEEE_binary32_w0_decode_xer;
 xer_type_encoder_f IEEE_binary32_w0_encode_xer;
+cbor_type_decoder_f IEEE_binary32_w0_decode_cbor;
+cbor_type_encoder_f IEEE_binary32_w0_encode_cbor;
 
 /*** <<< CODE [IEEE-binary32-w0] >>> ***/
 
@@ -427,7 +454,12 @@ IEEE_binary32_w0_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != IEEE_binary32_w0_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -461,7 +493,7 @@ asn_TYPE_descriptor_t asn_DEF_IEEE_binary32_w0 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		IEEE_binary32_w0_constraint
 	},
@@ -488,6 +520,8 @@ ber_type_decoder_f IEEE_binary64_w_decode_ber;
 der_type_encoder_f IEEE_binary64_w_encode_der;
 xer_type_decoder_f IEEE_binary64_w_decode_xer;
 xer_type_encoder_f IEEE_binary64_w_encode_xer;
+cbor_type_decoder_f IEEE_binary64_w_decode_cbor;
+cbor_type_encoder_f IEEE_binary64_w_encode_cbor;
 
 /*** <<< CODE [IEEE-binary64-w] >>> ***/
 
@@ -507,7 +541,12 @@ IEEE_binary64_w_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != IEEE_binary64_w_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -538,7 +577,7 @@ asn_TYPE_descriptor_t asn_DEF_IEEE_binary64_w = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		IEEE_binary64_w_constraint
 	},
@@ -565,6 +604,8 @@ ber_type_decoder_f IEEE_binary64_0w_decode_ber;
 der_type_encoder_f IEEE_binary64_0w_encode_der;
 xer_type_decoder_f IEEE_binary64_0w_decode_xer;
 xer_type_encoder_f IEEE_binary64_0w_encode_xer;
+cbor_type_decoder_f IEEE_binary64_0w_decode_cbor;
+cbor_type_encoder_f IEEE_binary64_0w_encode_cbor;
 
 /*** <<< CODE [IEEE-binary64-0w] >>> ***/
 
@@ -584,7 +625,12 @@ IEEE_binary64_0w_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != IEEE_binary64_0w_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -615,7 +661,7 @@ asn_TYPE_descriptor_t asn_DEF_IEEE_binary64_0w = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		IEEE_binary64_0w_constraint
 	},
@@ -642,6 +688,8 @@ ber_type_decoder_f IEEE_binary64_w0_decode_ber;
 der_type_encoder_f IEEE_binary64_w0_encode_der;
 xer_type_decoder_f IEEE_binary64_w0_decode_xer;
 xer_type_encoder_f IEEE_binary64_w0_encode_xer;
+cbor_type_decoder_f IEEE_binary64_w0_decode_cbor;
+cbor_type_encoder_f IEEE_binary64_w0_encode_cbor;
 
 /*** <<< CODE [IEEE-binary64-w0] >>> ***/
 
@@ -661,7 +709,12 @@ IEEE_binary64_w0_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != IEEE_binary64_w0_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -692,7 +745,7 @@ asn_TYPE_descriptor_t asn_DEF_IEEE_binary64_w0 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		IEEE_binary64_w0_constraint
 	},
@@ -753,9 +806,25 @@ indirect_ieee_binary32_2_constraint(const asn_TYPE_descriptor_t *td, const void 
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != indirect_ieee_binary32_2_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_indirect_ieee_binary32 __attribute__((weak, alias("asn_DEF_indirect_ieee_binary32_2")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_indirect_ieee_binary32_2;
+static asn_TYPE_descriptor_t asn_DEF_indirect_ieee_binary32;
+__attribute__((constructor)) static void asn_DEF_indirect_ieee_binary32_2_alias_init(void) {
+	asn_DEF_indirect_ieee_binary32 = asn_DEF_indirect_ieee_binary32_2;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
 /*
  * This type is implemented using Indirect_IEEE_binary32,
  * so here we adjust the DEF accordingly.
@@ -776,9 +845,25 @@ ieee_binary32_w_3_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != ieee_binary32_w_3_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w __attribute__((weak, alias("asn_DEF_ieee_binary32_w_3")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w_3;
+static asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w;
+__attribute__((constructor)) static void asn_DEF_ieee_binary32_w_3_alias_init(void) {
+	asn_DEF_ieee_binary32_w = asn_DEF_ieee_binary32_w_3;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
 /*
  * This type is implemented using IEEE_binary32_w,
  * so here we adjust the DEF accordingly.
@@ -799,9 +884,25 @@ ieee_binary32_0w_4_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != ieee_binary32_0w_4_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_ieee_binary32_0w __attribute__((weak, alias("asn_DEF_ieee_binary32_0w_4")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_ieee_binary32_0w_4;
+static asn_TYPE_descriptor_t asn_DEF_ieee_binary32_0w;
+__attribute__((constructor)) static void asn_DEF_ieee_binary32_0w_4_alias_init(void) {
+	asn_DEF_ieee_binary32_0w = asn_DEF_ieee_binary32_0w_4;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
 /*
  * This type is implemented using IEEE_binary32_0w,
  * so here we adjust the DEF accordingly.
@@ -822,9 +923,25 @@ ieee_binary32_w0_5_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
 		/* Nothing is here. See below */
 	}
 	
-	return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	/* prevent infinite recursion */
+	if(td->encoding_constraints.general_constraints != ieee_binary32_w0_5_constraint) {
+		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+	} else {
+		return 0;
+	}
 }
 
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w0 __attribute__((weak, alias("asn_DEF_ieee_binary32_w0_5")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w0_5;
+static asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w0;
+__attribute__((constructor)) static void asn_DEF_ieee_binary32_w0_5_alias_init(void) {
+	asn_DEF_ieee_binary32_w0 = asn_DEF_ieee_binary32_w0_5;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
 /*
  * This type is implemented using IEEE_binary32_w0,
  * so here we adjust the DEF accordingly.
@@ -857,7 +974,7 @@ asn_TYPE_descriptor_t asn_DEF_indirect_ieee_binary32_2 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		indirect_ieee_binary32_2_constraint
 	},
@@ -890,7 +1007,7 @@ asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w_3 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ieee_binary32_w_3_constraint
 	},
@@ -923,7 +1040,7 @@ asn_TYPE_descriptor_t asn_DEF_ieee_binary32_0w_4 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ieee_binary32_0w_4_constraint
 	},
@@ -956,7 +1073,7 @@ asn_TYPE_descriptor_t asn_DEF_ieee_binary32_w0_5 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		ieee_binary32_w0_5_constraint
 	},
@@ -978,7 +1095,7 @@ static asn_TYPE_member_t asn_MBR_Test_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -998,7 +1115,7 @@ static asn_TYPE_member_t asn_MBR_Test_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1018,7 +1135,7 @@ static asn_TYPE_member_t asn_MBR_Test_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1038,7 +1155,7 @@ static asn_TYPE_member_t asn_MBR_Test_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1058,7 +1175,7 @@ static asn_TYPE_member_t asn_MBR_Test_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1078,7 +1195,7 @@ static asn_TYPE_member_t asn_MBR_Test_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1098,7 +1215,7 @@ static asn_TYPE_member_t asn_MBR_Test_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1144,7 +1261,7 @@ asn_TYPE_descriptor_t asn_DEF_Test = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},
@@ -1200,9 +1317,23 @@ typedef struct EXTERNAL {
 
 extern asn_TYPE_descriptor_t asn_DEF_EXTERNAL;
 
+/*** <<< CODE [EXTERNAL] >>> ***/
+
+#ifndef ASN1C_NO_UNSUFFIXED_PDU_ALIAS
+#if defined(__ELF__) && (defined(__GNUC__) || defined(__clang__))
+extern asn_TYPE_descriptor_t asn_DEF_encoding __attribute__((weak, alias("asn_DEF_encoding_5")));
+#else
+static asn_TYPE_descriptor_t asn_DEF_encoding_5;
+static asn_TYPE_descriptor_t asn_DEF_encoding;
+__attribute__((constructor)) static void asn_DEF_encoding_5_alias_init(void) {
+	asn_DEF_encoding = asn_DEF_encoding_5;
+}
+#endif
+#endif /* ASN1C_NO_UNSUFFIXED_PDU_ALIAS */
+
 /*** <<< STAT-DEFS [EXTERNAL] >>> ***/
 
-static asn_TYPE_member_t asn_MBR_encoding_5[] = {
+static asn_TYPE_member_t asn_MBR_EXTERNAL__encoding_5[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct encoding, choice.single_ASN1_type),
 		.tag = (ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		.tag_mode = +1,	/* EXPLICIT tag at current level */
@@ -1216,7 +1347,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1236,7 +1367,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1256,7 +1387,7 @@ static asn_TYPE_member_t asn_MBR_encoding_5[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1296,11 +1427,11 @@ asn_TYPE_descriptor_t asn_DEF_encoding_5 = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		CHOICE_constraint
 	},
-	asn_MBR_encoding_5,
+	asn_MBR_EXTERNAL__encoding_5,
 	3,	/* Elements count */
 	&asn_SPC_encoding_specs_5	/* Additional specs */
 };
@@ -1319,7 +1450,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1339,7 +1470,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1359,7 +1490,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1379,7 +1510,7 @@ static asn_TYPE_member_t asn_MBR_EXTERNAL_1[] = {
 			.per_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-                    .jer_constraints = 0,
+			.jer_constraints = 0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			.general_constraints = 0
 		},
@@ -1425,7 +1556,7 @@ asn_TYPE_descriptor_t asn_DEF_EXTERNAL = {
 		0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 #if !defined(ASN_DISABLE_JER_SUPPORT)
-              0,
+		0,
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 		SEQUENCE_constraint
 	},

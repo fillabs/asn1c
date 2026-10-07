@@ -69,6 +69,30 @@ INTEGER_map_enum2value(const asn_INTEGER_specifics_t *specs, const char *lstart,
     return el_found;
 }
 
+static const asn_INTEGER_enum_map_t *
+INTEGER_map_text2value(const asn_INTEGER_specifics_t *specs, const char *lstart,
+                       const char *lstop) {
+    int count = specs ? specs->map_count : 0;
+    int i;
+
+    if(!count) return NULL;
+    while(lstart < lstop
+          && (*lstart == 9 || *lstart == 10 || *lstart == 13 || *lstart == 32))
+        lstart++;
+    while(lstop > lstart
+          && (lstop[-1] == 9 || lstop[-1] == 10 || lstop[-1] == 13
+              || lstop[-1] == 32))
+        lstop--;
+
+    for(i = 0; i < count; i++) {
+        const asn_INTEGER_enum_map_t *el = &specs->value2enum[i];
+        if((size_t)(lstop - lstart) == el->enum_len
+        && memcmp(lstart, el->enum_name, el->enum_len) == 0)
+            return el;
+    }
+    return NULL;
+}
+
 static int
 INTEGER_st_prealloc(INTEGER_t *st, int min_size) {
     void *p = MALLOC(min_size + 1);
@@ -331,6 +355,33 @@ INTEGER_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
         buf_ptr, size, INTEGER__xer_body_decode);
 }
 
+static enum xer_pbd_rval
+INTEGER__xer_text_body_decode(const asn_TYPE_descriptor_t *td, void *sptr,
+                              const void *chunk_buf, size_t chunk_size) {
+    const asn_INTEGER_specifics_t *specs =
+        (const asn_INTEGER_specifics_t *)td->specifics;
+    INTEGER_t *st = (INTEGER_t *)sptr;
+    const asn_INTEGER_enum_map_t *el;
+
+    el = INTEGER_map_text2value(specs, (const char *)chunk_buf,
+                                (const char *)chunk_buf + chunk_size);
+    if(!el)
+        return XPBD_BROKEN_ENCODING;
+    if(asn_imax2INTEGER(st, el->nat_value))
+        return XPBD_SYSTEM_FAILURE;
+    return XPBD_BODY_CONSUMED;
+}
+
+asn_dec_rval_t
+INTEGER_decode_xer_text(const asn_codec_ctx_t *opt_codec_ctx,
+                        const asn_TYPE_descriptor_t *td, void **sptr,
+                        const char *opt_mname, const void *buf_ptr,
+                        size_t size) {
+    return xer_decode_primitive(opt_codec_ctx, td,
+        sptr, sizeof(INTEGER_t), opt_mname,
+        buf_ptr, size, INTEGER__xer_text_body_decode);
+}
+
 asn_enc_rval_t
 INTEGER_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
                    int ilevel, enum xer_encoder_flags_e flags,
@@ -345,6 +396,40 @@ INTEGER_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr,
         ASN__ENCODE_FAILED;
 
     er.encoded = INTEGER__dump(td, st, cb, app_key, 1);
+    if(er.encoded < 0) ASN__ENCODE_FAILED;
+
+    ASN__ENCODED_OK(er);
+}
+
+asn_enc_rval_t
+INTEGER_encode_xer_text(const asn_TYPE_descriptor_t *td, const void *sptr,
+                        int ilevel, enum xer_encoder_flags_e flags,
+                        asn_app_consume_bytes_f *cb, void *app_key) {
+    const INTEGER_t *st = (const INTEGER_t *)sptr;
+    const asn_INTEGER_specifics_t *specs =
+        (const asn_INTEGER_specifics_t *)td->specifics;
+    asn_enc_rval_t er = {0,0,0};
+    intmax_t value = 0;
+    const asn_INTEGER_enum_map_t *el;
+
+    (void)ilevel;
+    (void)flags;
+
+    if(!st || !st->buf)
+        ASN__ENCODE_FAILED;
+    if(specs && specs->field_unsigned) {
+        uintmax_t uvalue = 0;
+        if(asn_INTEGER2umax(st, &uvalue) || uvalue > (uintmax_t)LONG_MAX)
+            ASN__ENCODE_FAILED;
+        value = (intmax_t)uvalue;
+    } else if(asn_INTEGER2imax(st, &value)) {
+        ASN__ENCODE_FAILED;
+    }
+
+    el = INTEGER_map_value2enum(specs, value);
+    if(!el)
+        ASN__ENCODE_FAILED;
+    er.encoded = asn__format_to_callback(cb, app_key, "%s", el->enum_name);
     if(er.encoded < 0) ASN__ENCODE_FAILED;
 
     ASN__ENCODED_OK(er);

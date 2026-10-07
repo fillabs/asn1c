@@ -455,12 +455,21 @@ all: InterchangedObject.c $(TARGET)
 $(TARGET): ${OBJS}
 	$(CC) $(CFLAGS) -o $(TARGET) ${OBJS} $(LDFLAGS) $(LIBS)
 
+# Track header dependencies so that objects are rebuilt when any
+# included header (e.g. a skeleton header) changes. Without this,
+# stale objects compiled against an older header layout may be
+# linked together, causing hard-to-debug memory corruption.
+DEPFLAGS = -MMD -MP
+
 %.o: %.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) $(DEPFLAGS) -o $@ -c $<
+
+-include $(OBJS:.o=.d)
 
 clean:
 	rm -f $(TARGET)
 	rm -f $(OBJS)
+	rm -f $(OBJS:.o=.d)
 
 regen: regenerate-from-asn1-source
 

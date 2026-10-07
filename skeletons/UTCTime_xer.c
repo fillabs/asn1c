@@ -7,12 +7,6 @@
 #include <UTCTime.h>
 #include <errno.h>
 
-#ifdef __CYGWIN__
-#include "/usr/include/time.h"
-#else
-#include <time.h>
-#endif  /* __CYGWIN__ */
-
 #if !defined(ASN___INTERNAL_TEST_MODE)
 
 asn_enc_rval_t

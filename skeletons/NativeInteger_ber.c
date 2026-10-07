@@ -16,7 +16,7 @@ NativeInteger_decode_ber(const asn_codec_ctx_t *opt_codec_ctx,
                          const void *buf_ptr, size_t size, int tag_mode) {
     const asn_INTEGER_specifics_t *specs =
         (const asn_INTEGER_specifics_t *)td->specifics;
-    long *native = (long *)*nint_ptr;
+    void *native = *nint_ptr;
     asn_dec_rval_t rval;
     ber_tlv_len_t length;
 
@@ -24,7 +24,7 @@ NativeInteger_decode_ber(const asn_codec_ctx_t *opt_codec_ctx,
      * If the structure is not there, allocate it.
      */
     if(native == NULL) {
-        native = (long *)(*nint_ptr = CALLOC(1, sizeof(*native)));
+        native = (*nint_ptr = CALLOC(1, NativeInteger_field_width(specs)));
         if(native == NULL) {
             rval.code = RC_FAIL;
             rval.consumed = 0;
@@ -67,28 +67,23 @@ NativeInteger_decode_ber(const asn_codec_ctx_t *opt_codec_ctx,
             const void *constbuf;
             void *nonconstbuf;
         } unconst_buf;
-        long l;
 
         unconst_buf.constbuf = buf_ptr;
         tmp.buf = (uint8_t *)unconst_buf.nonconstbuf;
         tmp.size = length;
 
-        if((specs&&specs->field_unsigned)
-            ? asn_INTEGER2ulong(&tmp, (unsigned long *)&l) /* sic */
-            : asn_INTEGER2long(&tmp, &l)) {
+        if(NativeInteger_store_from_INTEGER(native, specs, &tmp)) {
             rval.code = RC_FAIL;
             rval.consumed = 0;
             return rval;
         }
-
-        *native = l;
     }
 
     rval.code = RC_OK;
     rval.consumed += length;
 
-    ASN_DEBUG("Took %ld/%ld bytes to encode %s (%ld)",
-              (long)rval.consumed, (long)length, td->name, (long)*native);
+    ASN_DEBUG("Took %ld/%ld bytes to encode %s",
+              (long)rval.consumed, (long)length, td->name);
 
     return rval;
 }
@@ -100,31 +95,22 @@ asn_enc_rval_t
 NativeInteger_encode_der(const asn_TYPE_descriptor_t *sd, const void *ptr,
                          int tag_mode, ber_tlv_tag_t tag,
                          asn_app_consume_bytes_f *cb, void *app_key) {
-    unsigned long native = *(const unsigned long *)ptr; /* Disable sign ext. */
+    const asn_TYPE_descriptor_t *td = sd;  /* for ASN__ENCODE_FAILED */
+    const void *sptr = ptr;                /* for ASN__ENCODE_FAILED */
+    const asn_INTEGER_specifics_t *specs =
+        (const asn_INTEGER_specifics_t *)sd->specifics;
     asn_enc_rval_t erval = {0,0,0};
     INTEGER_t tmp;
 
-#ifdef WORDS_BIGENDIAN  /* Opportunistic optimization */
+    /* Materialize the native member (any width) as a canonical INTEGER. */
+    if(NativeInteger_to_INTEGER(ptr, specs, &tmp)) {
+        ASN__ENCODE_FAILED;
+    }
 
-    tmp.buf = (uint8_t *)&native;
-    tmp.size = sizeof(native);
-
-#else  /* Works even if WORDS_BIGENDIAN is not set where should've been */
-    uint8_t buf[sizeof(native)];
-    uint8_t *p;
-
-    /* Prepare a fake INTEGER */
-    for(p = buf + sizeof(buf) - 1; p >= buf; p--, native >>= 8)
-        *p = (uint8_t)native;
-
-    tmp.buf = buf;
-    tmp.size = sizeof(buf);
-#endif  /* WORDS_BIGENDIAN */
-
-    /* Encode fake INTEGER */
     erval = INTEGER_encode_der(sd, &tmp, tag_mode, tag, cb, app_key);
     if(erval.structure_ptr == &tmp) {
         erval.structure_ptr = ptr;
     }
+    if(tmp.buf) FREEMEM(tmp.buf);
     return erval;
 }

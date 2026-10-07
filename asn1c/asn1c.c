@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info> and contributors.
+ * Copyright (c) 2022-2025 Mouse <mouse07410@hotmail.com> and contributors.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +32,8 @@
 #include "asn1_common.h"
 
 #undef COPYRIGHT
-#define COPYRIGHT "Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info> and contributors.\n"
+#define COPYRIGHT "Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info> and contributors.\n\
+Copyright (c) 2022-2026 Mouse <5923577+mouse07410@users.noreply.github.com> and contributors.\n"
 
 #include <asn1parser.h>   /* Parse the ASN.1 file and build a tree */
 #include <asn1fix.h>      /* Fix the ASN.1 tree */
@@ -48,15 +50,65 @@
 #include <dirent.h>
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
+
+/*
+ * Parse a string as a decimal integer with validation.
+ * Returns 1 on success, 0 on failure (non-integer, overflow, or trailing garbage).
+ * If out_val is non-NULL, stores the parsed value on success.
+ */
+static int
+is_integer(const char *str, long *out_val) {
+    char *endptr;
+    errno = 0; /* To distinguish success/failure after call */
+
+    /* 10 is the base (decimal) */
+    long val = strtol(str, &endptr, 10);
+
+    /* Check for various possible errors */
+    if (str == endptr) return 0; /* No digits found at all */
+    if (errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) return 0; /* Overflow */
+    if (errno != 0 && val == 0) return 0; /* Other conversion error */
+
+    /* Check for trailing garbage (optional) */
+    /* If you want to allow "123 ", you'd check if *endptr is whitespace */
+    if (*endptr != '\0') return 0;
+
+    if (out_val) *out_val = val;
+    return 1; /* Success */
+}
+
 static void usage(const char *av0); /* Print the Usage screen and exit */
 static int importStandardModules(asn1p_t *asn, const char *skeletons_dir);
+
+/*
+ * Exit status (see asn1c(1), EXIT STATUS):
+ *   0            Success. No FATAL diagnostic was reported.
+ *   EX_USAGE     (64) Command line usage error.
+ *   EX_DATAERR   (65) ASN.1 input error: a syntax error, or a FATAL
+ *                     diagnostic during semantic processing.
+ *   EX_NOINPUT   (66) An input file cannot be opened.
+ *   EX_SOFTWARE  (70) Printing or code generation failed, or reported a
+ *                     FATAL diagnostic. The output is incomplete.
+ *   EX_OSFILE    (72) Skeleton files not found (with -Werror).
+ *
+ * A FATAL diagnostic always gives a non-zero exit status, also when the
+ * library that reports it continues its work.
+ */
+static int fixer_fatal_count; /* FATAL diagnostics via fixer_error_logger */
+static void fixer_error_logger(int _severity, const char *fmt, ...);
+
+
 
 int
 main(int ac, char **av) {
     enum asn1p_flags asn1_parser_flags = A1P_NOFLAGS;
     enum asn1f_flags asn1_fixer_flags = A1F_NOFLAGS;
     enum asn1c_flags asn1_compiler_flags =
-        A1C_NO_C99 | A1C_GEN_BER | A1C_GEN_XER | A1C_GEN_OER | A1C_GEN_UPER | A1C_GEN_APER | A1C_GEN_PRINT | A1C_GEN_RFILL | A1C_GEN_EXAMPLE | A1C_GEN_JER;
+        A1C_NO_C99 | A1C_GEN_BER | A1C_GEN_XER | A1C_GEN_OER | A1C_GEN_UPER | A1C_GEN_APER | A1C_GEN_PRINT | A1C_GEN_RFILL | A1C_GEN_EXAMPLE | A1C_GEN_JER | A1C_GEN_CBOR;
     enum asn1print_flags asn1_printer_flags = APF_NOFLAGS;
     int print_arg__print_out = 0;   /* Don't compile, just print parsed */
     int print_arg__fix_n_print = 0; /* Fix and print */
@@ -70,6 +122,7 @@ main(int ac, char **av) {
     int ch;                         /* Command line character */
     int i;                          /* Index in some loops */
     int exit_code = 0;              /* Exit code */
+    int complex_threshold = 4;      /* Threshold for switching structures to ptrs */
 
     /*
      * Process command-line options.
@@ -127,11 +180,23 @@ main(int ac, char **av) {
                 char *known_type = optarg + 18;
                 ret = asn1f_make_known_external_type(known_type);
                 assert(ret == 0 || errno == EEXIST);
+            } else if(strcmp(optarg, "prefer-import-source") == 0) {
+                asn1_fixer_flags |= A1F_PREFER_IMPORT_SOURCE;
             } else if(strcmp(optarg, "native-types") == 0) {
                 fprintf(stderr, "-f%s: Deprecated option\n", optarg);
                 asn1_compiler_flags &= ~A1C_USE_WIDE_TYPES;
             } else if(strcmp(optarg, "wide-types") == 0) {
                 asn1_compiler_flags |= A1C_USE_WIDE_TYPES;
+            } else if(strncmp(optarg, "long-size=", 10) == 0) {
+                char *mode = optarg + 10;
+                if(strcmp(mode, "32") == 0) {
+                    asn1c_target_long_size = ASN_TARGET_LONG_32;
+                } else if(strcmp(mode, "64") == 0) {
+                    asn1c_target_long_size = ASN_TARGET_LONG_64;
+                } else {
+                    fprintf(stderr, "-flong-size expects one of: 32, 64\n");
+                    exit(EX_USAGE);
+                }
             } else if(strcmp(optarg, "line-refs") == 0) {
                 asn1_compiler_flags |= A1C_LINE_REFS;
             } else if(strcmp(optarg, "no-constraints") == 0) {
@@ -147,9 +212,45 @@ main(int ac, char **av) {
                 asn1_compiler_flags &= ~A1C_LINK_SKELETONS;
             } else if(strcmp(optarg, "link-skeletons") == 0) {
                 asn1_compiler_flags |= A1C_LINK_SKELETONS;
+            } else if(strcmp(optarg, "gen-only-pdu-deps") == 0) {
+                asn1_compiler_flags |= A1C_GEN_ONLY_PDU_DEPS;
+            } else if(strcmp(optarg, "list-deps") == 0) {
+                asn1_compiler_flags |= A1C_LIST_DEPS;
+            } else if(strncmp(optarg, "integer-native-type=", 20) == 0) {
+                char *mode = optarg + 20;
+                if(strcmp(mode, "auto") == 0) {
+                    asn1c_integer_native_type = AINT_NATIVE_AUTO;
+                } else if(strcmp(mode, "int32") == 0) {
+                    asn1c_integer_native_type = AINT_NATIVE_INT32;
+                } else if(strcmp(mode, "uint32") == 0) {
+                    asn1c_integer_native_type = AINT_NATIVE_UINT32;
+                } else if(strcmp(mode, "int64") == 0) {
+                    asn1c_integer_native_type = AINT_NATIVE_INT64;
+                } else if(strcmp(mode, "uint64") == 0) {
+                    asn1c_integer_native_type = AINT_NATIVE_UINT64;
+                } else if(strcmp(mode, "long") == 0) {
+                    /* Deprecated, ambiguous alias kept for compatibility. */
+                    asn1c_integer_native_type = AINT_NATIVE_AUTO;
+                } else {
+                    fprintf(stderr,
+                        "-finteger-native-type expects one of: "
+                        "int32, uint32, int64, uint64, auto\n");
+                    exit(EX_USAGE);
+                }
             } else if(strncmp(optarg, "prefix=", 7) == 0) {
                 char *prefix = optarg + 7;
                 asn1c_prefix_set(prefix);
+            } else if(strncmp(optarg, "complex-threshold=", 18) == 0) {
+                char *threshold = optarg + 18;
+                long thresh_val;
+                if ((is_integer(threshold, &thresh_val) != 1)
+                	|| (thresh_val > 500) /* let's not be stupid here */
+                	|| (thresh_val <= 0)  /* again, stupidity not appreciated */
+                	) {
+                	fprintf(stderr, "-f%s: bad format or value too large\n", optarg);
+	                exit(EX_USAGE);
+	            }
+                complex_threshold = (int)thresh_val;
             } else {
                 fprintf(stderr, "-f%s: Invalid argument\n", optarg);
                 exit(EX_USAGE);
@@ -162,6 +263,8 @@ main(int ac, char **av) {
                 asn1_compiler_flags |= A1C_GEN_XER;
             } else if(strcmp(optarg, "en-JER") == 0) {
                 asn1_compiler_flags |= A1C_GEN_JER;
+            } else if(strcmp(optarg, "en-CBOR") == 0) {
+                asn1_compiler_flags |= A1C_GEN_CBOR;
             } else if(strcmp(optarg, "en-OER") == 0) {
                 asn1_compiler_flags |= A1C_GEN_OER;
             } else if(strcmp(optarg, "en-UPER") == 0) {
@@ -190,6 +293,8 @@ main(int ac, char **av) {
                 asn1_compiler_flags &= ~A1C_GEN_XER;
             } else if(strcmp(optarg, "o-gen-JER") == 0) {
                 asn1_compiler_flags &= ~A1C_GEN_JER;
+            } else if(strcmp(optarg, "o-gen-CBOR") == 0) {
+                asn1_compiler_flags &= ~A1C_GEN_CBOR;
             } else if(strcmp(optarg, "o-gen-OER") == 0) {
                 asn1_compiler_flags &= ~A1C_GEN_OER;
             } else if(strcmp(optarg, "o-gen-UPER") == 0) {
@@ -246,7 +351,7 @@ main(int ac, char **av) {
             skeletons_dir = optarg;
             break;
         case 'v':
-            fprintf(stderr, "ASN.1 Compiler, v" VERSION "\n" COPYRIGHT);
+            fprintf(stderr, "ASN.1 Compiler, " VERSION " (" PACKAGE_BUGREPORT ")\n" COPYRIGHT);
             exit(0);
             break;
         case 'W':
@@ -300,6 +405,15 @@ main(int ac, char **av) {
         }
     }
 
+    if((asn1_compiler_flags & A1C_NO_CONSTRAINTS)
+       && (asn1_compiler_flags
+           & (A1C_GEN_OER | A1C_GEN_UPER | A1C_GEN_APER))) {
+        fprintf(stderr,
+                "Error: -fno-constraints is incompatible with -gen-OER, "
+                "-gen-UPER, or -gen-APER\n");
+        exit(EX_USAGE);
+    }
+
     /*
      * Ensure that there are some input files present.
      */
@@ -312,7 +426,7 @@ main(int ac, char **av) {
                 "%s: No input files specified. "
                 "Try '%s -h' for more information\n",
                 bin_name, bin_name);
-        exit(1);
+        exit(EX_USAGE);
     }
 
     /*
@@ -321,8 +435,7 @@ main(int ac, char **av) {
     if(skeletons_dir == NULL) {
         struct stat sb;
         skeletons_dir = DATADIR;
-        if((av[-optind][0] == '.' || av[-optind][1] == '/')
-           && stat(skeletons_dir, &sb)) {
+        if(stat(skeletons_dir, &sb)) {
             /*
              * The default skeletons directory does not exist,
              * compute it from my file name:
@@ -354,10 +467,21 @@ main(int ac, char **av) {
     for(i = 0; i < ac; i++) {
         asn1p_t *new_asn;
 
+        errno = 0;
         new_asn = asn1p_parse_file(av[i], asn1_parser_flags);
         if(new_asn == NULL) {
+            /*
+             * asn1p_parse_file() sets errno to EINVAL when the file was
+             * opened but is not a regular file or not valid ASN.1, and
+             * keeps the errno of fopen() when the file cannot be opened.
+             * Do not open the file again to tell the two apart: that
+             * races with changes to the file and can block on a FIFO.
+             */
+            int parse_errno = errno;
             fprintf(stderr, "Cannot parse \"%s\"\n", av[i]);
-            exit_code = EX_DATAERR;
+            exit_code = (parse_errno == EINVAL || parse_errno == 0)
+                            ? EX_DATAERR
+                            : EX_NOINPUT;
             goto cleanup;
         }
 
@@ -384,9 +508,8 @@ main(int ac, char **av) {
     if(print_arg__print_out && !print_arg__fix_n_print) {
         if(asn1print(asn, asn1_printer_flags)) {
             exit_code = EX_SOFTWARE;
-            goto cleanup;
         }
-        return 0;
+        goto cleanup;
     }
 
     /*
@@ -406,8 +529,11 @@ main(int ac, char **av) {
      * expand references, etc, etc.
      * This function will emit necessary warnings and error messages.
      */
-    ret = asn1f_process(asn, asn1_fixer_flags,
-                        NULL /* default fprintf(stderr) */);
+    /*
+     * The fixer keeps this logger for the lookups that the code generator
+     * makes later, so fixer_fatal_count also counts those diagnostics.
+     */
+    ret = asn1f_process(asn, asn1_fixer_flags, fixer_error_logger);
     switch(ret) {
     case 0:
         break; /* All clear */
@@ -420,6 +546,16 @@ main(int ac, char **av) {
         exit_code = EX_DATAERR; /* Fatal failure */
         goto cleanup;
     }
+    if(fixer_fatal_count) {
+        /*
+         * A FATAL diagnostic was reported, but not returned by the fixer.
+         * Do not generate code. With -E -F, still print the tree to help
+         * the diagnosis, then fail.
+         */
+        exit_code = EX_DATAERR;
+        if(!(print_arg__print_out && print_arg__fix_n_print))
+            goto cleanup;
+    }
 
     /*
      * Dump the parsed ASN.1 tree if -E specified and -F is given.
@@ -427,9 +563,8 @@ main(int ac, char **av) {
     if(print_arg__print_out && print_arg__fix_n_print) {
         if(asn1print(asn, asn1_printer_flags)) {
             exit_code = EX_SOFTWARE;
-            goto cleanup;
         }
-        return 0;
+        goto cleanup;
     }
 
     /*
@@ -437,7 +572,7 @@ main(int ac, char **av) {
      */
     if(debug_type_names) {
         asn1c_debug_type_naming(asn, asn1_compiler_flags, debug_type_names);
-        return 0;
+        goto cleanup;
     }
 
     /*
@@ -445,11 +580,22 @@ main(int ac, char **av) {
      * of another language.
      */
     if(asn1_compile(asn, skeletons_dir, destdir ? destdir : "",
-                    asn1_compiler_flags, ac + optind, optind, av - optind)) {
+                    asn1_compiler_flags, ac + optind, optind, av - optind,
+                    complex_threshold)) {
         exit_code = EX_SOFTWARE;
+    }
+    if(fixer_fatal_count) {
+        exit_code = EX_SOFTWARE; /* FATAL during code generation lookups */
     }
 
 cleanup:
+    /*
+     * The printer and the type naming can look up symbols through the
+     * fixer after the checks above. A FATAL diagnostic there means that
+     * the output is incomplete.
+     */
+    if(exit_code == 0 && fixer_fatal_count)
+        exit_code = EX_SOFTWARE;
     asn1p_delete(asn);
     asn1p_lex_destroy();
     if (exit_code) exit(exit_code);
@@ -557,13 +703,34 @@ importStandardModules(asn1p_t *asn, const char *skeletons_dir) {
 }
 
 /*
+ * Same output as the default fixer logger. Counts FATAL diagnostics.
+ */
+static void
+fixer_error_logger(int _severity, const char *fmt, ...) {
+    va_list ap;
+    const char *pfx = "";
+
+    switch(_severity) {
+    case -1: pfx = "DEBUG: "; break;
+    case 0: pfx = "WARNING: "; break;
+    case 1: pfx = "FATAL: "; fixer_fatal_count++; break;
+    }
+
+    fprintf(stderr, "%s", pfx);
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+}
+
+/*
  * Print the usage screen and exit(EX_USAGE).
  */
 static void __attribute__((noreturn))
 usage(const char *av0) {
     /* clang-format off */
 	fprintf(stderr,
-"ASN.1 Compiler, v" VERSION "\n" COPYRIGHT
+"ASN.1 Compiler, " VERSION "\n" COPYRIGHT
 "Usage: %s [options] file ...\n"
 "Options:\n"
 "  -E                    Run only the ASN.1 parser and print out the tree\n"
@@ -585,6 +752,7 @@ usage(const char *av0) {
 "\n"
 
 "  -fbless-SIZE          Allow SIZE() constraint for INTEGER etc (non-std.)\n"
+"  -fcomplex-threshold=<value>   Threshold value beyond which to use indirection\n"
 "  -fcompound-names      Disambiguate C's struct NAME's inside top-level types\n"
 "  -fstrict-import-oid   Strict OID matching in import. Deactivate WITH SUCCESSORS/DESCENDANTS.\n"
 "  -findirect-choice     Compile members of CHOICE as indirect pointers\n"
@@ -593,14 +761,24 @@ usage(const char *av0) {
 "  -fline-refs           Include ASN.1 module's line numbers in comments\n"
 "  -fno-constraints      Do not generate the constraint checking code\n"
 "  -fno-include-deps     Do not generate the courtesy #includes for dependencies\n"
+"  -fprefer-import-source  Resolve only names listed in IMPORTS (no whole-module fallback)\n"
 "  -funnamed-unions      Enable unnamed unions in structures\n"
 "  -fwide-types          Use INTEGER_t instead of \"long\" by default, etc.\n"
+"  -flong-size=<bits>    Target C long size for native INTEGER storage.\n"
+"                        Values: 32, 64.  Default: auto portable 32-bit.\n"
+"  -finteger-native-type=<mode>  Native C storage policy for constrained INTEGER\n"
+"                        types.  Modes: auto, int32, uint32, int64, uint64.\n"
+"                        Default: auto.  Values not fitting the policy are\n"
+"                        generated as INTEGER_t.\n"
+"  -fgen-only-pdu-deps   Generate code only for types that are dependencies of -pdu types\n"
+"  -flist-deps           List PDU dependencies (requires -pdu option, no code generated)\n"
 "  -fprefix=<prefix>     Add the specified prefix to generated types\n"
 "\n"
 
 "  -no-gen-BER           Do not generate the Basic Encoding Rules (BER, X.690) support code\n"
 "  -no-gen-XER           Do not generate the XML Encoding Rules (XER, X.693) support code\n"
 "  -no-gen-JER           Do not generate the JSON Encoding Rules (JER, X.697) support code\n"
+"  -no-gen-CBOR          Do not generate the Concise Binary Object Representation (CBOR, RFC 7049) support code\n"
 "  -no-gen-OER           Do not generate the Octet Encoding Rules (OER, X.696) support code\n"
 "  -no-gen-UPER          Do not generate the Unaligned Packed Encoding Rules (PER, X.691) support code\n"
 "  -no-gen-APER          Do not generate the Aligned Packed Encoding Rules (PER, X.691) support code\n"
@@ -614,6 +792,10 @@ usage(const char *av0) {
 "  -print-class-matrix   Print out the collected object class matrix (debug)\n"
 "  -print-constraints    Explain subtype constraints (debug)\n"
 "  -print-lines          Generate \"-- #line\" comments in -E output\n"
+"\n"
+"Exit status: 0 success; 64 usage error; 65 ASN.1 input error;\n"
+"  66 input file cannot be opened; 70 printing or code generation failed\n"
+"  or reported a FATAL diagnostic (incomplete output); 72 skeletons not found.\n"
 
 	,
 	a1c_basename(av0, NULL), DATADIR);

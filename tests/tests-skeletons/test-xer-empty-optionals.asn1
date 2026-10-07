@@ -1,0 +1,24 @@
+TestModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+-- Test structure with various OPTIONAL fields
+TestSequence ::= SEQUENCE {
+    mandatoryInt INTEGER,
+    optionalInt INTEGER OPTIONAL,
+    optionalEnum MyEnum OPTIONAL,
+    optionalString OCTET STRING OPTIONAL,
+    optionalBits BIT STRING OPTIONAL,
+    optionalSeq SubSequence OPTIONAL,
+    optionalSeqOf SEQUENCE OF INTEGER OPTIONAL
+}
+
+SubSequence ::= SEQUENCE {
+    value INTEGER
+}
+
+MyEnum ::= ENUMERATED {
+    value1(0),
+    value2(1),
+    value3(2)
+}
+
+END

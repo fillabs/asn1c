@@ -33,9 +33,14 @@ for ref in ${top_srcdir}/tests/tests-asn1c-compiler/*.asn1.+*; do
 	oldversion=${template}.old
 	newversion=${template}.new
 	PROCESSING="$ref (from $src)"
-	LC_ALL=C sed -e 's/^found in .*/found in .../' < "$ref" > "$oldversion"
+	# Strip the version-dependent parts before comparing:
+	#  - "found in <path>" varies between build environments
+	#  - "asn1c-<version> (<url>)" changes with every commit
+	# Both the reference file and the fresh compiler output are normalised
+	# identically, so a version-string-only difference does not cause a failure.
+	LC_ALL=C sed -e 's/^found in .*/found in .../' -e 's/asn1c-[^ ]* ([^)]*)/asn1c/g' -e 's/asn1c-[^ >]*/asn1c/g' < "$ref" > "$oldversion"
 	ec=0
-	(${top_builddir}/asn1c/asn1c -S ${top_srcdir}/skeletons -no-gen-OER -no-gen-UPER -no-gen-APER -no-gen-JER $flags "$src" | LC_ALL=C sed -e 's/^found in .*/found in .../' > "$newversion") || ec=$?
+	(${top_builddir}/asn1c/asn1c -S ${top_srcdir}/skeletons -no-gen-OER -no-gen-UPER -no-gen-APER -no-gen-JER $flags "$src" | LC_ALL=C sed -e 's/^found in .*/found in .../' -e 's/asn1c-[^ ]* ([^)]*)/asn1c/g' -e 's/asn1c-[^ >]*/asn1c/g' > "$newversion") || ec=$?
 	if [ $? = 0 ]; then
 		diff $diffArgs "$oldversion" "$newversion" || ec=$?
 	fi
@@ -45,7 +50,7 @@ for ref in ${top_srcdir}/tests/tests-asn1c-compiler/*.asn1.+*; do
 	fi
 	rm -f $oldversion $newversion
 	if [ "$1" = "regenerate" ]; then
-		${top_builddir}/asn1c/asn1c -S ${top_srcdir}/skeletons -no-gen-OER -no-gen-UPER -no-gen-APER -no-gen-JER $flags "$src" > "$ref"
+		${top_builddir}/asn1c/asn1c -S ${top_srcdir}/skeletons -no-gen-OER -no-gen-UPER -no-gen-APER -no-gen-JER $flags "$src" | LC_ALL=C sed -e 's/asn1c-[^ )]* ([^)]*)/asn1c-0.9.29 (http:\/\/lionet.info\/asn1c)/g' -e 's/asn1c-[^ >]*/asn1c-0.9.29/g' > "$ref"
 	fi
 done
 

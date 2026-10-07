@@ -1,0 +1,27 @@
+
+-- OK: Nested CHOICE/SET members with identical names should not collide
+
+-- Tests the fix for issue where criticalExtensions was used as both
+-- a CHOICE name and an empty SEQUENCE name in nested structures,
+-- causing name collisions in generated code.
+
+ModuleNestedChoiceNameCollision
+	DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+HandoverCommand ::= SEQUENCE {
+	rrcTransId		INTEGER,
+	criticalExtensions	CHOICE {
+		r8		SEQUENCE {
+			data	OCTET STRING
+		},
+		criticalExtensions	CHOICE {
+			r11	SEQUENCE {
+				data2	OCTET STRING
+			},
+			criticalExtensions	SEQUENCE {}
+		}
+	}
+}
+
+END
