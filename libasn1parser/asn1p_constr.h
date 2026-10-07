@@ -4,9 +4,15 @@
 #ifndef	ASN1_PARSER_CONSTRAINT_H
 #define	ASN1_PARSER_CONSTRAINT_H
 
-typedef struct asn1p_constraint_s {
-
-	enum asn1p_constraint_type_e {
+/*
+ * The enumerations are declared at file scope rather than nested inside
+ * struct asn1p_constraint_s. In C both forms are equivalent (enum tags and
+ * enumerators nested in a struct already have file scope), but in C++ the
+ * nested form scopes them to the struct, so C/C++ code analysers that parse
+ * these headers in C++ mode report ACT_EL_RANGE, ACT_CT_SIZE, etc. as
+ * undefined at every use site.
+ */
+enum asn1p_constraint_type_e {
 		ACT_INVALID,		/* for assertions */
 		/*
 		 * Constraint elements.
@@ -38,14 +44,20 @@ typedef struct asn1p_constraint_s {
 		ACT_CA_INT,		/* INTERSECTION (^) */
 		ACT_CA_EXC,		/* EXCEPT */
 		ACT_CA_AEX,		/* ALL EXCEPT */
-	} type;
+};
 
-	enum asn1p_constr_pres_e {
+enum asn1p_constr_pres_e {
 		ACPRES_DEFAULT,
 		ACPRES_PRESENT,
 		ACPRES_ABSENT,
 		ACPRES_OPTIONAL,
-	} presence;
+};
+
+typedef struct asn1p_constraint_s {
+
+	enum asn1p_constraint_type_e type;
+
+	enum asn1p_constr_pres_e presence;
 
 	struct asn1p_constraint_s *parent_ct;	/* optional */
 
