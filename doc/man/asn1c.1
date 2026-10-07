@@ -275,7 +275,7 @@ See the \f[CR]asn1c\-usage.pdf\f[R] for details.
 .PP
 .TS
 tab(@);
-lw(14.2n) lw(29.3n) lw(13.2n) lw(13.2n).
+l l l l.
 T{
 Encoding
 T}@T{
@@ -370,7 +370,7 @@ T}
 T{
 BASIC\-XER
 T}@T{
-\f[CR]xer_encode(XER_F_BASIC)\f[R]
+\f[CR]xer_encode()\f[R]
 T}@T{
 *\-XER
 T}@T{
@@ -379,7 +379,7 @@ T}
 T{
 CANONICAL\-XER
 T}@T{
-\f[CR]xer_encode(XER_F_CANONICAL)\f[R]
+\f[CR]xer_encode()\f[R]
 T}@T{
 *\-XER
 T}@T{
@@ -397,7 +397,7 @@ T}
 T{
 JER\-MINIFIED
 T}@T{
-\f[CR]jer_encode(JER_F_MINIFIED)\f[R]
+\f[CR]jer_encode()\f[R]
 T}@T{
 JER
 T}@T{
@@ -415,8 +415,11 @@ T}
 .TE
 .PP
 *) Asterisk means both BASIC and CANONICAL variants.
-JER\-MINIFIED selects whitespace\-free output; \f[CR]jer_decode()\f[R]
-accepts either JER form.
+Pass \f[CR]XER_F_BASIC\f[R] or \f[CR]XER_F_CANONICAL\f[R] to
+\f[CR]xer_encode()\f[R] for the corresponding XER variant.
+Use \f[CR]JER_F_MINIFIED\f[R] with \f[CR]jer_encode()\f[R] for
+whitespace\-free output; \f[CR]jer_decode()\f[R] accepts either JER
+form.
 .SH XER AND JER ENCODING INSTRUCTIONS
 asn1c supports a selected set of schema\-level encoding instructions for
 XER and JER.

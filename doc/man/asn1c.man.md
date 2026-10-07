@@ -255,7 +255,7 @@ column 3, use the API function specified in column 4.
 See the `asn1c-usage.pdf` for details.
 
 | Encoding | API function | Understood by | API function |
-| --------------- | ------------------------------- | -------------- | -------------- |
+| -------------- | -------------------- | -------------- | -------------- |
 | BER | `der_encode()` | BER | `ber_decode()` |
 | DER | `der_encode()` | DER, BER | `ber_decode()` |
 | CER | *not supported* | CER, BER | `ber_decode()` |
@@ -265,14 +265,16 @@ See the `asn1c-usage.pdf` for details.
 | CANONICAL-UPER | `uper_encode()` | *-UPER | `uper_decode()` |
 | BASIC-APER | `aper_encode()` | *-APER | `aper_decode()` |
 | CANONICAL-APER | `aper_encode()` | *-APER | `aper_decode()` |
-| BASIC-XER | `xer_encode(XER_F_BASIC)` | *-XER | `xer_decode()` |
-| CANONICAL-XER | `xer_encode(XER_F_CANONICAL)` | *-XER | `xer_decode()` |
+| BASIC-XER | `xer_encode()` | *-XER | `xer_decode()` |
+| CANONICAL-XER | `xer_encode()` | *-XER | `xer_decode()` |
 | JER | `jer_encode()` | JER | `jer_decode()` |
-| JER-MINIFIED | `jer_encode(JER_F_MINIFIED)` | JER | `jer_decode()` |
+| JER-MINIFIED | `jer_encode()` | JER | `jer_decode()` |
 | CBOR | `cbor_encode()` | CBOR | `cbor_decode()` |
 
-*) Asterisk means both BASIC and CANONICAL variants. JER-MINIFIED selects
-whitespace-free output; `jer_decode()` accepts either JER form.
+*) Asterisk means both BASIC and CANONICAL variants. Pass `XER_F_BASIC` or
+`XER_F_CANONICAL` to `xer_encode()` for the corresponding XER variant. Use
+`JER_F_MINIFIED` with `jer_encode()` for whitespace-free output; `jer_decode()`
+accepts either JER form.
 
 # XER AND JER ENCODING INSTRUCTIONS
 
