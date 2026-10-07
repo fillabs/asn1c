@@ -81,9 +81,11 @@ CANONICAL-APER | aper_encode()              | *-APER        | aper_decode()
 BASIC-XER      | xer_encode(XER_F_BASIC)    | *-XER         | xer_decode()
 CANONICAL-XER  | xer_encode(XER_F_CANONICAL)| *-XER         | xer_decode()
 JER            | jer_encode()               | JER           | jer_decode()
+JER-MINIFIED   | jer_encode(JER_F_MINIFIED) | JER           | jer_decode()
 CBOR           | cbor_encode()              | CBOR          | cbor_decode()
 
-*) Asterisk means both BASIC and CANONICAL variants.
+*) Asterisk means both BASIC and CANONICAL variants. JER-MINIFIED produces
+whitespace-free JSON, and `jer_decode()` accepts either JER form.
 </details>
 
 ## XER and JER Encoding Instructions

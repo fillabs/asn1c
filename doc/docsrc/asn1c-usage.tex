@@ -1747,12 +1747,11 @@ a little and check out a simple high level way.
 The asn1c runtime supplies (see \emph{asn\_application.h}) two sets of high level functions, \api{sec:asn_encode}{asn_encode*} and \api{sec:asn_decode}{asn_decode*}, which take a transfer syntax selector as an argument. The transfer syntax selector is defined as this:
 
 \begin{codesample}[basicstyle=\scriptsize\listingfont]
-/*
- * A selection of ASN.1 Transfer Syntaxes to use with generalized encoders and decoders.
- */
+/* A selection of ASN.1 transfer syntaxes for generic encoders and decoders. */
 enum asn_transfer_syntax {
-    ATS_INVALID,
+    ATS_INVALID = 0,
     ATS_NONSTANDARD_PLAINTEXT,
+    ATS_RANDOM,
     ATS_BER,
     ATS_DER,
     ATS_CER,
@@ -1760,8 +1759,13 @@ enum asn_transfer_syntax {
     ATS_CANONICAL_OER,
     ATS_UNALIGNED_BASIC_PER,
     ATS_UNALIGNED_CANONICAL_PER,
+    ATS_ALIGNED_BASIC_PER,
+    ATS_ALIGNED_CANONICAL_PER,
     ATS_BASIC_XER,
     ATS_CANONICAL_XER,
+    ATS_JER,
+    ATS_JER_MINIFIED,
+    ATS_CBOR,
 };
 \end{codesample}
 

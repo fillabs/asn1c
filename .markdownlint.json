@@ -4,11 +4,15 @@
         "indent": 2
     },
     "MD013": {
-        "line_length": 90
+        "line_length": 90,
+	"stern": false,
+	"strict": false,
+	"tables": false
     },
     "MD024": {
         "siblings_only": true
     },
     "no-hard-tabs": true,
-    "no-inline-html": false
+    "no-inline-html": false,
+    "single-title": false
 }

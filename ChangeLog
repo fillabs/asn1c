@@ -54,7 +54,7 @@ Changes since v1.5.0:
 	  and deterministically reject malformed values whose buffer is NULL while
 	  their size is non-zero. Runtime regression coverage exercises both empty
 	  representations plus malformed, in-alphabet, and out-of-alphabet values;
-	  generated permitted-alphabet helpers now include complete docblocks.
+	  generated permitted-alphabet helpers now include complete doc-blocks.
 	* Corrected UPER known-multiplier character strings with extensible SIZE
 	  constraints to retain their effective permitted-alphabet width outside
 	  the size root, as required by X.691:2021 sections 30.4 and 30.5.2.
@@ -496,7 +496,7 @@ Changes since v1.5.0:
 
 0.9.28: 2017-03-26
     * PER decoding: avoid memory leak on error. By github.com/simo5
-    * Constness patch #46 by Wim L <wiml@omnigroup.com> (41bbf1c..78d604f).
+    * Const-ness patch #46 by Wim L <wiml@omnigroup.com> (41bbf1c..78d604f).
     Build issues:
     * Fixed generated file permissions introduced by earlier pull (issue/32).
     * Win32/MinGW patch #31 by Frank Morgner (frankmorgner).
@@ -762,7 +762,7 @@ Changes since v1.5.0:
       ASN.1 subtype constraints checking code.
     * Added ASN1C_ENVIRONMENT_VERSION and get_asn1c_environment_version().
     * Fixed ANY type decoding (Severity: high; Security impact: low).
-    * Fixed BER decoder restartability problem with certain primitive
+    * Fixed BER decoder restart-ability problem with certain primitive
       types (BOOLEAN, INTEGER, and REAL). The problem occurred when the
       encoding of such type is split between several bytes.
       (Severity: high; Security impact: low)
@@ -788,7 +788,7 @@ Changes since v1.5.0:
     * Improved type name generation code ("struct foo" vs "foo_t").
     * Fixed constraint checking code incorrectly dealing with imported
       types with constraint values defined in other modules.
-    * Real REAL support! (Haven't tested denormals support yet!)
+    * Real REAL support! (Haven't tested "denormals" support yet!)
       See skeletons/tests/check-REAL.c
 
 0.9.4:    2004-Sep-10
@@ -955,7 +955,7 @@ Changes since v1.5.0:
     * Fixed OCTET STRING::BER decoder: restart after reaching a buffer
       boundary was broken (Severity: high; Security impact: low).
       Reported by <vss@high.net.ru>
-    * Added test cases to check decoders restartability.
+    * Added test cases to check decoders restart-ability.
     * Slightly more general INTEGER2long decoder.
     * Allowed nested /* C-type */ comments, as per X.680:2002.
 
@@ -1034,7 +1034,7 @@ Changes since v1.5.0:
 === Bug importance disclosure terms ===
 
 SEVERITY.
-    This term applies to the frequence the particular construct is used
+    This term applies to the frequency the particular construct is used
     in the real world. The higher the frequency, the more chances of triggering
     this bug.
     low:    The ASN.1 specifications which could trigger
