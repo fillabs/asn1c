@@ -21,9 +21,10 @@ The asn1c is arguably the most evolved open source ASN.1 compiler.
 Current release: **1.5.3**
 
 This release corrects imported-name resolution and compiler diagnostics,
-fixes PER extensibility and UPER/APER CHOICE mapping, and avoids generated-file
-collisions with runtime skeletons on case-insensitive filesystems. It also
-includes header usability improvements and updated compiler documentation.
+fixes PER extensibility, avoids generated-file collisions with runtime
+skeletons on case-insensitive filesystems, and addresses a skeleton build race.
+It also includes header usability improvements and updated compiler
+documentation.
 See the [v1.5.3 release notes](release-notes/v1.5.3.md) for details.
 
 #### Upgrade warning: unknown extensions
