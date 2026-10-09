@@ -95,7 +95,7 @@ CHOICE_decode_xer(const asn_codec_ctx_t *opt_codec_ctx,
             asn_dec_rval_t tmprval;
             void *memb_ptr;    /* Pointer to the member */
             void **memb_ptr2;  /* Pointer to that pointer */
-            unsigned old_present __attribute__((unused));
+            unsigned old_present CC_NOTUSED;
 
             elm = &td->elements[edx];
 
