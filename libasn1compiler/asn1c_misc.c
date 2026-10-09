@@ -247,6 +247,19 @@ asn1c_make_identifier(enum ami_flags_e flags, asn1p_expr_t *expr, ...) {
 	return storage;
 }
 
+static int
+asn1c_filename_caseeq(const char *a, const char *b) {
+    const unsigned char *n = (const unsigned char *)a;
+    const unsigned char *s = (const unsigned char *)b;
+
+    while(*n && *s && tolower(*n) == tolower(*s)) {
+        n++;
+        s++;
+    }
+
+    return (*n == '\0' && *s == '\0');
+}
+
 const char *
 asn1c_disambiguate_generated_filename(const char *name) {
     static const char *system_header_names[] = {
@@ -254,25 +267,46 @@ asn1c_disambiguate_generated_filename(const char *name) {
         "stdint", "stddef", "stdbool", "limits", "math", "memory",
         "setjmp", "signal", "unistd",
     };
+    /*
+     * Basenames of skeleton files (skeletons/<name>.[ch]) that a legal ASN.1
+     * type reference could map onto. ASN.1 identifiers cannot contain '_',
+     * so only the underscore-free skeleton names can collide. On
+     * case-insensitive filesystems (macOS, Windows) a user type such as
+     * "Null" would otherwise produce Null.[ch], which is the same file as
+     * the NULL.[ch] skeleton: the skeleton is then "retained local" and the
+     * generated code cannot find NULL_t, asn_OP_NULL, etc.
+     */
+    static const char *skeleton_names[] = {
+        "ANY",              "BMPString",       "BOOLEAN",
+        "constraints",      "converter-example", "ENUMERATED",
+        "GeneralizedTime",  "GeneralString",   "GraphicString",
+        "IA5String",        "INTEGER",         "ISO646String",
+        "NativeEnumerated", "NativeInteger",   "NativeReal",
+        "NULL",             "NumericString",   "ObjectDescriptor",
+        "PrintableString",  "REAL",            "RELATIVE-OID",
+        "T61String",        "TeletexString",   "UniversalString",
+        "UTCTime",          "UTF8String",      "VideotexString",
+        "VisibleString",
+    };
     static char storage[64];
+    size_t i;
 
     if(asn1c_prefix_get()[0] != '\0') {
         return name;
     }
 
-    for(size_t i = 0; i < sizeof(system_header_names) / sizeof(system_header_names[0]);
+    for(i = 0; i < sizeof(system_header_names) / sizeof(system_header_names[0]);
         i++) {
-        const char *sysname = system_header_names[i];
-        const unsigned char *n = (const unsigned char *)name;
-        const unsigned char *s = (const unsigned char *)sysname;
-
-        while(*n && *s && tolower(*n) == tolower(*s)) {
-            n++;
-            s++;
+        if(asn1c_filename_caseeq(name, system_header_names[i])) {
+            snprintf(storage, sizeof(storage), "asn1c_%s",
+                     system_header_names[i]);
+            return storage;
         }
+    }
 
-        if(*n == '\0' && *s == '\0') {
-            snprintf(storage, sizeof(storage), "asn1c_%s", sysname);
+    for(i = 0; i < sizeof(skeleton_names) / sizeof(skeleton_names[0]); i++) {
+        if(asn1c_filename_caseeq(name, skeleton_names[i])) {
+            snprintf(storage, sizeof(storage), "asn1c_%s", name);
             return storage;
         }
     }

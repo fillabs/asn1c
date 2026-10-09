@@ -18,16 +18,14 @@ The asn1c is arguably the most evolved open source ASN.1 compiler.
 
 ### Latest release
 
-Current release: **1.5.0**
+Current release: **1.5.3**
 
-This release adds the `-fprefer-import-source` flag, which fixes incorrect type
-binding when two modules export identically-named types and a consumer imports
-one from each. It also includes post-v1.4 fixes across APER/UPER/OER decoding,
-PER size constraint handling, `-fprefix` generation for anonymous typedefs
-and member symbols, parser/compiler warning cleanup, circular-reference
-include fixes, and multiple code-scanning fixes. It also addresses security
-vulnerabilities, including formatting-related code scanning findings and
-hardening of integer decoder edge cases.
+This release corrects imported-name resolution and compiler diagnostics,
+fixes PER extensibility, avoids generated-file collisions with runtime
+skeletons on case-insensitive filesystems, and addresses a skeleton build race.
+It also includes header usability improvements and updated compiler
+documentation.
+See the [v1.5.3 release notes](release-notes/v1.5.3.md) for details.
 
 #### Upgrade warning: unknown extensions
 
@@ -45,7 +43,9 @@ defining it only in application code does not change an already-built runtime
 library. Compatibility warning contributed by <shakespark@gmail.com>.
 
 See [ChangeLog](ChangeLog) for the complete release history and
-[release-notes/v1.4.md](release-notes/v1.4.md) for the v1.4 release notes.
+[release-notes/v1.5.3.md](release-notes/v1.5.3.md) for these release notes,
+[release-notes/v1.4.2.md](release-notes/v1.4.2.md) for v1.4.2, and
+[release-notes/v1.4.md](release-notes/v1.4.md) for v1.4.
 
 ## ASN.1 Transfer Syntaxes
 
@@ -81,9 +81,11 @@ CANONICAL-APER | aper_encode()              | *-APER        | aper_decode()
 BASIC-XER      | xer_encode(XER_F_BASIC)    | *-XER         | xer_decode()
 CANONICAL-XER  | xer_encode(XER_F_CANONICAL)| *-XER         | xer_decode()
 JER            | jer_encode()               | JER           | jer_decode()
+JER-MINIFIED   | jer_encode(JER_F_MINIFIED) | JER           | jer_decode()
 CBOR           | cbor_encode()              | CBOR          | cbor_decode()
 
-*) Asterisk means both BASIC and CANONICAL variants.
+*) Asterisk means both BASIC and CANONICAL variants. JER-MINIFIED produces
+whitespace-free JSON, and `jer_decode()` accepts either JER form.
 </details>
 
 ## XER and JER Encoding Instructions

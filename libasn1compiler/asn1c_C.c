@@ -2119,9 +2119,9 @@ asn1c_lang_C_type_SIMPLE_TYPE(arg_t *arg) {
                     expr->_type_unique_index);
             }
         }
-		OUT("asn_struct_free_f %s_free;\n", p);
+		OUT("asn_struct_free_f %s__free;\n", p);
         if(arg->flags & A1C_GEN_PRINT) {
-            OUT("asn_struct_print_f %s_print;\n", p);
+            OUT("asn_struct_print_f %s__print;\n", p);
         }
 		OUT("asn_constr_check_f %s_constraint;\n", p);
         if(arg->flags & A1C_GEN_BER) {
@@ -3009,11 +3009,11 @@ emit_custom_operation_structure(arg_t *arg, asn1p_expr_t *expr) {
     
     /* Use OCTET_STRING base operations except for XER */
     OUT(".kind = ASN_KIND_PRIMITIVE,\n");
-    OUT("%s_free,\n", base_type);
+    OUT("%s__free,\n", base_type);
     
     OUT_NOINDENT("#if !defined(ASN_DISABLE_PRINT_SUPPORT)\n");
     if(arg->flags & A1C_GEN_PRINT) {
-        OUT("%s_print,\n", base_type);
+        OUT("%s__print,\n", base_type);
     } else {
         OUT("0,\n");
     }
@@ -3021,8 +3021,8 @@ emit_custom_operation_structure(arg_t *arg, asn1p_expr_t *expr) {
     OUT("0,\n");
     OUT_NOINDENT("#endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */\n");
     
-    OUT("%s_compare,\n", base_type);
-    OUT("%s_copy,\n", base_type);
+    OUT("%s__compare,\n", base_type);
+    OUT("%s__copy,\n", base_type);
     
     OUT_NOINDENT("#if !defined(ASN_DISABLE_BER_SUPPORT)\n");
     if(arg->flags & A1C_GEN_BER) {

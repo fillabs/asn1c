@@ -74,10 +74,10 @@ emit_cval_bound(arg_t *arg, const char *id, int idx, const char *sfx,
 
         if(!use_bytes && v < 0) {
             OUT("static const asn_cval_t asn_CVAL_%s_%d_%s = "
-                "{ ACV_SINT, { .s = INTMAX_C(%s) } };\n", id, idx, sfx, dec);
+                "{ ACV_SINT, { .s = %s } };\n", id, idx, sfx, dec);
         } else if(!use_bytes) {
             OUT("static const asn_cval_t asn_CVAL_%s_%d_%s = "
-                "{ ACV_UINT, { .u = UINTMAX_C(%s) } };\n", id, idx, sfx, dec);
+                "{ ACV_UINT, { .u = %s } };\n", id, idx, sfx, dec);
         } else {
             /* Oversized: emit canonical INTEGER content octets. */
             asn1c_bigint_t b;

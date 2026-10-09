@@ -22,6 +22,7 @@ TESTS += check-REAL.sh
 TESTS += check-SET_OF_INTEGER.sh
 TESTS += check-SEQUENCE_OF_INTEGER.sh
 TESTS += check-Time.sh
+TESTS += check-skeleton-name-clash.sh
 TESTS += check-JER-open-type.sh
 TESTS += check-JER-enumerated-opentype.sh
 TESTS += check-encoding-instructions.sh

@@ -180,7 +180,7 @@ asn1f_lookup_module(arg_t *arg, const char *module_name, const asn1p_oid_t *oid,
 		if(oid) {
 			if(mod->module_oid) {
 				int r = asn1p_oid_compare(oid, mod->module_oid);
-				if(0 == (arg->flags &  A1F_STRICT_MODULE_OID)) {
+				if(0 == (arg->flags &  A1F_PREFER_IMPORT_SOURCE)) {
 					if(oid_option == XPT_WITH_SUCCESSORS) {
 						if(r == oid->arcs_count && r == mod->module_oid->arcs_count) /* positive and last arc */
 	    					r = 0;
